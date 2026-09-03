@@ -12,8 +12,8 @@ Support forum: https://forum.kee.pm
 
 ## Requirements
 
-* node (16 should work but only tested with 18)
-* a node package manager (tested with npm 8 and 9)
+* node 20 or higher (required by web-ext 10; CI uses 20)
+* a node package manager (tested with npm 8, 9 and 10)
 * a web browser (tested with Firefox 117)
 * a Supporter's subscription to [Kee Vault](https://keevault.pm) OR KeePass 2.x (+ .NET/Mono) + KeePassRPC.plgx
 
@@ -52,8 +52,8 @@ Reproducible builds rely upon npm version 7 or higher.
 Our builds are created by GitHub Actions using the following configuration:
 
 * Ubuntu 22.04
-* Node 18
-* npm 8
+* Node 20
+* npm 10
 
 ### Instructions
 

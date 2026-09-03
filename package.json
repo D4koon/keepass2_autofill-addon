@@ -53,7 +53,7 @@
     "vue-demi": "^0.14.7",
     "vue-tsc": "^2.0.17",
     "vuetify": "^3.6.5",
-    "web-ext": "^9.4.0",
+    "web-ext": "^10.6.0",
     "webext-detect-page": "^5.0.1"
   },
   "scripts": {
