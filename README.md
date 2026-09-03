@@ -25,10 +25,12 @@ It's set up for Visual Studio Code but it shouldn't be too hard to work out how 
 1. `npm ci` (or `npm install` to get any newer library dependencies than those we used in official builds)
 1. Development:
    1. Open two terminals/consoles
-      1. In the 1st: `npm run dev` OR `npm run dev-chrome`
+      1. In the 1st, run the build task for your target browser:
+         * Chrome: `npm run dev-chrome` (or `npm run dev`) - extension pages are served from the Vite dev server with hot module reloading
+         * Firefox: `npm run dev-firefox` - extension pages are bundled to disk instead. Firefox rejects the `http://localhost` entry that the dev server needs in the extension `content_security_policy` (https://bugzilla.mozilla.org/show_bug.cgi?id=1864284), so `npm run dev` leaves the popup, options and panels blank there. `dev-firefox` still rebuilds on every save but does not do in-place HMR.
       1. In the 2nd: `npm run start:firefox` OR `npm run start:chrome`
    1. the task in the 1st terminal will recompile and reload necessary parts of the addon each time you change a file but in some circumstances you'll need to press 'r' in the 2nd terminal to force a complete reload.
-   1. If you mismatch the Firefox/Chrome commands most parts of the development process should be unaffected but you'll see some console warnings so try to keep them aligned when switching between browsers.
+   1. Keep the 1st and 2nd terminal commands on the same browser. Mismatched pairs mostly still work but produce console warnings - and for Firefox paired with `npm run dev` you get the non-functional UI described above.
 1. Preparing for release or Pull Request:
    1. `npm run tsc` to verify that no type errors have been introduced during recent development changes
    1. `npm run lint`
