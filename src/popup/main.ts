@@ -16,11 +16,28 @@ import { IPCPiniaPlugin } from "../common/IPCPiniaPlugin";
 const piniaInstance = createPinia();
 let vueApp: VueApp<Element>;
 let store: KeeStore;
+let vuetifyInstance: ReturnType<typeof createVuetify>;
+
+// The popup has no dark stylesheet of its own; it relies on Vuetify's theme for
+// its content and on this for the sliver of body visible before/around the app.
+function applyBodyTheme() {
+    document.body.style.backgroundColor =
+        configManager.activeTheme === "dark" ? "rgb(18, 18, 18)" : "";
+}
+
+function onConfigChange() {
+    applyBodyTheme();
+    if (vuetifyInstance) {
+        vuetifyInstance.theme.global.name.value = configManager.activeTheme;
+    }
+}
 
 async function start() {
     await configManager.load();
     KeeLog.debug("popup starting");
     KeeLog.attachConfig(configManager.current);
+    applyBodyTheme();
+    configManager.addChangeListener(onConfigChange);
     Port.startup("browserPopup");
 
     Port.raw.onMessage.addListener(function (m: AddonMessage) {
@@ -43,7 +60,7 @@ async function start() {
                 })
             });
 
-            const vuetify = createVuetify({
+            vuetifyInstance = createVuetify({
                 components,
                 directives,
                 theme: {
@@ -77,7 +94,7 @@ async function start() {
                 }
             });
             piniaInstance.use(IPCPiniaPlugin);
-            vueApp.use(vuetify);
+            vueApp.use(vuetifyInstance);
             vueApp.use(piniaInstance);
             vueApp.config.globalProperties.$chrome = chrome;
             vueApp.config.globalProperties.$i18n = chrome.i18n.getMessage;

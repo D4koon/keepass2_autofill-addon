@@ -23,12 +23,19 @@ function updateFrameState(newState: FrameState) {
 
 let vueApp: App<Element>;
 let store: KeeStore;
+let vuetifyInstance: ReturnType<typeof createVuetify>;
 
 async function start() {
     await configManager.load();
     KeeLog.debug("iframe page starting");
     KeeLog.attachConfig(configManager.current);
     Port.startup("iframe_" + parentFrameId);
+
+    configManager.addChangeListener(() => {
+        if (vuetifyInstance) {
+            vuetifyInstance.theme.global.name.value = configManager.activeTheme;
+        }
+    });
 
     const darkTheme = params["theme"] === "dark";
 
@@ -44,7 +51,7 @@ async function start() {
                             render: () => h(Panel, {})
                         });
 
-                        const vuetify = createVuetify({
+                        vuetifyInstance = createVuetify({
                             components,
                             directives,
                             theme: {
@@ -78,7 +85,7 @@ async function start() {
                             }
                         });
                         piniaInstance.use(IPCPiniaPlugin);
-                        vueApp.use(vuetify);
+                        vueApp.use(vuetifyInstance);
                         vueApp.use(piniaInstance);
                         vueApp.config.globalProperties.$chrome = chrome;
                         vueApp.config.globalProperties.$i18n = chrome.i18n.getMessage;

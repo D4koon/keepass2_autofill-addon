@@ -22,6 +22,7 @@ let searchResults: SiteSearchResult[];
 async function setupPage() {
     await configManager.load();
     KeeLog.attachConfig(configManager.current);
+    applyTheme();
     loadInitialConfig();
     [].forEach.call(
         $$(".siteSpecificToggle"),
@@ -1108,6 +1109,16 @@ function saveTheme(e) {
     e.preventDefault();
     const selectedValue = (document.getElementById("pref_theme_desc") as HTMLSelectElement).value;
     configManager.setASAP({ theme: themeFromString(selectedValue) });
+    applyTheme();
+}
+
+// Bootstrap 3 has no dark mode of its own, so we flag the document and let
+// settings.css restyle the page for whichever theme is currently active.
+function applyTheme() {
+    document.documentElement.classList.toggle(
+        "theme-dark",
+        configManager.activeTheme === "dark"
+    );
 }
 
 function saveCurrentSearchTermTimeout(e) {

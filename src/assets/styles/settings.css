@@ -165,3 +165,125 @@ legend.fix-border {
     padding: 5px 0px;
     border-bottom: solid 1px #eaeaea;
 }
+
+/* ---------------------------------------------------------------------------
+   Dark theme
+
+   Bootstrap 3 ships no dark mode, so when settings/main.ts adds .theme-dark to
+   <html> (driven by the "Appearance" setting) we override the relevant
+   Bootstrap and custom rules here.
+   --------------------------------------------------------------------------- */
+.theme-dark {
+    background-color: #121212;
+}
+
+.theme-dark body {
+    background-color: #121212;
+    color: #dfdfdf;
+}
+
+.theme-dark a {
+    color: #5a9bd4;
+}
+
+.theme-dark a:hover,
+.theme-dark a:focus {
+    color: #7fb4e0;
+}
+
+.theme-dark .panel {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: none;
+}
+
+.theme-dark .panel-default > .panel-heading {
+    background-color: #262626;
+    border-color: #333;
+    color: #dfdfdf;
+}
+
+.theme-dark .panel-title {
+    color: #dfdfdf;
+}
+
+.theme-dark .form-control {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #dfdfdf;
+}
+
+.theme-dark .form-control:focus {
+    border-color: #5a9bd4;
+    box-shadow: none;
+}
+
+.theme-dark .form-control::placeholder {
+    color: #8a8a8a;
+}
+
+.theme-dark .btn-default {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #dfdfdf;
+}
+
+.theme-dark .btn-default:hover,
+.theme-dark .btn-default:focus,
+.theme-dark .btn-default:active {
+    background-color: #363636;
+    border-color: #555;
+    color: #fff;
+}
+
+.theme-dark .input-group-addon {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #dfdfdf;
+}
+
+.theme-dark fieldset.fix-border {
+    border-color: #444 !important;
+}
+
+.theme-dark #siteListResults th,
+.theme-dark #siteListResults td {
+    border-bottom-color: #333;
+}
+
+.theme-dark .dropdown-menu {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+.theme-dark .dropdown-menu > li > a {
+    color: #dfdfdf;
+}
+
+.theme-dark .dropdown-menu > li > a:hover,
+.theme-dark .dropdown-menu > li > a:focus {
+    background-color: #2f2f2f;
+    color: #fff;
+}
+
+.theme-dark .modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+.theme-dark .modal-header,
+.theme-dark .modal-footer {
+    border-color: #333;
+}
+
+.theme-dark .close {
+    color: #dfdfdf;
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+.theme-dark .close:hover,
+.theme-dark .close:focus {
+    color: #fff;
+    opacity: 1;
+}
