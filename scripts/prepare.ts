@@ -2,7 +2,7 @@
 import { execSync } from "child_process";
 import fs from "fs-extra";
 import chokidar from "chokidar";
-import { isDev, log, port, isChrome, r } from "./utils";
+import { isDev, log, port, isChrome, bundledDev, r } from "./utils";
 
 
 function rewriteLinks(data: string, search: string, replace: string) {
@@ -77,11 +77,15 @@ writeLocales();
 writeJavascriptLibs();
 
 if (isDev) {
-    stubIndexHtml();
-    chokidar.watch(r("src/**/*.html"))
-        .on("change", () => {
-            stubIndexHtml();
-        });
+    // In bundledDev mode (npm run dev-firefox) `vite build --watch` emits the real
+    // page HTML into extension/dist, so the localhost stubs must not overwrite it.
+    if (!bundledDev) {
+        stubIndexHtml();
+        chokidar.watch(r("src/**/*.html"))
+            .on("change", () => {
+                stubIndexHtml();
+            });
+    }
     chokidar.watch([r("src/manifest.ts"), r("package.json")])
         .on("change", () => {
             writeManifest();

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import fs from "fs-extra";
 import type PkgType from "../package.json";
-import { isBeta, isDev, isChrome, port, r } from "../scripts/utils";
+import { isBeta, isDev, isChrome, bundledDev, port, r } from "../scripts/utils";
 
 type Manifest = chrome.runtime.Manifest;
 
@@ -105,10 +105,11 @@ export async function getManifest() {
             }
         ],
         content_security_policy: {
-            extension_pages: isDev
+            extension_pages: isDev && !bundledDev
                 // http://localhost:${port} is required on dev for Vite script to load
                 // http://localhost:8099 for Vue devtools connection
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1864284 prevents this from working in Firefox
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1864284 prevents this from working in Firefox,
+                // so the bundledDev flow (npm run dev-firefox) ships pages with the plain 'self' policy instead
                 ? `script-src 'self' http://localhost:${port} http://localhost:8099`
                 : "script-src 'self'" // default FF 106 & Chrome 111
         },
