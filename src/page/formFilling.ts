@@ -809,38 +809,21 @@ export class FormFilling {
                     add(`  Form #${i} (${label}): treated as a login form.`);
                     continue;
                 }
-                let inputs = 0;
-                let passwords = 0;
-                let visibleInputs = 0;
-                try {
-                    const els = f?.getElementsByTagName
-                        ? Array.from(f.getElementsByTagName("input"))
-                        : [];
-                    inputs = els.length;
-                    passwords = els.filter(
-                        el => (el as HTMLInputElement).type === "password"
-                    ).length;
-                    visibleInputs = els.filter(el =>
-                        this.formUtils.isDOMElementVisible(el as HTMLElement)
-                    ).length;
-                } catch (e) {
-                    /* best effort */
-                }
-                add(
-                    `  Form #${i} (${label}): NOT treated as a login form - ` +
-                        `${inputs} input(s), ${passwords} password field(s), ` +
-                        `${visibleInputs} visible. ` +
-                        (passwords === 0
-                            ? "No password field, and no text field is whitelisted for this site."
-                            : "It may be blacklisted, hidden, or have too many fields.")
-                );
+                add(`  Form #${i} (${label}): NOT treated as a login form. ${this.describeForm(f)}`);
             }
+
+            // Frame-wide picture - helps when the form Kee found is a red herring
+            // and the real fields are elsewhere (shadow DOM, another iframe, loaded later).
+            add(this.describeFrameFields());
 
             if (scannedIndexes.length === 0 || !this.findLoginOp.forms) {
                 add(
                     "Kee did not classify any form here as a login form, so it never searches " +
-                        "for or fills entries on this page. To force it, add the form or a field " +
-                        "to this site's white list in Settings > Finding forms."
+                        "for or fills entries on this page. Likely reasons: the password field " +
+                        "is inside a web component (shadow DOM), the real form is in another " +
+                        "iframe, it loads after this check ran, or the field is type=text with a " +
+                        "show/hide toggle. If it is a normal form, add it or a field to this " +
+                        "site's white list in Settings > Finding forms."
                 );
                 return this.sendDiagnoseFillReport(report);
             }
@@ -918,6 +901,94 @@ export class FormFilling {
 
     private round(n: number) {
         return typeof n === "number" && isFinite(n) ? Math.round(n * 100) / 100 : n;
+    }
+
+    // Best-effort structural summary of a single form for the fill diagnosis.
+    private describeForm(f: any): string {
+        try {
+            const els: any[] = f && f.elements ? Array.from(f.elements) : [];
+            const tags: Record<string, number> = {};
+            let passwords = 0;
+            let visible = 0;
+            for (const el of els) {
+                const t = (
+                    el.localName +
+                    (el.type ? ":" + el.type : "")
+                ).toLowerCase();
+                tags[t] = (tags[t] || 0) + 1;
+                if ((el.type || "").toLowerCase() === "password") passwords++;
+                try {
+                    if (this.formUtils.isDOMElementVisible(el)) visible++;
+                } catch (e) {
+                    /* ignore */
+                }
+            }
+            const tagSummary =
+                Object.keys(tags)
+                    .map(k => `${k}×${tags[k]}`)
+                    .join(", ") || "none";
+            const html = (f && f.outerHTML ? String(f.outerHTML) : "")
+                .replace(/\s+/g, " ")
+                .slice(0, 200);
+            return (
+                `form.elements: ${els.length} (${tagSummary}); ` +
+                `password fields: ${passwords}; visible fields: ${visible}. ` +
+                (html ? `HTML: ${html}${html.length === 200 ? "…" : ""}` : "")
+            );
+        } catch (e) {
+            return "could not inspect this form (" + (e && e.message ? e.message : e) + ").";
+        }
+    }
+
+    // Frame-wide field picture: catches the common cases where the form Kee found is
+    // not the real one - fields in shadow DOM, in a nested iframe, or added later.
+    private describeFrameFields(): string {
+        try {
+            const doc = window.document;
+            const inputs = doc.getElementsByTagName("input").length;
+            const pw = doc.querySelectorAll('input[type="password"]').length;
+            const iframes = doc.getElementsByTagName("iframe").length;
+
+            // Shallow scan for open shadow roots and any password fields inside them.
+            let shadowHosts = 0;
+            let shadowPasswords = 0;
+            const all = doc.querySelectorAll("*");
+            for (let i = 0; i < all.length; i++) {
+                const sr = (all[i] as any).shadowRoot;
+                if (sr) {
+                    shadowHosts++;
+                    try {
+                        shadowPasswords += sr.querySelectorAll(
+                            'input[type="password"]'
+                        ).length;
+                    } catch (e) {
+                        /* ignore */
+                    }
+                }
+            }
+
+            let msg =
+                `Frame totals: ${inputs} <input>, ${pw} password field(s) in the light DOM, ` +
+                `${iframes} nested iframe(s), ${shadowHosts} open shadow root(s)`;
+            if (shadowPasswords > 0) {
+                msg +=
+                    `, ${shadowPasswords} password field(s) inside shadow DOM. ` +
+                    "Kee cannot see fields inside shadow DOM, which is why nothing matched.";
+            } else if (pw === 0 && iframes > 0) {
+                msg +=
+                    ". No password field in this frame but there are iframes - the login form " +
+                    "is probably inside one of them; open the diagnosis from that frame.";
+            } else if (pw === 0) {
+                msg +=
+                    ". No password field anywhere in this frame yet - it may load later, be a " +
+                    "type=text field with a show/hide toggle, or be on a later step of the login.";
+            } else {
+                msg += ".";
+            }
+            return msg;
+        } catch (e) {
+            return "Frame totals: could not inspect (" + (e && e.message ? e.message : e) + ").";
+        }
     }
 
     private sendDiagnoseFillReport(lines: string[]) {
