@@ -235,7 +235,7 @@ export class Utils {
         return atob(input.replace(/-/g, "+").replace(/_/g, "/"));
     }
 
-    binaryToByteArray(binary: string): Uint8Array {
+    binaryToByteArray(binary: string) {
         const len = binary.length;
         const buffer = new ArrayBuffer(len);
         const view = new Uint8Array(buffer);

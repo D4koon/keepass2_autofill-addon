@@ -12,7 +12,7 @@ Support forum: https://forum.kee.pm
 
 ## Requirements
 
-* node 20 or higher (required by web-ext 10; CI uses 20)
+* node 20.19 or higher (required by web-ext 10 and vite 7; CI uses 20)
 * a node package manager (tested with npm 8, 9 and 10)
 * a web browser (tested with Firefox 117)
 * a Supporter's subscription to [Kee Vault](https://keevault.pm) OR KeePass 2.x (+ .NET/Mono) + KeePassRPC.plgx
