@@ -711,6 +711,223 @@ export class FormFilling {
         this.fillAndSubmit(true);
     }
 
+    // Debugging aid for "this entry is findable in the search box but won't fill here".
+    // Runs a single, explicitly chosen entry through the real form-scan + relevance
+    // scoring pipeline against this frame, force-fills the best form (never submits) and
+    // returns a plain-text report of what happened and why. Triggered from the popup
+    // search results; the report is surfaced there as a notification.
+    public diagnoseFillForEntry(rawEntry: Entry) {
+        const report: string[] = [];
+        const add = (line: string) => {
+            report.push(line);
+            this.Logger.info("[diagnose-fill] " + line);
+        };
+
+        try {
+            if (!rawEntry) {
+                add("No entry data was supplied to the page.");
+                return this.sendDiagnoseFillReport(report);
+            }
+
+            // Work on a plain, mutable clone: the entry arrives over the messaging
+            // boundary and some of its properties are read-only on the model type.
+            const entry: Entry = JSON.parse(JSON.stringify(rawEntry));
+
+            add(`Entry: "${entry.title}"  (${entry.uuid})`);
+            const entryFieldDesc = entry.fields
+                .map(f => `${f.type}[${f.locators?.[0]?.name || f.locators?.[0]?.id || "no name/id"}]`)
+                .join(", ");
+            add(`Entry fields: ${entryFieldDesc || "(none)"}`);
+
+            // Entries fetched by uuid (rather than by URL match) may not carry a
+            // numeric match accuracy; without this the relevance maths becomes NaN.
+            if (typeof entry.matchAccuracy !== "number" || !isFinite(entry.matchAccuracy)) {
+                (entry as { matchAccuracy: number }).matchAccuracy = 0;
+                add("Entry has no URL match accuracy (reached by search, not URL match); treating as 0.");
+            }
+
+            const hasUsername = !!Entry.getUsernameField(entry);
+            const hasPassword = !!Entry.getPasswordField(entry);
+            if (!hasUsername && !hasPassword) {
+                add(
+                    "This entry has no username and no password field, so Kee can never fill " +
+                        "it into a form. Add a username and/or password in KeePass."
+                );
+                return this.sendDiagnoseFillReport(report);
+            }
+
+            add(`Page URL: ${window.document.URL}`);
+            if (entry.URLs && entry.URLs.length) {
+                add(`Entry URL(s): ${entry.URLs.join(", ")}`);
+                add(
+                    "Note: this entry was reached via text search, not URL matching. If the " +
+                        "page URL is not covered by the entry URL(s) above (per the entry's match " +
+                        "accuracy setting) it will never appear in the automatic matches list."
+                );
+            }
+
+            // Make sure this frame has been scanned for forms at least once. We only
+            // re-scan when there is no prior result at all - an existing result with no
+            // login form is itself a useful finding, reported below.
+            if (
+                !this.matchResult ||
+                !this.matchResult.forms ||
+                this.matchResult.forms.length === 0
+            ) {
+                add("Frame not scanned for forms yet - running form detection...");
+                this.findMatchesInThisFrame({
+                    autofillOnSuccess: false,
+                    autosubmitOnSuccess: false
+                });
+            }
+
+            const formCount =
+                this.matchResult && this.matchResult.forms ? this.matchResult.forms.length : 0;
+
+            if (formCount === 0) {
+                add(
+                    "No <form> and no loose input fields were found in this frame. There is " +
+                        "nothing here for Kee to fill. If the login form is inside an iframe, " +
+                        "run this diagnosis with that frame focused."
+                );
+                return this.sendDiagnoseFillReport(report);
+            }
+
+            const scannedIndexes: number[] =
+                (this.findLoginOp && this.findLoginOp.formIndexes) || [];
+            add(
+                `Forms in this frame: ${formCount}; ` +
+                    `treated as login forms: ${scannedIndexes.length}`
+            );
+
+            // Kee only scores/fills forms it classified as login forms. Describe every
+            // form so the user can see which one was skipped and roughly why.
+            for (let i = 0; i < formCount; i++) {
+                const f = this.matchResult.forms[i] as HTMLFormElement;
+                const label = f?.id || f?.name || "unnamed";
+                if (scannedIndexes.indexOf(i) !== -1) {
+                    add(`  Form #${i} (${label}): treated as a login form.`);
+                    continue;
+                }
+                let inputs = 0;
+                let passwords = 0;
+                let visibleInputs = 0;
+                try {
+                    const els = f?.getElementsByTagName
+                        ? Array.from(f.getElementsByTagName("input"))
+                        : [];
+                    inputs = els.length;
+                    passwords = els.filter(
+                        el => (el as HTMLInputElement).type === "password"
+                    ).length;
+                    visibleInputs = els.filter(el =>
+                        this.formUtils.isDOMElementVisible(el as HTMLElement)
+                    ).length;
+                } catch (e) {
+                    /* best effort */
+                }
+                add(
+                    `  Form #${i} (${label}): NOT treated as a login form - ` +
+                        `${inputs} input(s), ${passwords} password field(s), ` +
+                        `${visibleInputs} visible. ` +
+                        (passwords === 0
+                            ? "No password field, and no text field is whitelisted for this site."
+                            : "It may be blacklisted, hidden, or have too many fields.")
+                );
+            }
+
+            if (scannedIndexes.length === 0 || !this.findLoginOp.forms) {
+                add(
+                    "Kee did not classify any form here as a login form, so it never searches " +
+                        "for or fills entries on this page. To force it, add the form or a field " +
+                        "to this site's white list in Settings > Finding forms."
+                );
+                return this.sendDiagnoseFillReport(report);
+            }
+
+            // Score this single entry against every scannable form, reusing the exact
+            // production scoring path (which also emits its own per-field debug logging).
+            this.matchResult = this.getRelevanceOfLoginMatchesAgainstAllForms(
+                [entry],
+                this.findLoginOp,
+                this.matchResult
+            );
+
+            this.matchResult.formRelevanceScores.forEach((score, i) => {
+                if (scannedIndexes.indexOf(i) === -1) return;
+                const f = this.matchResult.forms[i] as HTMLFormElement;
+                const scored = this.matchResult.entries[i] && this.matchResult.entries[i][0];
+                add(
+                    `Form #${i} (${f?.id || f?.name || "unnamed"}): relevance ${this.round(score)}` +
+                        (scored
+                            ? `, lowFieldMatchRatio=${!!scored.lowFieldMatchRatio}`
+                            : "")
+                );
+            });
+
+            const best = this.getMostRelevantForm();
+            add(
+                `Best form: #${best.bestFormIndex} with score ${this.round(best.bestRelevanceScore)}. ` +
+                    "Automatic fill needs score >= 1 and lowFieldMatchRatio=false; below that the " +
+                    "entry is still offered in the list but not auto-filled."
+            );
+
+            // Force the fill of the best form regardless of the auto-fill threshold - this is
+            // the "try it here anyway" part. We never submit from a diagnosis.
+            add("Force-filling the best form now (ignoring the threshold, never submitting)...");
+            this.matchResult.UUID = null;
+            this.matchResult.dbFileName = null;
+            this.matchResult.formReadyForSubmit = false;
+            this.matchResult.mustAutoFillForm = true;
+            this.matchResult.mustAutoSubmitForm = false;
+            this.fillAndSubmit(false, best.bestFormIndex, 0, true);
+
+            const filled = [
+                ...(this.matchResult.lastFilledOther || []),
+                ...(this.matchResult.lastFilledPasswords || [])
+            ];
+            if (filled.length > 0) {
+                const names = filled
+                    .map(
+                        f =>
+                            (f.DOMelement as HTMLInputElement)?.id ||
+                            (f.DOMelement as HTMLInputElement)?.name ||
+                            "unnamed"
+                    )
+                    .join(", ");
+                add(`Filled ${filled.length} field(s): ${names}.`);
+                add(
+                    "If the fields above are the wrong ones, the form/field detection is the " +
+                        "problem. If nothing visibly changed, the fields may be hidden or " +
+                        "re-rendered by the site's JavaScript."
+                );
+            } else {
+                add(
+                    "No fields were filled. The per-field suitability scores are in the console " +
+                        "at Debug log level (Settings > Logging). Common causes: the entry field " +
+                        "names/ids do not resemble the form field names/ids, or the form fields " +
+                        "are not visible."
+                );
+            }
+        } catch (e) {
+            add("Diagnosis stopped with an error: " + (e && e.message ? e.message : e));
+        }
+
+        this.sendDiagnoseFillReport(report);
+    }
+
+    private round(n: number) {
+        return typeof n === "number" && isFinite(n) ? Math.round(n * 100) / 100 : n;
+    }
+
+    private sendDiagnoseFillReport(lines: string[]) {
+        try {
+            this.myPort.postMessage({ diagnoseFillReport: lines });
+        } catch (e) {
+            this.Logger.warn("Could not send diagnose-fill report: " + e);
+        }
+    }
+
     getRelevanceOfLoginMatchesAgainstAllForms(
         entries: Entry[],
         findLoginOp,
@@ -856,7 +1073,12 @@ export class FormFilling {
     // It's possible to fill and submit a entry with a specific uuid but
     // that process is now centered on the findMatches function. This function just
     // takes the results of that (which may include a specific entry to fill and submit to a specific form)
-    fillAndSubmit(automated: boolean, formIndex?: number, entryIndex?: number) {
+    fillAndSubmit(
+        automated: boolean,
+        formIndex?: number,
+        entryIndex?: number,
+        noSubmit = false
+    ) {
         this.Logger.debug(
             "fillAndSubmit started. automated: " +
                 automated +
@@ -1170,6 +1392,7 @@ export class FormFilling {
         // }
 
         if (
+            !noSubmit &&
             !matchResult.cannotAutoSubmitForm &&
             (action.submit || matchResult.mustAutoSubmitForm) &&
             matchResult.formReadyForSubmit

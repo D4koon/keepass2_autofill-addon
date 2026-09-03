@@ -243,6 +243,10 @@ if (document.body) {
                 formFilling.fillAndSubmit(false, null, m.selectedEntryIndex);
             }
 
+            if (m.action == Action.DiagnoseFill && m.diagnoseFillEntry) {
+                formFilling.diagnoseFillForEntry(m.diagnoseFillEntry);
+            }
+
             if (m.action == Action.ResetForms) {
                 formFilling.removeKeeIconFromAllFields();
                 formSaving.removeAllSubmitHandlers();

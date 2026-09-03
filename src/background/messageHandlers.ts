@@ -7,6 +7,7 @@ import type { VaultMessage } from "../common/VaultMessage";
 import { VaultAction } from "../common/VaultAction";
 import { Entry } from "../common/model/Entry";
 import { copyStringToClipboard } from "../common/copyStringToClipboard";
+import { utils } from "../common/utils";
 import { kee } from "./KF";
 import { accountManager } from "./AccountManager";
 
@@ -132,6 +133,38 @@ export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg:
             findMatchesResult: result
         } as AddonMessage);
     }
+    if (msg.diagnoseFill) {
+        const result = await kee.findLogins(
+            null,
+            null,
+            msg.diagnoseFill.uuid,
+            msg.diagnoseFill.DBfilename,
+            null,
+            null
+        );
+        const entry = result && result[0];
+        const frame = kee.tabStates
+            .get(kee.foregroundTabId)
+            ?.framePorts.get(msg.frameId || 0);
+        if (!entry) {
+            kee.browserPopupPort.postMessage({
+                diagnoseFillReport: ["Could not load the full entry from KeePass to diagnose."]
+            } as AddonMessage);
+        } else if (!frame) {
+            kee.browserPopupPort.postMessage({
+                diagnoseFillReport: [
+                    "No connected page in the active tab" +
+                        (msg.frameId ? ` frame ${msg.frameId}` : "") +
+                        " to run the diagnosis against."
+                ]
+            } as AddonMessage);
+        } else {
+            frame.postMessage({
+                action: Action.DiagnoseFill,
+                diagnoseFillEntry: entry
+            } as AddonMessage);
+        }
+    }
     if (msg.loginEditor) {
         kee.launchLoginEditor(msg.loginEditor.uuid, msg.loginEditor.DBfilename);
     }
@@ -184,6 +217,17 @@ export async function pageMessageHandler(this: chrome.runtime.Port, msg: AddonMe
         } catch (e) {
             /* whatever */
         }
+    }
+    if (msg.diagnoseFillReport) {
+        kee.notifyUser(
+            new KeeNotification(
+                "kee-diagnose-fill",
+                [],
+                utils.newGUID(),
+                ["Fill diagnosis:", ...msg.diagnoseFillReport],
+                "Medium"
+            )
+        );
     }
     if (msg.entries) {
         //TODO:f: When/how is this msg sent? it might be somewhere we can trigger the browser action button update to display the number of matched items.

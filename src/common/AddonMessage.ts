@@ -25,6 +25,12 @@ export interface AddonMessage {
     removeNotification?: string;
     findMatches?: { uri?: string; uuid?: string; DBfilename?: string };
     findMatchesResult?: Entry[];
+    // Debugging aid: ask why a specific (search-box) entry does not fill on the current page.
+    // popup -> background: which entry to diagnose; background -> page: the resolved entry;
+    // page -> background -> popup: the human-readable report lines.
+    diagnoseFill?: { uuid: string; DBfilename: string };
+    diagnoseFillEntry?: Entry;
+    diagnoseFillReport?: string[];
     entries?: Entry[];
     action?: Action;
     selectedEntryIndex?: number;

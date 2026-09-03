@@ -10,5 +10,6 @@ export const enum Action {
     PageHide = "pageHide",
     OpenKeePass = "openkeepass",
     CreateEntry = "createEntry",
-    UpdateEntry = "updateEntry"
+    UpdateEntry = "updateEntry",
+    DiagnoseFill = "diagnoseFill"
 }

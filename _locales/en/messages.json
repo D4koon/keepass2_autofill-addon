@@ -455,6 +455,10 @@
       "message": "Delete",
       "description": "Action button for user to delete an item within a collection. E.g. delete an entry within the list of site-specific settings overrides"
   },
+  "diagnose_fill_here": {
+      "message": "Why won't this fill here?",
+      "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+  },
   "site_specific_settings_checkbox_explanation": {
       "message": "Settings from \"All Websites\" will apply to each section below unless you enable the setting using the checkbox next to it." ,
       "description": "Explains to the user how the site-specific settings can be enabled and what happens in the default situation"

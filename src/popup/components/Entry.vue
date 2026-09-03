@@ -71,7 +71,12 @@ location="top" :disabled="!entryPathIsLong"
                                     </v-sheet>
                                 </v-sheet>
 
-                                <v-sheet class="ma-2 shrink">
+                                <v-sheet class="ma-2 shrink" style="display: flex; column-gap: 4px;">
+                                    <v-btn
+v-if="isSearchResult" size="small" location="bottom left"
+                                        icon="mdi-help-circle-outline" :title="$i18n('diagnose_fill_here')"
+                                        @click="diagnoseFillHere">
+                                    </v-btn>
                                     <v-btn size="small" location="bottom left" icon="mdi-pencil" @click="editEntry">
                                     </v-btn>
                                 </v-sheet>
@@ -171,6 +176,11 @@ export default {
         isMatchedEntry: function () {
             const e = this.entrySummary as EntrySummary;
             return typeof e.isPreferredMatch === "boolean";
+        },
+        isSearchResult: function () {
+            // No entryIndex means this came from the search box rather than the
+            // automatically matched list, so a click navigates instead of filling.
+            return this.entryIndex === undefined || this.entryIndex === null;
         }
     },
     methods: {
@@ -255,6 +265,18 @@ export default {
                 frameId: this.frameId
             });
             window.close();
+        },
+        diagnoseFillHere() {
+            // Ask the page script to run this entry through the real matching + fill
+            // pipeline on the current page and report back why it does / doesn't fill.
+            // Keep the popup open so the resulting notification is visible.
+            Port.postMessage({
+                diagnoseFill: {
+                    uuid: this.entrySummary.uuid,
+                    DBfilename: this.entrySummary.dbFileName
+                },
+                frameId: this.frameId ?? 0
+            } as AddonMessage);
         },
         nextInList() {
             this.$emit("move-next-in-list");
