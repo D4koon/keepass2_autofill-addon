@@ -510,6 +510,22 @@ export class FormFilling {
             forms.push(window.document.forms.item(i));
         }
 
+        // <form> elements that live inside an open shadow root are not in
+        // document.forms, so add them explicitly (deduplicated).
+        try {
+            const shadowForms = this.formUtils
+                .deepQueryAll<HTMLFormElement>(window.document, "form")
+                .filter(f => forms.indexOf(f) === -1);
+            if (shadowForms.length > 0) {
+                forms = Array.prototype.slice.call(forms).concat(shadowForms);
+                this.Logger.debug(
+                    "found " + shadowForms.length + " form(s) inside shadow DOM"
+                );
+            }
+        } catch (e) {
+            this.Logger.debug("shadow form scan failed: " + e);
+        }
+
         // Forcing a scan for orphaned fields on all pages. May need to change
         // this if real world performance is too slow.
         const pseudoForm = this.scanForOrphanedFields(window.document);
@@ -663,6 +679,23 @@ export class FormFilling {
         const items = doc.getElementsByTagName("input");
         for (const tag of items) {
             if (!tag.form) orphanedFields.push(tag);
+        }
+
+        // Inputs inside open shadow roots are never in doc.getElementsByTagName
+        // and (not being form-associated) have no .form, so treat them as orphans
+        // too. This is what makes web-component logins (Lit/Polymer/etc.) fillable.
+        try {
+            const shadowInputs = this.formUtils.deepQueryAll<HTMLInputElement>(
+                doc,
+                "input"
+            );
+            for (const tag of shadowInputs) {
+                if (!tag.form && orphanedFields.indexOf(tag) === -1) {
+                    orphanedFields.push(tag);
+                }
+            }
+        } catch (e) {
+            this.Logger.debug("shadow orphan-field scan failed: " + e);
         }
 
         if (orphanedFields.length > 0) {
@@ -819,9 +852,10 @@ export class FormFilling {
             if (scannedIndexes.length === 0 || !this.findLoginOp.forms) {
                 add(
                     "Kee did not classify any form here as a login form, so it never searches " +
-                        "for or fills entries on this page. Likely reasons: the password field " +
-                        "is inside a web component (shadow DOM), the real form is in another " +
-                        "iframe, it loads after this check ran, or the field is type=text with a " +
+                        "for or fills entries on this page. Kee now also scans open shadow roots, " +
+                        "so if fields still were not found the likely reasons are: a CLOSED " +
+                        "shadow root (not scriptable at all), the real form is in another iframe, " +
+                        "it loads after this check ran, or the field is type=text with a " +
                         "show/hide toggle. If it is a normal form, add it or a field to this " +
                         "site's white list in Settings > Finding forms."
                 );
@@ -999,10 +1033,9 @@ export class FormFilling {
 
             if (shadowInputs > 0 && lightInputs === 0) {
                 msg +=
-                    " The login fields are inside Shadow DOM (web components). Kee's form " +
-                    "scanner only walks the light DOM, so it cannot see or fill them - this " +
-                    "is a Kee limitation, not a settings problem, and the white list cannot " +
-                    "help because there is no light-DOM field to whitelist.";
+                    " The login fields are inside Shadow DOM (web components). Kee scans open " +
+                    "shadow roots, so these should be reachable; if they still were not picked " +
+                    "up they may be in a CLOSED shadow root or added after the scan.";
                 if (hostChains.length) {
                     msg += " Fields found under: " + hostChains.join("; ") + ".";
                 }
@@ -1604,7 +1637,20 @@ export class FormFilling {
                 const value = buttons[i];
                 ...
             */
-        Array.from(form.ownerDocument.getElementsByTagName("button")).forEach(value => {
+        // Native <button>s in the light DOM plus any inside open shadow roots
+        // (web-component submit buttons such as Home Assistant's <ha-button>).
+        const buttonEls = [
+            ...Array.from(form.ownerDocument.getElementsByTagName("button"))
+        ];
+        try {
+            const doc = (form.ownerDocument || document) as Document;
+            for (const b of this.formUtils.deepQueryAll<HTMLButtonElement>(doc, "button")) {
+                if (buttonEls.indexOf(b) === -1) buttonEls.push(b);
+            }
+        } catch (e) {
+            /* light-DOM buttons are enough */
+        }
+        buttonEls.forEach(value => {
             if (!value.isConnected) return;
             if (!value.type || value.type != "reset") {
                 const semanticValues: string[] = [];

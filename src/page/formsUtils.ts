@@ -222,6 +222,108 @@ export class FormUtils {
         };
     }
 
+    // ------------------------------------------------------------------
+    // Shadow DOM traversal
+    //
+    // Kee's normal form/field discovery only walks the light DOM. Many modern
+    // sites (anything built with Lit/Polymer/Stencil web components - e.g. Home
+    // Assistant) render their login inputs inside open shadow roots, so none of
+    // the light-DOM queries ever see them. These helpers walk open shadow roots
+    // as well, with hard limits so a pathological page cannot hang the scan.
+    // Closed shadow roots are not accessible to any script and are skipped.
+    // ------------------------------------------------------------------
+
+    private static readonly SHADOW_NODE_LIMIT = 15000;
+    private static readonly SHADOW_DEPTH_LIMIT = 10;
+
+    // Collect every open shadow root at or below `root`.
+    public getOpenShadowRoots(root: ParentNode): ShadowRoot[] {
+        const roots: ShadowRoot[] = [];
+        let budget = FormUtils.SHADOW_NODE_LIMIT;
+        const visit = (node: ParentNode, depth: number) => {
+            if (depth > FormUtils.SHADOW_DEPTH_LIMIT || budget <= 0) return;
+            let els: Element[];
+            try {
+                els = Array.from(node.querySelectorAll("*"));
+            } catch (e) {
+                return;
+            }
+            for (const el of els) {
+                if (--budget <= 0) return;
+                const sr = (el as { shadowRoot?: ShadowRoot }).shadowRoot;
+                if (sr) {
+                    roots.push(sr);
+                    visit(sr, depth + 1);
+                }
+            }
+        };
+        visit(root, 0);
+        return roots;
+    }
+
+    // Light DOM + every open shadow root beneath `root`, flattened.
+    public deepQueryAll<E extends Element = Element>(
+        root: ParentNode,
+        selector: string
+    ): E[] {
+        const out: E[] = [];
+        try {
+            out.push(...(Array.from(root.querySelectorAll(selector)) as E[]));
+        } catch (e) {
+            /* invalid selector - caller's problem, not ours */
+        }
+        for (const sr of this.getOpenShadowRoots(root)) {
+            try {
+                out.push(...(Array.from(sr.querySelectorAll(selector)) as E[]));
+            } catch (e) {
+                /* ignore */
+            }
+        }
+        return out;
+    }
+
+    // Fast existence check for the mutation observer's "is this worth a rescan?"
+    public deepContains(root: ParentNode, selectors: string[]): boolean {
+        for (const s of selectors) {
+            try {
+                if (root.querySelector(s)) return true;
+            } catch (e) {
+                /* ignore */
+            }
+        }
+        for (const sr of this.getOpenShadowRoots(root)) {
+            for (const s of selectors) {
+                try {
+                    if (sr.querySelector(s)) return true;
+                } catch (e) {
+                    /* ignore */
+                }
+            }
+        }
+        return false;
+    }
+
+    // Attach `observer` to every open shadow root under `root` that it is not
+    // already watching, so mutations inside web components trigger a rescan.
+    public observeOpenShadowRoots(
+        observer: MutationObserver,
+        root: ParentNode,
+        options: MutationObserverInit
+    ) {
+        if (!this.observedShadowRoots) this.observedShadowRoots = new WeakSet<ShadowRoot>();
+        for (const sr of this.getOpenShadowRoots(root)) {
+            if (this.observedShadowRoots.has(sr)) continue;
+            try {
+                observer.observe(sr, options);
+                this.observedShadowRoots.add(sr);
+            } catch (e) {
+                /* ignore */
+            }
+        }
+    }
+
+    private observedShadowRoots: WeakSet<ShadowRoot>;
+
     // A basic, slightly flawed but fast visibility test
     public isDOMElementVisible(element: HTMLElement) {
         if (!element.offsetParent && element.offsetHeight === 0 && element.offsetWidth === 0) {

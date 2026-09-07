@@ -75,12 +75,13 @@ if (document.body) {
             if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                 for (const node of mutation.addedNodes) {
                     if (rescan) break;
-                    for (let i = 0; i < interestingNodes.length; i++) {
-                        const element = node as Element;
-                        if (element.querySelector && element.querySelector(interestingNodes[i])) {
-                            rescan = true;
-                            break;
-                        }
+                    const element = node as Element;
+                    if (typeof (element as Element).querySelector !== "function") continue;
+                    // deepContains also looks inside any open shadow roots the added
+                    // subtree carries, so web-component forms trigger a rescan too.
+                    if (formUtils.deepContains(element, interestingNodes)) {
+                        rescan = true;
+                        break;
                     }
                 }
             }
@@ -88,6 +89,17 @@ if (document.body) {
 
         // Schedule a rescan soon. Not immediately, in case a batch of mutations are about to be triggered.
         if (rescan) {
+            // Only now (we already have a reason to rescan) do the full-tree walk to
+            // pick up any new open shadow roots - keeps mutation-heavy pages cheap.
+            try {
+                formUtils.observeOpenShadowRoots(observer, document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            } catch (e) {
+                /* non-fatal */
+            }
+
             formFilling.formFinderTimer = window.setTimeout(
                 formFilling.findMatchesInThisFrame.bind(formFilling),
                 500
@@ -142,6 +154,16 @@ if (document.body) {
         passwordGenerator = new PasswordGenerator(frameId);
 
         inputsObserver.observe(document.body, { childList: true, subtree: true });
+        // Also watch existing open shadow roots (web-component pages render their
+        // real login fields there and the top-level observer does not see inside).
+        try {
+            formUtils.observeOpenShadowRoots(inputsObserver, document.body, {
+                childList: true,
+                subtree: true
+            });
+        } catch (e) {
+            KeeLog.debug("could not observe shadow roots: " + e);
+        }
 
         tutorialIntegration();
     }
