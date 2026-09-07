@@ -945,45 +945,76 @@ export class FormFilling {
     private describeFrameFields(): string {
         try {
             const doc = window.document;
-            const inputs = doc.getElementsByTagName("input").length;
-            const pw = doc.querySelectorAll('input[type="password"]').length;
             const iframes = doc.getElementsByTagName("iframe").length;
 
-            // Shallow scan for open shadow roots and any password fields inside them.
+            // Recurse through open shadow roots (Kee's own scanner does not) so we can
+            // tell whether the real fields exist but are simply unreachable.
+            let lightInputs = 0;
+            let lightPw = 0;
             let shadowHosts = 0;
-            let shadowPasswords = 0;
-            const all = doc.querySelectorAll("*");
-            for (let i = 0; i < all.length; i++) {
-                const sr = (all[i] as any).shadowRoot;
-                if (sr) {
-                    shadowHosts++;
-                    try {
-                        shadowPasswords += sr.querySelectorAll(
-                            'input[type="password"]'
-                        ).length;
-                    } catch (e) {
-                        /* ignore */
+            let shadowInputs = 0;
+            let shadowPw = 0;
+            const hostChains: string[] = [];
+
+            const label = (el: Element) =>
+                el.localName + (el.id ? "#" + el.id : "");
+
+            const walk = (root: ParentNode, inShadow: boolean, chain: string) => {
+                let nodes: Element[];
+                try {
+                    nodes = Array.from(root.querySelectorAll("*"));
+                } catch (e) {
+                    return;
+                }
+                for (const el of nodes) {
+                    if (el.localName === "input") {
+                        const type = ((el as HTMLInputElement).type || "").toLowerCase();
+                        if (inShadow) {
+                            shadowInputs++;
+                            if (type === "password") shadowPw++;
+                        } else {
+                            lightInputs++;
+                            if (type === "password") lightPw++;
+                        }
+                    }
+                    const sr = (el as { shadowRoot?: ShadowRoot }).shadowRoot;
+                    if (sr) {
+                        shadowHosts++;
+                        const nextChain = chain ? chain + " > " + label(el) : label(el);
+                        const before = shadowInputs + shadowPw;
+                        walk(sr, true, nextChain);
+                        if (shadowInputs + shadowPw > before && hostChains.length < 5) {
+                            hostChains.push(nextChain);
+                        }
                     }
                 }
-            }
+            };
+            walk(doc, false, "");
 
+            const totalPw = lightPw + shadowPw;
             let msg =
-                `Frame totals: ${inputs} <input>, ${pw} password field(s) in the light DOM, ` +
-                `${iframes} nested iframe(s), ${shadowHosts} open shadow root(s)`;
-            if (shadowPasswords > 0) {
+                `Frame totals: ${lightInputs} <input> and ${lightPw} password field(s) in the ` +
+                `light DOM; ${shadowInputs} <input> and ${shadowPw} password field(s) inside ` +
+                `${shadowHosts} open shadow root(s); ${iframes} nested iframe(s).`;
+
+            if (shadowInputs > 0 && lightInputs === 0) {
                 msg +=
-                    `, ${shadowPasswords} password field(s) inside shadow DOM. ` +
-                    "Kee cannot see fields inside shadow DOM, which is why nothing matched.";
-            } else if (pw === 0 && iframes > 0) {
+                    " The login fields are inside Shadow DOM (web components). Kee's form " +
+                    "scanner only walks the light DOM, so it cannot see or fill them - this " +
+                    "is a Kee limitation, not a settings problem, and the white list cannot " +
+                    "help because there is no light-DOM field to whitelist.";
+                if (hostChains.length) {
+                    msg += " Fields found under: " + hostChains.join("; ") + ".";
+                }
+            } else if (totalPw === 0 && iframes > 0) {
                 msg +=
-                    ". No password field in this frame but there are iframes - the login form " +
+                    " No password field in this frame but there are iframes - the login form " +
                     "is probably inside one of them; open the diagnosis from that frame.";
-            } else if (pw === 0) {
+            } else if (totalPw === 0) {
                 msg +=
-                    ". No password field anywhere in this frame yet - it may load later, be a " +
-                    "type=text field with a show/hide toggle, or be on a later step of the login.";
-            } else {
-                msg += ".";
+                    " No password field anywhere in this frame yet - it may load after this " +
+                    "check ran, be a type=text field with a show/hide toggle, or be on a later " +
+                    "step of the login.";
             }
             return msg;
         } catch (e) {
