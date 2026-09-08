@@ -796,12 +796,28 @@ export class FormFilling {
             }
 
             add(`Page URL: ${window.document.URL}`);
+            const pageOrigin = window.location.origin;
+            const entryCoversOrigin = (entry.URLs || []).some(u => {
+                try {
+                    return new URL(u).origin === pageOrigin;
+                } catch (e) {
+                    return false;
+                }
+            });
             if (entry.URLs && entry.URLs.length) {
                 add(`Entry URL(s): ${entry.URLs.join(", ")}`);
                 add(
                     "Note: this entry was reached via text search, not URL matching. If the " +
                         "page URL is not covered by the entry URL(s) above (per the entry's match " +
                         "accuracy setting) it will never appear in the automatic matches list."
+                );
+            }
+            if (!entryCoversOrigin) {
+                add(
+                    `WARNING: none of this entry's URLs match the current origin (${pageOrigin}). ` +
+                        "Diagnosis will still force-fill this form so you can see the result, but " +
+                        "only do this on a site you trust - you would be typing these credentials " +
+                        "into a page they do not belong to."
                 );
             }
 

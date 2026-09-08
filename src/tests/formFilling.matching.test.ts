@@ -185,6 +185,49 @@ describe("shadow DOM logins", () => {
     });
 });
 
+describe("fill diagnosis", () => {
+    const report = (h: ReturnType<typeof createHarness>): string[] => {
+        const call = h.port.postMessage.mock.calls
+            .map(c => c[0])
+            .find((m: { diagnoseFillReport?: string[] }) => m && m.diagnoseFillReport);
+        return call ? call.diagnoseFillReport : [];
+    };
+
+    it("warns when the entry's URLs do not cover the current origin", () => {
+        const h = createHarness(`
+            <form><input name="username" type="text"><input name="password" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(
+            makeEntry(
+                [
+                    { type: "text", value: "a", name: "username" },
+                    { type: "password", value: "b", name: "password" }
+                ],
+                { URLs: ["https://some-other-site.example/"] }
+            )
+        );
+        expect(report(h).some(l => l.startsWith("WARNING: none of this entry's URLs"))).toBe(
+            true
+        );
+    });
+
+    it("does not warn when an entry URL matches the current origin", () => {
+        const h = createHarness(`
+            <form><input name="username" type="text"><input name="password" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(
+            makeEntry(
+                [
+                    { type: "text", value: "a", name: "username" },
+                    { type: "password", value: "b", name: "password" }
+                ],
+                { URLs: [window.location.origin + "/login"] }
+            )
+        );
+        expect(report(h).some(l => l.startsWith("WARNING: none of this entry's URLs"))).toBe(
+            false
+        );
+    });
+});
+
 describe("field filling", () => {
     it("does not overwrite a field that already has a value during automated fill", () => {
         const h = createHarness(`
