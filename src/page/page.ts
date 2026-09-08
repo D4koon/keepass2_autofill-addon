@@ -69,7 +69,20 @@ if (document.body) {
         if (!store?.state.connected || store?.state.ActiveKeePassDatabaseIndex < 0) return;
 
         let rescan = false;
-        const interestingNodes = ["form", "input", "select"];
+        // Only a newly added <form> or a text-like input is worth a full rescan +
+        // KeePassRPC round-trip. Ignoring range/checkbox/radio/hidden/submit inputs
+        // stops dashboards (e.g. Home Assistant) that constantly re-render such
+        // controls - now also visible inside shadow DOM - from thrashing the scanner.
+        const interestingNodes = [
+            "form",
+            'input[type="password"]',
+            'input[type="text"]',
+            'input[type="email"]',
+            'input[type="tel"]',
+            'input[type="url"]',
+            'input[type="number"]',
+            "input:not([type])"
+        ];
         mutations.forEach(mutation => {
             if (rescan) return;
             if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
@@ -79,7 +92,10 @@ if (document.body) {
                     if (typeof (element as Element).querySelector !== "function") continue;
                     // deepContains also looks inside any open shadow roots the added
                     // subtree carries, so web-component forms trigger a rescan too.
-                    if (formUtils.deepContains(element, interestingNodes)) {
+                    if (
+                        formUtils.deepContains(element, interestingNodes) ||
+                        (element.matches && element.matches(interestingNodes.join(",")))
+                    ) {
                         rescan = true;
                         break;
                     }

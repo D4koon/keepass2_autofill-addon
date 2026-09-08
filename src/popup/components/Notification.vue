@@ -57,7 +57,10 @@ export default {
     }),
     methods: {
         dispatchActionResponse(id: string, action: ButtonAction, data: { [id: string]: string }) {
-            const pm = Port.postMessage;
+            // Bind so `this` inside ContentPortManager.postMessage is not lost - an
+            // unbound call throws inside its try/catch and silently drops the message,
+            // which is why the notification close button appeared to do nothing.
+            const pm = Port.postMessage.bind(Port);
             switch (action) {
                 case "enableHighSecurityKPRPCConnection":
                     configManager.current.connSLClient = 3;
@@ -82,8 +85,7 @@ export default {
             pm({ removeNotification: id } as AddonMessage);
         },
         closeNotification(id: string) {
-            const pm = Port.postMessage;
-            pm({ removeNotification: id } as AddonMessage);
+            Port.postMessage({ removeNotification: id } as AddonMessage);
         }
     }
 };

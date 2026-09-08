@@ -236,8 +236,25 @@ export class FormUtils {
     private static readonly SHADOW_NODE_LIMIT = 15000;
     private static readonly SHADOW_DEPTH_LIMIT = 10;
 
-    // Collect every open shadow root at or below `root`.
+    private shadowRootCache: { root: ParentNode; at: number; roots: ShadowRoot[] } = null;
+
+    // Collect every open shadow root at or below `root`. Result is memoised very
+    // briefly so the several callers within one form scan share a single walk.
     public getOpenShadowRoots(root: ParentNode): ShadowRoot[] {
+        const now = Date.now();
+        if (
+            this.shadowRootCache &&
+            this.shadowRootCache.root === root &&
+            now - this.shadowRootCache.at < 250
+        ) {
+            return this.shadowRootCache.roots;
+        }
+        const result = this.walkOpenShadowRoots(root);
+        this.shadowRootCache = { root, at: now, roots: result };
+        return result;
+    }
+
+    private walkOpenShadowRoots(root: ParentNode): ShadowRoot[] {
         const roots: ShadowRoot[] = [];
         let budget = FormUtils.SHADOW_NODE_LIMIT;
         const visit = (node: ParentNode, depth: number) => {
