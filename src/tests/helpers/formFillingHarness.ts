@@ -64,18 +64,7 @@ export type Harness = {
     fieldValue(idOrName: string): string | undefined;
 };
 
-// jsdom under vitest rejects `new UIEvent("input", { view: window })` across the
-// module-isolation boundary ("view is not of type Window"). The content script
-// dispatches such events after filling a field; for tests a plain Event is
-// equivalent (nothing reads event.view).
-class LenientUIEvent extends Event {
-    constructor(type: string, init: EventInit = {}) {
-        super(type, init);
-    }
-}
-
 export function createHarness(bodyHtml: string): Harness {
-    (globalThis as { UIEvent: unknown }).UIEvent = LenientUIEvent;
     document.body.innerHTML = bodyHtml;
     configManager.resetToDefault();
 

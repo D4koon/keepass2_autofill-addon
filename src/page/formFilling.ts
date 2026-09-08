@@ -362,20 +362,10 @@ export class FormFilling {
         //TODO:5: Investigate and document why we're not using data attributes to store this string in the DOM
         (domElement as any).keeInitialDetectedValue = value;
 
-        domElement.dispatchEvent(
-            new UIEvent("input", {
-                view: window,
-                bubbles: true,
-                cancelable: true
-            })
-        );
-        domElement.dispatchEvent(
-            new UIEvent("change", {
-                view: window,
-                bubbles: true,
-                cancelable: true
-            })
-        );
+        // input/change are plain Events (not UIEvents); site frameworks read
+        // event.target.value, never event.view.
+        domElement.dispatchEvent(new Event("input", { bubbles: true, cancelable: true }));
+        domElement.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
     }
 
     private fillManyFormFields(
