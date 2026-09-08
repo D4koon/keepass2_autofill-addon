@@ -1,15 +1,13 @@
-// 2023: All tests fail because we can't run them in vite or jest.
-// Probably impossible to make them work again now so abandoning them until MV3 rewrite. Just in case
-// though, some comments like the ones below are the closest we got to any feasible workaround for the bugs.
-// vi.hoisted(() => {
-//     globalThis.jest = vi;
-// global.chrome = {runtime:{id: "test id"}};
-// globalThis.chrome = {runtime:{id: "test id"}};
-// });
-import { beforeEach, describe, expect, it, vi } from "vitest";
-//globalThis.jest = vi;
+// A fake `chrome` (see ./setup.ts) lets these run again under vitest;
+// resetToDefault() in beforeEach isolates each case.
+import { beforeEach, expect, it } from "vitest";
 
 import { SiteConfig } from "../common/config";
+import { configManager } from "../common/ConfigManager";
+
+beforeEach(() => {
+    configManager.resetToDefault();
+});
 
 const urlStringPage1 = "https://www.kee.pm/examplePage?param=whatever";
 const urlStringPage2 = "https://www.kee.pm/otherPage";
@@ -20,25 +18,18 @@ const urlStringHost1 = "https://www.kee.pm";
 const exampleEntryUUID1 = "1111";
 const exampleEntryUUID2 = "2222";
 
-beforeEach(() => {
-    vi.resetModules();
-});
-
 it("resolved site config returns matching uuid with Domain preference set", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.togglePreferredEntryUuid(exampleEntryUUID1, urlStringPage1);
     const result = configManager.siteConfigFor(urlStringPage1).preferredEntryUuid;
     expect(result).toBe(exampleEntryUUID1);
 });
 
 it("resolved site config returns no matching uuid with no preference set", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     const result = configManager.siteConfigFor(urlStringPage1).preferredEntryUuid;
     expect(result).toBeNull();
 });
 
 it("resolved site config returns no matching uuid with incorrect Page preference set", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         { preferredEntryUuid: exampleEntryUUID1 } as SiteConfig,
         new URL(urlStringPage1),
@@ -51,7 +42,6 @@ it("resolved site config returns no matching uuid with incorrect Page preference
 });
 
 it("removing preferred entry uuid for site config with other settings removes only the preferred entry uuid", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         {
             preferredEntryUuid: exampleEntryUUID1,
@@ -75,7 +65,6 @@ it("removing preferred entry uuid for site config with other settings removes on
 });
 
 it("removing preferred entry uuid for site config with no other settings removes the entire site config definition", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         {
             preferredEntryUuid: exampleEntryUUID1
@@ -93,7 +82,6 @@ it("removing preferred entry uuid for site config with no other settings removes
 });
 
 it("removing preferred entry uuid for previously user-edited site config with no other settings removes only the preferred entry uuid", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         {
             preferredEntryUuid: exampleEntryUUID1
@@ -113,7 +101,6 @@ it("removing preferred entry uuid for previously user-edited site config with no
 });
 
 it("setting a matching entry as no longer preferred invokes 'remove' for Domain, Hostname and Page site config definitions", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         { preferredEntryUuid: exampleEntryUUID1 } as SiteConfig,
         new URL(urlStringDomain1),
@@ -153,7 +140,6 @@ it("setting a matching entry as no longer preferred invokes 'remove' for Domain,
 });
 
 it("setting new matching entry as preferred invokes 'remove' for all config settings that can determine the current preferred entry if they are equally or more specific than the configured target", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         { preferredEntryUuid: exampleEntryUUID1 } as SiteConfig,
         new URL(urlStringDomain1),
@@ -199,7 +185,6 @@ it("setting new matching entry as preferred invokes 'remove' for all config sett
 });
 
 it("setting new matching entry as preferred updates an existing Exact per site config definition", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.addSiteConfigParameters(
         { preferredEntryUuid: exampleEntryUUID1 } as SiteConfig,
         new URL(urlStringDomain1),
@@ -213,7 +198,6 @@ it("setting new matching entry as preferred updates an existing Exact per site c
 });
 
 it("setting new matching entry as preferred creates new Exact per site config definition", async () => {
-    const configManager = (await import("../common/ConfigManager")).configManager;
     configManager.togglePreferredEntryUuid(exampleEntryUUID2, urlStringPage1);
     const resultVisible = configManager.siteConfigFor(urlStringPage1).preferredEntryUuid;
     const resultDomainConfigCreated = configManager.siteConfigLookupFor("Domain", "Exact")[

@@ -68,9 +68,8 @@ jobs:
       - name: Compile Typescript
         run: npm run tsc
 
-      # Disabled until MV3 rewrite
-      # - name: Test
-      #   run: npm run test
+      - name: Test
+        run: npm run test
       
       - name: Push git tag
         run: git push --tags

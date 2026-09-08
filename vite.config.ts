@@ -122,13 +122,6 @@ export default defineConfig(({ command }) => ({
     test: {
         globals: true,
         environment: "node",
-        cache: false
-		// setupFiles: [
-		// 	"../vitest.setup.js",
-		// 	"jest-webextension-mock"
-		// ],
-        // sequence: {
-        //     setupFiles: "list"
-        // }
+        setupFiles: ["./tests/setup.ts"]
     }
 }));

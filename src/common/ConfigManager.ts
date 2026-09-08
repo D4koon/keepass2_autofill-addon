@@ -79,14 +79,26 @@ defaultConfig.hideConfirmationAfterSave = false;
 defaultConfig.mustShowReleaseNotesAtStartup = false;
 defaultConfig.autoFillFieldsWithExistingValue = false;
 
+// Pristine snapshot taken before anything can mutate defaultConfig. Every
+// ConfigManager starts from its own copy of this rather than aliasing the shared
+// defaultConfig object, so site-config edits can't leak between instances (which
+// also makes the unit tests deterministic).
+const pristineDefaultConfigJSON = JSON.stringify(defaultConfig);
+
 export class ConfigManager {
     public current: Config;
     private readonly maxCharsPerPage: number = 10000;
     private _listeners = [];
 
     public constructor() {
-        this.current = defaultConfig;
-        chrome.storage.onChanged.addListener((a, b) => this.reloadOnStorageChange(a, b));
+        this.current = JSON.parse(pristineDefaultConfigJSON);
+        chrome.storage?.onChanged?.addListener((a, b) => this.reloadOnStorageChange(a, b));
+    }
+
+    // Restore the in-memory config to defaults without touching storage.
+    // Used by the unit tests to isolate cases.
+    public resetToDefault() {
+        this.current = JSON.parse(pristineDefaultConfigJSON);
     }
 
     // Some processes may want to take action when settings are changed (e.g. the background

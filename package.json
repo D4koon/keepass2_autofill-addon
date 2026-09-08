@@ -57,7 +57,8 @@
     "webext-detect-page": "^5.0.1"
   },
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev": "npm run clean && mkdir extension && cross-env NODE_ENV=development run-p dev:*",
     "dev-chrome": "npm run clean && mkdir extension && cross-env NODE_ENV=development BROWSER_TARGET=chrome run-p dev:*",
     "dev-firefox": "npm run clean && mkdir extension && cross-env NODE_ENV=development KEE_BUNDLED_DEV=true run-p dev-fx:*",
