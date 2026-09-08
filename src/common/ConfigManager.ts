@@ -147,7 +147,17 @@ export class ConfigManager {
         for (let i = 0; i < pages.length; i++) {
             configValues["keeConfigPage" + i] = pages[i];
         }
-        await chrome.storage.local.set(configValues);
+        try {
+            await chrome.storage.local.set(configValues);
+        } catch (e) {
+            // Many callers fire-and-forget save(); make sure a failed write is
+            // at least visible rather than a silent unhandled rejection.
+            KeeLog.error(
+                `Failed to persist Kee configuration (${configString.length} chars, ` +
+                    `${pages.length} pages): ${e?.message || e}`
+            );
+            throw e;
+        }
     }
 
     public async load() {
@@ -193,7 +203,7 @@ export class ConfigManager {
             this.current.KPRPCStoredKeys = {};
             saveNeeded = true;
         }
-        if (saveNeeded) this.save();
+        if (saveNeeded) void this.save().catch(() => {});
     }
 
     private migrateToLatestVersion() {
@@ -217,7 +227,7 @@ export class ConfigManager {
                 migrations.migrateToVersion8(this.current);
         }
         /* eslint-enable no-fallthrough */
-        this.save();
+        void this.save().catch(() => {});
     }
 
     public migrateFromRemoteToLatestVersion() {
@@ -231,7 +241,7 @@ export class ConfigManager {
                 migrations.migrateToVersion7(this.current);
         }
         /* eslint-enable no-fallthrough */
-        this.save();
+        void this.save().catch(() => {});
     }
 
     private reload(onLoaded?) {
@@ -674,7 +684,7 @@ export class ConfigManager {
                 "Auto"
             );
         }
-        this.save();
+        void this.save().catch(() => {});
     }
 
     private removePreferredEntryUuid(cnl: SiteConfigNodeAndIndex) {

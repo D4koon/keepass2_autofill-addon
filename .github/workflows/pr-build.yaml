@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
@@ -45,3 +45,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      # web-ext's own linter. Soft check - its rules shift between web-ext
+      # releases, so a new warning shouldn't block a PR.
+      - name: Lint packaged extension
+        run: npm run lint:xpi
+        continue-on-error: true

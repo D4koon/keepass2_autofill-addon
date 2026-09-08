@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
@@ -70,7 +70,10 @@ jobs:
 
       - name: Test
         run: npm run test
-      
+
+      - name: Lint
+        run: npm run lint
+
       - name: Push git tag
         run: git push --tags
 
