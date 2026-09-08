@@ -93,7 +93,7 @@
     "pack:beta:crx": "crx pack extension -o ./dist/extension-beta.crx",
     "pack:beta:xpi": "cross-env WEB_EXT_ARTIFACTS_DIR=./dist/ web-ext build --source-dir ./extension --filename extension-beta.xpi --overwrite-dest",
     "start:chrome": "web-ext run --source-dir ./extension --target=chromium --profile-create-if-missing --chromium-profile=./.testing-web-ext-chromium-profile --keep-profile-changes",
-    "start:firefox": "TMPDIR=~/tmp-dir/ web-ext run --source-dir ./extension --target=firefox-desktop --devtools --firefox=firefox --profile-create-if-missing --firefox-profile=./.testing-web-ext-firefox-profile --keep-profile-changes",
+    "start:firefox": "web-ext run --source-dir ./extension --target=firefox-desktop --devtools --profile-create-if-missing --firefox-profile=./.testing-web-ext-firefox-profile --keep-profile-changes",
     "clean": "rimraf extension",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

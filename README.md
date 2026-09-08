@@ -29,6 +29,10 @@ It's set up for Visual Studio Code but it shouldn't be too hard to work out how 
          * Chrome: `npm run dev-chrome` (or `npm run dev`) - extension pages are served from the Vite dev server with hot module reloading
          * Firefox: `npm run dev-firefox` - extension pages are bundled to disk instead. Firefox rejects the `http://localhost` entry that the dev server needs in the extension `content_security_policy` (https://bugzilla.mozilla.org/show_bug.cgi?id=1864284), so `npm run dev` leaves the popup, options and panels blank there. `dev-firefox` still rebuilds on every save but does not do in-place HMR.
       1. In the 2nd: `npm run start:firefox` OR `npm run start:chrome`
+         * `web-ext` auto-detects the browser. If it can't find yours, or you want a specific build, point it at the binary with an env var before running the script:
+           * Firefox: `WEB_EXT_FIREFOX` (e.g. Windows `set WEB_EXT_FIREFOX=C:\Program Files\Mozilla Firefox\firefox.exe`, macOS/Linux `export WEB_EXT_FIREFOX=/path/to/firefox`)
+           * Chrome/Chromium: `WEB_EXT_CHROMIUM_BINARY`
+         * On some Linux setups `web-ext` fails to create the temporary profile under `/tmp`; work around it with `mkdir -p ~/tmp-dir && export TMPDIR=~/tmp-dir` first.
    1. the task in the 1st terminal will recompile and reload necessary parts of the addon each time you change a file but in some circumstances you'll need to press 'r' in the 2nd terminal to force a complete reload.
    1. Keep the 1st and 2nd terminal commands on the same browser. Mismatched pairs mostly still work but produce console warnings - and for Firefox paired with `npm run dev` you get the non-functional UI described above.
 1. Preparing for release or Pull Request:
