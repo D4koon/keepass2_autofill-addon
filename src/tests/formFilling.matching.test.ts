@@ -137,6 +137,32 @@ describe("shadow DOM logins", () => {
         expect((sr.getElementById("sp") as HTMLInputElement).value).toBe("hunter2");
     });
 
+    it("ignores non-credential shadow inputs so dashboards don't blow the field limit", () => {
+        const h = createHarness("<dash-board></dash-board>");
+        const sr = document
+            .querySelector("dash-board")!
+            .attachShadow({ mode: "open" });
+        let sliders = "";
+        for (let i = 0; i < 80; i++) sliders += `<input type="range" name="s${i}">`;
+        sr.innerHTML = `
+            ${sliders}
+            <input id="du" name="username" type="text">
+            <input id="dp" name="password" type="password">`;
+
+        h.scan();
+        // If the 80 range inputs had been collected, getFormFields would throw
+        // "Too many fields" and no search would be sent.
+        expect(h.matchFinder).toHaveBeenCalledTimes(1);
+
+        h.deliverEntries([
+            makeEntry([
+                { type: "text", value: "bob", name: "username" },
+                { type: "password", value: "hunter2", name: "password" }
+            ])
+        ]);
+        expect((sr.getElementById("dp") as HTMLInputElement).value).toBe("hunter2");
+    });
+
     it("detects shadow-DOM inputs that are not wrapped in a <form>", () => {
         const h = createHarness("<login-widget></login-widget>");
         const sr = document

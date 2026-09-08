@@ -47,11 +47,36 @@ let missingPageShowTimer: number;
 let store: NonReactiveStore;
 let inputsObserver: MutationObserver;
 
+// Adaptive rescan backoff: a page that keeps mutating (SPA dashboards) should
+// not trigger a form scan + KeePassRPC round-trip every half second forever.
+const RESCAN_DEBOUNCE_MIN = 500;
+const RESCAN_DEBOUNCE_MAX = 5000;
+const RESCAN_HARD_LIMIT = 250; // give up observing on pathologically chatty pages
+let rescanCount = 0;
+
+function resetRescanBackoff() {
+    rescanCount = 0;
+}
+
 // Content scripts are injected into non-HTML documents such as SVGs.
 // We have no interest in this document if it has no body Node
 if (document.body) {
 
     inputsObserver = new MutationObserver((mutations, observer) => {
+        // The observer can be armed (from pageshow) before onFirstConnect has
+        // wired everything up, and stays armed briefly during pagehide teardown.
+        if (!formFilling || !formUtils || !store) return;
+
+        // A structural change may have added or removed a shadow host, so the
+        // cached list of open shadow roots can no longer be trusted. Cheap.
+        if (
+            mutations.some(
+                m => m.type === "childList" && (m.addedNodes.length || m.removedNodes.length)
+            )
+        ) {
+            formUtils.invalidateShadowCache();
+        }
+
         // If we have already scheduled a rescan recently, no further action required
         if (formFilling.formFinderTimer !== null) return;
 
@@ -103,8 +128,19 @@ if (document.body) {
             }
         });
 
-        // Schedule a rescan soon. Not immediately, in case a batch of mutations are about to be triggered.
+        // Schedule a rescan. Not immediately, in case a batch of mutations is
+        // still coming, and with a delay that grows as a page keeps churning.
         if (rescan) {
+            rescanCount++;
+            if (rescanCount > RESCAN_HARD_LIMIT) {
+                KeeLog.warn(
+                    "Kee: this page mutates too much; stopping the form observer. " +
+                        "Reload the page if a login form appears later."
+                );
+                observer.disconnect();
+                return;
+            }
+
             // Only now (we already have a reason to rescan) do the full-tree walk to
             // pick up any new open shadow roots - keeps mutation-heavy pages cheap.
             try {
@@ -116,9 +152,13 @@ if (document.body) {
                 /* non-fatal */
             }
 
+            const delay = Math.min(
+                RESCAN_DEBOUNCE_MIN * 2 ** Math.floor(rescanCount / 8),
+                RESCAN_DEBOUNCE_MAX
+            );
             formFilling.formFinderTimer = window.setTimeout(
                 formFilling.findMatchesInThisFrame.bind(formFilling),
-                500
+                delay
             );
         }
     });
@@ -312,6 +352,9 @@ if (document.body) {
     window.addEventListener("pageshow", () => {
         pageShowFired = true;
         clearTimeout(missingPageShowTimer);
+        // New page (incl. bfcache restore): forget any rescan backoff accumulated
+        // by the previous page. onFirstConnect re-arms the observer via startup().
+        resetRescanBackoff();
         if (configReady) {
             startup();
         }

@@ -674,13 +674,29 @@ export class FormFilling {
         // Inputs inside open shadow roots are never in doc.getElementsByTagName
         // and (not being form-associated) have no .form, so treat them as orphans
         // too. This is what makes web-component logins (Lit/Polymer/etc.) fillable.
+        // Only credential-ish types: a dashboard's shadow DOM can hold hundreds of
+        // range/checkbox controls which would blow the pseudo-form field limit.
+        const loginInputTypes = new Set([
+            "",
+            "text",
+            "password",
+            "email",
+            "tel",
+            "url",
+            "search",
+            "number"
+        ]);
         try {
             const shadowInputs = this.formUtils.deepQueryAll<HTMLInputElement>(
                 doc,
                 "input"
             );
             for (const tag of shadowInputs) {
-                if (!tag.form && orphanedFields.indexOf(tag) === -1) {
+                if (
+                    !tag.form &&
+                    loginInputTypes.has((tag.getAttribute("type") || "").toLowerCase()) &&
+                    orphanedFields.indexOf(tag) === -1
+                ) {
                     orphanedFields.push(tag);
                 }
             }

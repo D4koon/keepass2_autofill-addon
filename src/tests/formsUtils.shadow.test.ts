@@ -67,6 +67,23 @@ describe("FormUtils shadow-DOM traversal", () => {
         );
     });
 
+    it("caches the shadow-root list until invalidateShadowCache is called", () => {
+        document.body.innerHTML = "<x-a></x-a>";
+        shadow(document.querySelector("x-a")!, "<div></div>");
+        const u = fu();
+
+        expect(u.getOpenShadowRoots(document).length).toBe(1);
+
+        // A new host added without invalidation is not seen (stale cache is fine
+        // here - the mutation observer invalidates on real DOM changes).
+        document.body.insertAdjacentHTML("beforeend", "<x-b></x-b>");
+        shadow(document.querySelector("x-b")!, "<div></div>");
+        expect(u.getOpenShadowRoots(document).length).toBe(1);
+
+        u.invalidateShadowCache();
+        expect(u.getOpenShadowRoots(document).length).toBe(2);
+    });
+
     it("observeOpenShadowRoots attaches the observer to each open root once", () => {
         document.body.innerHTML = "<x-a></x-a><x-b></x-b>";
         shadow(document.querySelector("x-a")!, "<div></div>");

@@ -236,21 +236,36 @@ export class FormUtils {
     private static readonly SHADOW_NODE_LIMIT = 15000;
     private static readonly SHADOW_DEPTH_LIMIT = 10;
 
-    private shadowRootCache: { root: ParentNode; at: number; roots: ShadowRoot[] } = null;
+    private shadowRootCache: {
+        root: ParentNode;
+        generation: number;
+        roots: ShadowRoot[];
+    } = null;
+    private shadowGeneration = 0;
 
-    // Collect every open shadow root at or below `root`. Result is memoised very
-    // briefly so the several callers within one form scan share a single walk.
+    // Call when the DOM changed in a way that could add/remove shadow hosts, so
+    // the next getOpenShadowRoots() rebuilds instead of returning a stale list.
+    public invalidateShadowCache() {
+        this.shadowGeneration++;
+    }
+
+    // Collect every open shadow root at or below `root`. The result is cached
+    // until invalidateShadowCache() is called (the mutation observer does this on
+    // relevant DOM changes), so repeated scans on a settled page do no work.
     public getOpenShadowRoots(root: ParentNode): ShadowRoot[] {
-        const now = Date.now();
         if (
             this.shadowRootCache &&
             this.shadowRootCache.root === root &&
-            now - this.shadowRootCache.at < 250
+            this.shadowRootCache.generation === this.shadowGeneration
         ) {
             return this.shadowRootCache.roots;
         }
         const result = this.walkOpenShadowRoots(root);
-        this.shadowRootCache = { root, at: now, roots: result };
+        this.shadowRootCache = {
+            root,
+            generation: this.shadowGeneration,
+            roots: result
+        };
         return result;
     }
 
