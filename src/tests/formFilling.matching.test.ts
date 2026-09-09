@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
-import { createHarness, makeEntry } from "./helpers/formFillingHarness";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createHarness, makeEntry, resetHarness } from "./helpers/formFillingHarness";
 
 beforeEach(() => {
     document.body.innerHTML = "";
 });
+afterEach(resetHarness);
 
 describe("form detection", () => {
     it("treats a user + password form as a login form and fills both fields", () => {
