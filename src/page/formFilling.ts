@@ -10,6 +10,7 @@ import {
 } from "./relevanceScoring";
 import { SubmitButtonDeps, findSubmitButton, submitForm } from "./submitButtonFinder";
 import { FieldFillingDeps, fillManyFormFields } from "./fieldFilling";
+import { decideFill, resolveFillTarget, shouldAnnounceEntries } from "./fillDecision";
 import { MatchResult } from "./MatchResult";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { KeeLogger, KeeLog } from "../common/Logger";
@@ -20,11 +21,6 @@ import { Field } from "../common/model/Field";
 import { Entry } from "../common/model/Entry";
 import punycode from "punycode/";
 import NonReactiveStore from "../store/NonReactiveStore";
-
-class FillAndSubmitAction {
-    fill: boolean;
-    submit: boolean;
-}
 
 export class FormFilling {
     private findLoginOp: any = {};
@@ -961,20 +957,17 @@ export class FormFilling {
         if (!matchResult) return;
 
         // We do some things differently if we're being manually asked to fill and
-        // submit a specific matched entry
-        const isMatchedLoginRequest =
-            !automated &&
-            ((matchResult.mostRelevantFormIndex !== null &&
-                matchResult.mostRelevantFormIndex >= 0) ||
-                typeof formIndex != "undefined") &&
-            typeof entryIndex != "undefined";
-
-        if (!isMatchedLoginRequest) {
-            matchResult.mostRelevantFormIndex = this.getMostRelevantForm().bestFormIndex;
-        }
-
-        // Supplied formID overrides any that we just automatically calculated above
-        if (formIndex !== null && formIndex >= 0) matchResult.mostRelevantFormIndex = formIndex;
+        // submit a specific matched entry, and we pick the form to work on.
+        const { isMatchedLoginRequest, mostRelevantFormIndex } = resolveFillTarget(
+            {
+                automated,
+                formIndex,
+                entryIndex,
+                currentMostRelevantFormIndex: matchResult.mostRelevantFormIndex
+            },
+            () => this.getMostRelevantForm().bestFormIndex
+        );
+        matchResult.mostRelevantFormIndex = mostRelevantFormIndex;
 
         // from now on we concentrate on just the most relevant form and the fields we found earlier
         const form = matchResult.forms[matchResult.mostRelevantFormIndex];
@@ -987,8 +980,10 @@ export class FormFilling {
         const orderedEntriesWithPreference = this.flagUserPreferredEntry(orderedEntries);
 
         if (
-            !isMatchedLoginRequest &&
-            matchResult.entries[matchResult.mostRelevantFormIndex].length > 0
+            shouldAnnounceEntries(
+                isMatchedLoginRequest,
+                matchResult.entries[matchResult.mostRelevantFormIndex]
+            )
         ) {
             this.myPort.postMessage({
                 entries: orderedEntriesWithPreference
@@ -1002,218 +997,121 @@ export class FormFilling {
             );
         }
 
-        // this records the entry that we eventually choose as the one to fill the chosen form with
-        let matchingLogin: Entry = null;
-        let action: FillAndSubmitAction = { fill: false, submit: false };
-        let multipleMatches = false;
+        // Decide auto vs. manual, the relevance threshold, multi-match preference
+        // and per-entry overrides. decideFill is pure: it reports what to do and
+        // logs to replay; we apply the results to matchResult here.
+        const decision = decideFill({
+            automated,
+            isMatchedLoginRequest,
+            entryIndex,
+            entriesForForm: matchResult.entries[matchResult.mostRelevantFormIndex],
+            orderedEntriesWithPreference,
+            uuidHint: matchResult.UUID,
+            autofillOnSuccess: matchResult.autofillOnSuccess,
+            autosubmitOnSuccess: matchResult.autosubmitOnSuccess,
+            config: this.config
+        });
+        decision.logs.forEach(l => this.Logger[l.level](l.message));
 
         // If we started this fill/submit attempt from certain contexts, we will have
         // been told to ensure we do not perform auto-fill or submit and we'll instead
         // just tell the UI to notify the user about any matches we found. Although
         // we ignore this rule if the user initiated the fill/submit.
-        matchResult.cannotAutoFillForm = false;
-        matchResult.cannotAutoSubmitForm = false;
-
-        if (automated && matchResult.autofillOnSuccess === false) {
-            matchResult.cannotAutoFillForm = true;
+        matchResult.cannotAutoFillForm = decision.cannotAutoFillForm;
+        matchResult.cannotAutoSubmitForm = decision.cannotAutoSubmitForm;
+        if (decision.clearUuid) {
+            // A specific entry was selected by index, so clear any previously set
+            // information about an auto-filled entry so it can be set correctly below.
+            matchResult.UUID = null;
+            matchResult.dbFileName = null;
         }
-        if (automated && matchResult.autosubmitOnSuccess === false) {
-            matchResult.cannotAutoSubmitForm = true;
-        }
 
-        // No point looking at entry specific preferences if we are not allowed to auto-fill
-        if (!matchResult.cannotAutoFillForm) {
-            this.Logger.debug("We are allowed to auto-fill this form.");
+        // this records the entry that we eventually choose as the one to fill the chosen form with
+        const matchingLogin = decision.matchingLogin;
+        const action = decision.action;
 
-            // If we've been instructed to fill a specific entry, we need to select that
-            // entry and clear any previously set information about an auto-filled entry
-            // so it can be set correctly later
-            if (entryIndex >= 0) {
-                matchingLogin = matchResult.entries[matchResult.mostRelevantFormIndex][entryIndex];
-                matchResult.UUID = null;
-                matchResult.dbFileName = null;
+        //TODO:5: #6 multi-page
+        // // record / update the info attached to this tab regarding
+        // // the number of pages of forms we want to fill in
+        // // NB: we do this even if we know this is a single form
+        // // submission becauase then if the user gets dumped
+        // // back to the form (password error?) then we know not
+        // // to auto-submit again (to avoid getting stuck in a loop)
+
+        // if (tabState.currentPage > tabState.maximumPage)
+        // {
+        //     // I don't think this should ever happen because it's reset onFormSubmit
+        //     // before this page has loaded.
+
+        //     tabState.currentPage = 0;
+        //     tabState.maximumPage = 0;
+        //     tabState.forceAutoSubmit = null;
+        //     matchResult.cannotAutoSubmitForm = true;
+        //     this.Logger.info("Exceeded expected number of pages during this form-filling session. Not auto-submiting this form.");
+        // }
+
+        // // If the user manually requested this to be filled in or the current page is unknown
+        // if (!automated)//TODO:5: #6 multi-page || tabState.currentPage <= 0)
+        // {
+        //     let maximumPageCount = 1;
+        //     for (let i = 0; i < matchingLogin.passwords.length; i++)
+        //     {
+        //         const passField = matchingLogin.passwords[i];
+        //         if (passField.formFieldPage > maximumPageCount)
+        //             maximumPageCount = passField.formFieldPage;
+        //     }
+        //     for (let i = 0; i < matchingLogin.otherFields.length; i++)
+        //     {
+        //         const otherField = matchingLogin.otherFields[i];
+        //         if (otherField.formFieldPage > maximumPageCount)
+        //             maximumPageCount = otherField.formFieldPage;
+        //     }
+        //     //TODO:5: #6: multi-page
+        //     // // always assume page 1 (very rare cases will go wrong - see github KeeFox #411 for relevant enhancement request)
+        //     // // Possible regression since v1.4: We used to ignore currentPage entirely for the first
+        //     // // page of a submission, now we might try to give preference to page 1 fields (though total
+        //     // // relevance score shouldn't be shifted by enough to affect otherwise well-matched fields)
+        //     // tabState.currentPage = 1;
+        //     // tabState.maximumPage = maximumPageCount;
+        //     // this.Logger.debug("currentPage is: " + tabState.currentPage);
+        //     // this.Logger.debug("maximumPage is: " + tabState.maximumPage);
+        // }
+
+        if (matchingLogin != null && (action.fill || matchResult.mustAutoFillForm)) {
+            this.Logger.debug("Going to auto-fill a form");
+
+            const features = this.store.state.KeePassDatabases.find(
+                db => db.fileName === matchingLogin.database.fileName
+            ).sessionFeatures;
+            const scoreConfig: FieldMatchScoreConfig = {
+                punishWrongIDAndName:
+                    features.indexOf("KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY") >= 0
+            };
+            const lastFilledOther = fillManyFormFields(
+                otherFields,
+                matchingLogin.fields.filter(f => f.type !== "password"),
+                -1,
+                scoreConfig,
+                automated,
+                this.fieldFillingDeps
+            );
+            const lastFilledPasswords = fillManyFormFields(
+                passwordFields,
+                matchingLogin.fields.filter(f => f.type === "password"),
+                -1,
+                scoreConfig,
+                automated,
+                this.fieldFillingDeps
+            );
+            matchResult.formReadyForSubmit = true;
+            matchResult.lastFilledPasswords = lastFilledPasswords;
+            matchResult.lastFilledOther = lastFilledOther;
+            if (lastFilledPasswords && lastFilledPasswords.length > 0) {
+                submitTargetNeighbour = lastFilledPasswords[0].DOMelement;
+            } else if (lastFilledOther && lastFilledOther.length > 0) {
+                submitTargetNeighbour = lastFilledOther[0].DOMelement;
             }
-
-            let checkMatchingLoginRelevanceThreshold = false;
-            if (
-                matchingLogin == null &&
-                matchResult.entries[matchResult.mostRelevantFormIndex].length == 1
-            ) {
-                matchingLogin = matchResult.entries[matchResult.mostRelevantFormIndex][0];
-                checkMatchingLoginRelevanceThreshold = true;
-            } else if (
-                matchResult.UUID != undefined &&
-                matchResult.UUID != null &&
-                matchResult.UUID != ""
-            ) {
-                // Skip the relevance tests if we have been told to use a specific UUID
-                this.Logger.debug(
-                    "We've been told to use an entry with this UUID: " + matchResult.UUID
-                );
-                for (
-                    let count = 0;
-                    count < matchResult.entries[matchResult.mostRelevantFormIndex].length;
-                    count++
-                ) {
-                    if (
-                        matchResult.entries[matchResult.mostRelevantFormIndex][count].uuid ==
-                        matchResult.UUID
-                    ) {
-                        matchingLogin =
-                            matchResult.entries[matchResult.mostRelevantFormIndex][count];
-                        break;
-                    }
-                }
-                if (matchingLogin == null) {
-                    this.Logger.warn(
-                        "Could not find the required KeePass entry. Maybe the website redirected you to a different domain or hostname?"
-                    );
-                }
-            } else if (
-                matchingLogin == null &&
-                (!matchResult.entries[matchResult.mostRelevantFormIndex] ||
-                    !matchResult.entries[matchResult.mostRelevantFormIndex].length)
-            ) {
-                this.Logger.debug("No entries for form.");
-            } else if (matchingLogin == null) {
-                this.Logger.debug(
-                    "Multiple entries for form, so using preferred or most relevant."
-                );
-                matchingLogin =
-                    orderedEntriesWithPreference.find(e => e.isPreferredMatch) ||
-                    orderedEntriesWithPreference[0];
-                multipleMatches = true;
-                checkMatchingLoginRelevanceThreshold = true;
-            }
-
-            if (automated && checkMatchingLoginRelevanceThreshold && matchingLogin != null) {
-                if (matchingLogin.relevanceScore < 1) {
-                    this.Logger.info(
-                        "Our selected entry is not relevant enough to exceed our threshold so will not be auto-filled."
-                    );
-                    matchingLogin = null;
-                } else if (matchingLogin.lowFieldMatchRatio) {
-                    this.Logger.info(
-                        "Our selected entry has a low field match ratio so will not be auto-filled."
-                    );
-                    matchingLogin = null;
-                }
-            }
-
-            if (matchingLogin != null) {
-                //TODO:5: #6 multi-page
-                // // record / update the info attached to this tab regarding
-                // // the number of pages of forms we want to fill in
-                // // NB: we do this even if we know this is a single form
-                // // submission becauase then if the user gets dumped
-                // // back to the form (password error?) then we know not
-                // // to auto-submit again (to avoid getting stuck in a loop)
-
-                // if (tabState.currentPage > tabState.maximumPage)
-                // {
-                //     // I don't think this should ever happen because it's reset onFormSubmit
-                //     // before this page has loaded.
-
-                //     tabState.currentPage = 0;
-                //     tabState.maximumPage = 0;
-                //     tabState.forceAutoSubmit = null;
-                //     matchResult.cannotAutoSubmitForm = true;
-                //     this.Logger.info("Exceeded expected number of pages during this form-filling session. Not auto-submiting this form.");
-                // }
-
-                // // If the user manually requested this to be filled in or the current page is unknown
-                // if (!automated)//TODO:5: #6 multi-page || tabState.currentPage <= 0)
-                // {
-                //     let maximumPageCount = 1;
-                //     for (let i = 0; i < matchingLogin.passwords.length; i++)
-                //     {
-                //         const passField = matchingLogin.passwords[i];
-                //         if (passField.formFieldPage > maximumPageCount)
-                //             maximumPageCount = passField.formFieldPage;
-                //     }
-                //     for (let i = 0; i < matchingLogin.otherFields.length; i++)
-                //     {
-                //         const otherField = matchingLogin.otherFields[i];
-                //         if (otherField.formFieldPage > maximumPageCount)
-                //             maximumPageCount = otherField.formFieldPage;
-                //     }
-                //     //TODO:5: #6: multi-page
-                //     // // always assume page 1 (very rare cases will go wrong - see github KeeFox #411 for relevant enhancement request)
-                //     // // Possible regression since v1.4: We used to ignore currentPage entirely for the first
-                //     // // page of a submission, now we might try to give preference to page 1 fields (though total
-                //     // // relevance score shouldn't be shifted by enough to affect otherwise well-matched fields)
-                //     // tabState.currentPage = 1;
-                //     // tabState.maximumPage = maximumPageCount;
-                //     // this.Logger.debug("currentPage is: " + tabState.currentPage);
-                //     // this.Logger.debug("maximumPage is: " + tabState.maximumPage);
-                // }
-
-                // Default auto-fill behaviour depends upon whether this is automatic or
-                // manual, the corresponding user "automatic" option, if there are one or many matches
-                // and the user option to prevent automatic fill due to multiple matches
-                const autoFillEnabled =
-                    isMatchedLoginRequest ||
-                    (automated && multipleMatches && !this.config.autoFillFormsWithMultipleMatches
-                        ? false
-                        : this.config.autoFillForms);
-
-                // Default auto-submit behaviour depends upon whether this is automatic or manual and the corresponding user option
-                const autoSubmitEnabled = isMatchedLoginRequest
-                    ? this.config.autoSubmitMatchedForms
-                    : this.config.autoSubmitForms;
-
-                action = { fill: autoFillEnabled, submit: autoSubmitEnabled };
-
-                // Override fill preferences from per-entry configuration options
-                // unless user explicity selected the matched entry
-                if (!isMatchedLoginRequest) {
-                    if (matchingLogin.alwaysAutoFill) action.fill = true;
-                    if (matchingLogin.neverAutoFill) action.fill = false;
-                }
-
-                // Override submit preferences from per-entry configuration options
-                if (!isMatchedLoginRequest || !this.config.manualSubmitOverrideProhibited) {
-                    if (matchingLogin.alwaysAutoSubmit) action.submit = true;
-                    if (matchingLogin.neverAutoSubmit) action.submit = false;
-                }
-
-                if (action.fill || matchResult.mustAutoFillForm) {
-                    this.Logger.debug("Going to auto-fill a form");
-
-                    const features = this.store.state.KeePassDatabases.find(
-                        db => db.fileName === matchingLogin.database.fileName
-                    ).sessionFeatures;
-                    const scoreConfig: FieldMatchScoreConfig = {
-                        punishWrongIDAndName:
-                            features.indexOf("KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY") >= 0
-                    };
-                    const lastFilledOther = fillManyFormFields(
-                        otherFields,
-                        matchingLogin.fields.filter(f => f.type !== "password"),
-                        -1,
-                        scoreConfig,
-                        automated,
-                        this.fieldFillingDeps
-                    );
-                    const lastFilledPasswords = fillManyFormFields(
-                        passwordFields,
-                        matchingLogin.fields.filter(f => f.type === "password"),
-                        -1,
-                        scoreConfig,
-                        automated,
-                        this.fieldFillingDeps
-                    );
-                    matchResult.formReadyForSubmit = true;
-                    matchResult.lastFilledPasswords = lastFilledPasswords;
-                    matchResult.lastFilledOther = lastFilledOther;
-                    if (lastFilledPasswords && lastFilledPasswords.length > 0) {
-                        submitTargetNeighbour = lastFilledPasswords[0].DOMelement;
-                    } else if (lastFilledOther && lastFilledOther.length > 0) {
-                        submitTargetNeighbour = lastFilledOther[0].DOMelement;
-                    }
-                    this.formSaving.updateMatchResult(matchResult);
-                }
-            }
+            this.formSaving.updateMatchResult(matchResult);
         }
 
         // We only do this if any forms were auto-filled successfully
@@ -1224,6 +1122,10 @@ export class FormFilling {
                 matchResult.UUID == null ||
                 matchResult.UUID == ""
             ) {
+                // TODO (T1): matchingLogin can be null here if formReadyForSubmit is
+                // left over from an earlier fillAndSubmit call on the same matchResult
+                // (it is only reset in initMatchResult / diagnoseFillForEntry), in
+                // which case the next two lines throw. Preserved as-is.
                 this.Logger.debug("Syncing UUID to: " + matchingLogin.uuid);
                 matchResult.UUID = matchingLogin.uuid;
                 matchResult.dbFileName = matchingLogin.database.fileName;
