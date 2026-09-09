@@ -10,20 +10,16 @@ import {
     rankLoginMatchesAgainstAllForms,
     sortMatchedEntries
 } from "./entryRanking";
-import { SubmitButtonDeps, findSubmitButton, submitForm } from "./submitButtonFinder";
+import { FormScannerDeps, scanFrameForForms } from "./formScanner";
+import { SubmitButtonDeps, submitForm } from "./submitButtonFinder";
 import { FieldFillingDeps, fillManyFormFields } from "./fieldFilling";
 import { decideFill, resolveFillTarget, shouldAnnounceEntries } from "./fillDecision";
-import { MatchResult } from "./MatchResult";
 import { FrameMatchState } from "./frameMatchState";
 import { runFillDiagnosis } from "./fillDiagnostics";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
-import { KeeLogger, KeeLog } from "../common/Logger";
+import { KeeLogger } from "../common/Logger";
 import { Config } from "../common/config";
-import { configManager } from "../common/ConfigManager";
-import { MatchedField } from "./MatchedField";
-import { Field } from "../common/model/Field";
 import { Entry } from "../common/model/Entry";
-import punycode from "punycode/";
 import NonReactiveStore from "../store/NonReactiveStore";
 
 export class FormFilling {
@@ -45,6 +41,7 @@ export class FormFilling {
     private submitButtonDeps: SubmitButtonDeps;
     private fieldFillingDeps: FieldFillingDeps;
     private entryRankingDeps: EntryRankingDeps;
+    private formScannerDeps: FormScannerDeps;
 
     constructor(
         private store: NonReactiveStore,
@@ -69,6 +66,14 @@ export class FormFilling {
             sessionFeaturesFor: dbFileName =>
                 this.store.state.KeePassDatabases.find(db => db.fileName === dbFileName)
                     .sessionFeatures
+        };
+        this.formScannerDeps = {
+            logger: this.Logger,
+            formUtils: this.formUtils,
+            state: this.state,
+            matchFinder: this.matchFinder,
+            submitButtonDeps: this.submitButtonDeps,
+            formSaving: this.formSaving
         };
         this.panel = new MatchedLoginsPanel(parentFrameId);
         this.keeFieldIcon = new KeeFieldIcon(
@@ -171,258 +176,7 @@ export class FormFilling {
     public findMatchesInThisFrame(behaviour: FindMatchesBehaviour = {}) {
         // Whether or not this was invoked as a result of a DOM mutation, we won't need the timer to fire anymore
         this.cancelScheduledRescan();
-
-        if (window.document.forms.length > 50) {
-            this.Logger.debug(
-                "Too many forms on this page. Assuming it is not a login page" +
-                    " and avoiding looking for login forms in order to avoid performance impact."
-            );
-        }
-
-        // Can't append to a HTMLCollection but all we really use it for is iteration
-        // and length so converting to an array sometimes will cause no issues
-        let forms = new Array<HTMLFormElement>();
-        for (let i = 0; i < window.document.forms.length; i++) {
-            forms.push(window.document.forms.item(i));
-        }
-
-        // <form> elements that live inside an open shadow root are not in
-        // document.forms, so add them explicitly (deduplicated).
-        try {
-            const shadowForms = this.formUtils
-                .deepQueryAll<HTMLFormElement>(window.document, "form")
-                .filter(f => forms.indexOf(f) === -1);
-            if (shadowForms.length > 0) {
-                forms = Array.prototype.slice.call(forms).concat(shadowForms);
-                this.Logger.debug(
-                    "found " + shadowForms.length + " form(s) inside shadow DOM"
-                );
-            }
-        } catch (e) {
-            this.Logger.debug("shadow form scan failed: " + e);
-        }
-
-        // Forcing a scan for orphaned fields on all pages. May need to change
-        // this if real world performance is too slow.
-        const pseudoForm = this.scanForOrphanedFields(window.document);
-        if (pseudoForm) {
-            forms = Array.prototype.slice.call(forms);
-            forms.push(pseudoForm);
-        }
-
-        if (!forms || forms.length == 0) {
-            this.Logger.info("No forms found on this page.");
-            return;
-        }
-
-        const url = new URL(window.document.URL);
-        url.hostname = punycode.toUnicode(url.hostname);
-
-        this.Logger.info(
-            "Finding matches in a document. readyState: " + window.document.readyState
-        );
-
-        this.state.reset(behaviour);
-        this.state.current.forms = forms;
-
-        const conf = configManager.siteConfigFor(url.href);
-
-        this.Logger.debug("findMatches processing " + forms.length + " forms");
-
-        let searchSentToKeePass = false;
-
-        // For every form, including any pseudo forms we created earlier
-        for (let i = 0; i < forms.length; i++) {
-            const form = forms[i];
-            this.state.current.entries[i] = [];
-
-            // the overall relevance of this form is the maximum of it's
-            // matching entries (so we fill the most relevant form)
-            this.state.current.formRelevanceScores[i] = 0;
-
-            this.Logger.debug("about to get form fields");
-            let scanResult: {
-                otherFields: MatchedField[];
-                actualUsernameIndex?: number;
-                pwFields?: MatchedField[];
-            };
-            try {
-                scanResult = this.formUtils.getFormFields(form, false, 50);
-            } catch (e) {
-                this.Logger.debug("Lost interest in this form after finding too many fields" + e);
-                continue;
-            }
-            const usernameIndex = scanResult.actualUsernameIndex;
-            const passwordFields = scanResult.pwFields;
-            const otherFields = scanResult.otherFields;
-
-            // We want to fill in this form if we find a password field but first
-            // we check whether any whitelist or blacklist entries must override that behaviour
-            let interestingForm: boolean = null;
-
-            interestingForm = configManager.isFormInteresting(
-                form,
-                conf,
-                otherFields.map(f => f.field)
-            );
-
-            if (interestingForm === false) {
-                this.Logger.debug(
-                    "Lost interest in this form after inspecting field names and IDs"
-                );
-                continue;
-            }
-
-            const noPasswordField =
-                passwordFields == null || passwordFields.length <= 0 || passwordFields[0] == null;
-            const noOtherField =
-                usernameIndex < 0 ||
-                otherFields == null ||
-                otherFields.length <= 0 ||
-                otherFields[usernameIndex] == null;
-
-            if (noPasswordField && (noOtherField || interestingForm !== true)) {
-                this.Logger.debug(
-                    "No password field found in this form and either there are no other" +
-                        " fields or no whitelisted text field or form element"
-                );
-                continue;
-            }
-
-            let submitTargetNeighbour: HTMLElement;
-            if (noPasswordField) {
-                submitTargetNeighbour = otherFields[usernameIndex].DOMelement;
-            } else {
-                submitTargetNeighbour = passwordFields[0].DOMelement;
-            }
-
-            this.attachSubmitHandlers(form, submitTargetNeighbour, i);
-
-            this.state.current.usernameIndexArray[i] = usernameIndex;
-            this.state.current.passwordFieldsArray[i] = passwordFields;
-            this.state.current.otherFieldsArray[i] = otherFields;
-            this.state.current.submitTargets[i] = submitTargetNeighbour;
-
-            // The entries returned from KeePass for every form will be identical (based on tab/frame URL)
-            if (!searchSentToKeePass) {
-                this.state.loginOp.forms = forms;
-                this.state.loginOp.formIndexes = [i];
-                this.state.loginOp.wrappedBy = this.state.current;
-                this.state.current.wrappers[i] = this.state.loginOp;
-                this.state.current.requestCount++;
-
-                // Search for matching entries for the relevant URL. This request is asynchronous.
-                this.matchFinder(url.href);
-                searchSentToKeePass = true;
-            } else {
-                this.Logger.debug("form[" + i + "]: reusing entries from last form.");
-                this.state.loginOp.formIndexes.push(i);
-            }
-        } // end of form for loop
-    }
-
-    // It's OK for this to take a few seconds - humans can't type that fast.
-    // By making this async we allow the search for entries to begin earlier
-    // and reduce perceived impact on page load time
-    private async attachSubmitHandlers(
-        form: HTMLFormElement,
-        submitTargetNeighbour: HTMLElement,
-        formNumber: number
-    ) {
-        try {
-            await Promise.resolve();
-            const start = performance.now();
-            const submitTarget = findSubmitButton(
-                form,
-                submitTargetNeighbour,
-                this.submitButtonDeps
-            );
-            this.formSaving.addSubmitHandler(submitTarget, form);
-            KeeLog.info(
-                "Submit handlers attached asynchronously to form " +
-                    formNumber +
-                    " in " +
-                    (performance.now() - start) +
-                    "ms"
-            );
-        } catch (e) {
-            KeeLog.warn("Exception while adding submit handler. Message: " + e.message);
-        }
-    }
-
-    private scanForOrphanedFields(doc) {
-        const t = new Date().getTime();
-        const orphanedFields = [];
-        let pseudoForm = null;
-
-        // much faster than querySelectorAll
-        const items = doc.getElementsByTagName("input");
-        for (const tag of items) {
-            if (!tag.form) orphanedFields.push(tag);
-        }
-
-        // Inputs inside open shadow roots are never in doc.getElementsByTagName
-        // and (not being form-associated) have no .form, so treat them as orphans
-        // too. This is what makes web-component logins (Lit/Polymer/etc.) fillable.
-        // Only credential-ish types: a dashboard's shadow DOM can hold hundreds of
-        // range/checkbox controls which would blow the pseudo-form field limit.
-        const loginInputTypes = new Set([
-            "",
-            "text",
-            "password",
-            "email",
-            "tel",
-            "url",
-            "search",
-            "number"
-        ]);
-        try {
-            const shadowInputs = this.formUtils.deepQueryAll<HTMLInputElement>(
-                doc,
-                "input"
-            );
-            for (const tag of shadowInputs) {
-                if (
-                    !tag.form &&
-                    loginInputTypes.has((tag.getAttribute("type") || "").toLowerCase()) &&
-                    orphanedFields.indexOf(tag) === -1
-                ) {
-                    orphanedFields.push(tag);
-                }
-            }
-        } catch (e) {
-            this.Logger.debug("shadow orphan-field scan failed: " + e);
-        }
-
-        if (orphanedFields.length > 0) {
-            pseudoForm = {
-                elements: orphanedFields,
-                id: "Kee-pseudo-form",
-                name: "Kee-pseudo-form",
-                ownerDocument: doc,
-                getElementsByTagName: function () {
-                    return this.elements;
-                }, // Only use is for listing input elements
-                querySelectorAll: function () {
-                    return [];
-                }, // Only use is for listing button elements
-                submit: function () {
-                    return;
-                }, // Not possible to submit a pseudo form unless a button with custom JS has already been found
-                offsetParent: true, // This tricks element visibility checks into treating this as visible to the user
-                addEventListener: function () {
-                    return;
-                }, //TODO:5: hook up to the submit function to simulate real form submission
-                removeEventListener: function () {
-                    return;
-                }
-            };
-        }
-
-        const tn = new Date().getTime();
-        this.Logger.debug("scanForOrphanedFields took: " + (tn - t));
-
-        return pseudoForm;
+        scanFrameForForms(behaviour, this.formScannerDeps);
     }
 
     public findLoginsResultHandler(entries: Entry[]) {
