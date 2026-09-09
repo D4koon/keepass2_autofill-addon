@@ -34,8 +34,10 @@ export class FormFilling {
         return this.panel.stubInstance;
     }
 
-    // Should really make this private and call indirectly but I'm wary of all performance overheads wrt DOM mutation observers
-    public formFinderTimer: number = null;
+    // Debounced rescan timer set by the page's DOM mutation observer via
+    // scheduleRescan(); read through isRescanPending(). findMatchesInThisFrame
+    // cancels it on entry.
+    private formFinderTimer: number = null;
 
     private scoringDeps: ScoringDeps;
     private submitButtonDeps: SubmitButtonDeps;
@@ -97,6 +99,23 @@ export class FormFilling {
         this.panel.close();
     }
 
+    // Has the DOM mutation observer already queued a rescan of this frame?
+    public isRescanPending(): boolean {
+        return this.formFinderTimer !== null;
+    }
+
+    // Queue a debounced rescan of this frame (called by the page's mutation observer).
+    public scheduleRescan(delayMs: number) {
+        this.formFinderTimer = window.setTimeout(() => this.findMatchesInThisFrame(), delayMs);
+    }
+
+    private cancelScheduledRescan() {
+        if (this.formFinderTimer !== null) {
+            clearTimeout(this.formFinderTimer);
+            this.formFinderTimer = null;
+        }
+    }
+
     // Requires KeePassRPC #101
     // private calculateLabelMatchScore(matchedField: MatchedField, dataField: Field) {
     //     if (!matchedField.field.name || !dataField.name) return 0;
@@ -140,10 +159,7 @@ export class FormFilling {
     */
     public findMatchesInThisFrame(behaviour: FindMatchesBehaviour = {}) {
         // Whether or not this was invoked as a result of a DOM mutation, we won't need the timer to fire anymore
-        if (this.formFinderTimer !== null) {
-            clearTimeout(this.formFinderTimer);
-            this.formFinderTimer = null;
-        }
+        this.cancelScheduledRescan();
 
         if (window.document.forms.length > 50) {
             this.Logger.debug(

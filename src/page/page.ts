@@ -78,7 +78,7 @@ if (document.body) {
         }
 
         // If we have already scheduled a rescan recently, no further action required
-        if (formFilling.formFinderTimer !== null) return;
+        if (formFilling.isRescanPending()) return;
 
         // If we have become disconnected from the main extension (e.g. after an
         // upgrade to a new version) we can force a disconnect to reduce error
@@ -156,10 +156,7 @@ if (document.body) {
                 RESCAN_DEBOUNCE_MIN * 2 ** Math.floor(rescanCount / 8),
                 RESCAN_DEBOUNCE_MAX
             );
-            formFilling.formFinderTimer = window.setTimeout(
-                formFilling.findMatchesInThisFrame.bind(formFilling),
-                delay
-            );
+            formFilling.scheduleRescan(delay);
         }
     });
 
