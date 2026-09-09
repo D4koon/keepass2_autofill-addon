@@ -24,7 +24,6 @@ export interface ScoringDeps {
 export function calculateFieldMatchScore(
     matchedField: MatchedField,
     dataField: Field,
-    _currentPage, //TODO:5: remove param
     config: FieldMatchScoreConfig,
     deps: ScoringDeps,
     isVisible?: boolean
@@ -91,7 +90,6 @@ export function calculateRelevanceScore(
     entry: Entry,
     passwordFields: MatchedField[],
     otherFields: MatchedField[],
-    currentPage: number,
     formVisible: boolean,
     scoreConfig: FieldMatchScoreConfig,
     visibleFieldCache: VisibleFieldCache,
@@ -126,7 +124,6 @@ export function calculateRelevanceScore(
         "other",
         otherFields,
         entry.fields.filter(f => f.type !== "password"),
-        currentPage,
         scoreConfig,
         visibleFieldCache.other,
         deps
@@ -135,7 +132,6 @@ export function calculateRelevanceScore(
         "password",
         passwordFields,
         entry.fields.filter(f => f.type === "password"),
-        currentPage,
         scoreConfig,
         visibleFieldCache.password,
         deps
@@ -230,7 +226,6 @@ export function determineRelevanceScores(
     debugName: string,
     matchedFields: MatchedField[],
     entryFields: Field[],
-    currentPage: number,
     scoreConfig: FieldMatchScoreConfig,
     visibleFieldMap: boolean[],
     deps: ScoringDeps
@@ -256,7 +251,6 @@ export function determineRelevanceScores(
             const fmScore = calculateFieldMatchScore(
                 matchedFields[i],
                 entryFields[j],
-                currentPage,
                 scoreConfig,
                 deps,
                 visibleFieldMap[i]

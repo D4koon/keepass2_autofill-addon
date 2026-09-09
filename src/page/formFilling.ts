@@ -412,7 +412,6 @@ export class FormFilling {
             const lastFilledOther = fillManyFormFields(
                 otherFields,
                 matchingLogin.fields.filter(f => f.type !== "password"),
-                -1,
                 scoreConfig,
                 automated,
                 this.fieldFillingDeps
@@ -420,7 +419,6 @@ export class FormFilling {
             const lastFilledPasswords = fillManyFormFields(
                 passwordFields,
                 matchingLogin.fields.filter(f => f.type === "password"),
-                -1,
                 scoreConfig,
                 automated,
                 this.fieldFillingDeps

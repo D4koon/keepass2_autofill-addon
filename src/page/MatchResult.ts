@@ -8,7 +8,6 @@ export class MatchResult {
     usernameIndexArray: number[];
     passwordFieldsArray: MatchedField[][];
     otherFieldsArray: MatchedField[][];
-    currentPage: number;
     allMatchingLogins: any[];
     formRelevanceScores: number[];
     UUID: string;

@@ -78,7 +78,6 @@ export function rankLoginMatchesAgainstAllForms(
                 matchResult.entries[i][v],
                 matchResult.passwordFieldsArray[i],
                 matchResult.otherFieldsArray[i],
-                matchResult.currentPage,
                 formVisible,
                 fieldMatchScoreConfig,
                 visibleFieldCache,

@@ -156,7 +156,6 @@ function fillASingleField(
 export function fillManyFormFields(
     formFields: MatchedField[],
     dataFields: Field[],
-    currentPage,
     scoreConfig: FieldMatchScoreConfig,
     automated: boolean,
     deps: FieldFillingDeps
@@ -174,7 +173,7 @@ export function fillManyFormFields(
 
     deps.logger.debug("We've received the data we need");
 
-    deps.logger.info("Filling form fields for page " + currentPage);
+    deps.logger.info("Filling form fields");
 
     // we try to fill every form field. We try to match by id first and then name before just guessing.
     // Generally we'll only fill if the matched field is of the same type as the form field but
@@ -188,7 +187,6 @@ export function fillManyFormFields(
             const score = calculateFieldMatchScore(
                 formFields[i],
                 dataFields[j],
-                currentPage,
                 scoreConfig,
                 deps.scoringDeps
             );
