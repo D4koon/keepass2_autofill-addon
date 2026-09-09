@@ -22,11 +22,6 @@ export class MatchResult {
     formReadyForSubmit: boolean;
     autofillOnSuccess: boolean;
     autosubmitOnSuccess: boolean;
-    notifyUserOnSuccess: boolean;
-    wrappers: any[];
-    requestCount: number;
-    responseCount: number;
-    requestIds: any[];
     mostRelevantFormIndex?: number;
     lastFilledOther: FilledField[];
     lastFilledPasswords: FilledField[];

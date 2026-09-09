@@ -154,9 +154,6 @@ export function scanFrameForForms(behaviour: FindMatchesBehaviour, deps: FormSca
         if (!searchSentToKeePass) {
             state.loginOp.forms = forms;
             state.loginOp.formIndexes = [i];
-            state.loginOp.wrappedBy = state.current;
-            state.current.wrappers[i] = state.loginOp;
-            state.current.requestCount++;
 
             // Search for matching entries for the relevant URL. This request is asynchronous.
             deps.matchFinder(url.href);

@@ -7,8 +7,6 @@ import { Field } from "../common/model/Field";
 */
 
 export class FormUtils {
-    findLoginOps = [];
-    matchResults = [];
     Logger: KeeLogger;
 
     constructor(logger: KeeLogger) {

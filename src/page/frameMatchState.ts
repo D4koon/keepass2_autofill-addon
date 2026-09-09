@@ -50,16 +50,11 @@ export class FrameMatchState {
         this.current.formReadyForSubmit = false; // tracks whether we actually auto-fill on this page
         this.current.autofillOnSuccess = behaviour.autofillOnSuccess;
         this.current.autosubmitOnSuccess = behaviour.autosubmitOnSuccess;
-        this.current.notifyUserOnSuccess = behaviour.notifyUserOnSuccess;
-        this.current.wrappers = [];
         this.current.allMatchingLogins = [];
         this.current.formRelevanceScores = [];
         this.current.submitTargets = [];
         this.current.usernameIndexArray = [];
         this.current.passwordFieldsArray = [];
         this.current.otherFieldsArray = [];
-        this.current.requestCount = 0;
-        this.current.responseCount = 0;
-        this.current.requestIds = []; // the JSONRPC request Ids that reference this matchResult object (to allow deletion after async callback processing)
     }
 }
