@@ -1,5 +1,6 @@
 import { FilledField } from "./FilledField";
-import { PanelStub, PanelStubOptions } from "./PanelStub";
+import { PanelStub } from "./PanelStub";
+import { MatchedLoginsPanel } from "./matchedLoginsPanel";
 import { FormUtils } from "./formsUtils";
 import { FormSaving } from "./formSaving";
 import { KeeFieldIcon } from "./keeFieldIcon";
@@ -44,9 +45,12 @@ export class FormFilling {
     private findLoginOp: any = {};
     private matchResult: MatchResult = new MatchResult();
     private keeFieldIcon: KeeFieldIcon;
+    private panel: MatchedLoginsPanel;
 
-    public matchedLoginsPanelStub: PanelStub;
-    private matchedLoginsPanelStubRaf: number;
+    // Kept for API parity; nothing outside this class reads it.
+    public get matchedLoginsPanelStub(): PanelStub {
+        return this.panel.stubInstance;
+    }
 
     // Should really make this private and call indirectly but I'm wary of all performance overheads wrt DOM mutation observers
     public formFinderTimer: number = null;
@@ -64,11 +68,12 @@ export class FormFilling {
         private config: Config,
         private matchFinder: { (uri: string): void }
     ) {
+        this.panel = new MatchedLoginsPanel(parentFrameId);
         this.keeFieldIcon = new KeeFieldIcon(
             myPort,
             parentFrameId,
             formUtils,
-            this.createMatchedLoginsPanelNearNode.bind(this)
+            this.panel.createNearNode.bind(this.panel)
         );
     }
 
@@ -86,51 +91,21 @@ export class FormFilling {
                 this.matchResult.entries[this.matchResult.mostRelevantFormIndex].length > 1
             ) {
                 this.closeMatchedLoginsPanel();
-                this.matchedLoginsPanelStub = new PanelStub(
-                    PanelStubOptions.MatchedLogins,
-                    null,
-                    this.parentFrameId
-                );
-                this.matchedLoginsPanelStub.createPanel();
+                this.panel.createInCenter(this.parentFrameId);
             }
         }
     }
 
     public createMatchedLoginsPanelInCenter(specificFrameId: number) {
-        this.closeMatchedLoginsPanel();
-        this.matchedLoginsPanelStub = new PanelStub(
-            PanelStubOptions.MatchedLogins,
-            null,
-            specificFrameId
-        );
-        this.matchedLoginsPanelStub.createPanel();
+        this.panel.createInCenter(specificFrameId);
     }
 
     public createMatchedLoginsPanelNearNode(target: HTMLElement) {
-        this.closeMatchedLoginsPanel();
-        this.matchedLoginsPanelStub = new PanelStub(
-            PanelStubOptions.MatchedLogins,
-            target,
-            this.parentFrameId
-        );
-        KeeLog.debug("Creating panel...");
-        this.matchedLoginsPanelStub.createPanel();
-        this.matchedLoginsPanelStubRaf = requestAnimationFrame(() =>
-            this.updateMatchedLoginsPanelPosition()
-        );
+        this.panel.createNearNode(target);
     }
 
     public closeMatchedLoginsPanel() {
-        if (this.matchedLoginsPanelStub) this.matchedLoginsPanelStub.closePanel();
-        this.matchedLoginsPanelStub = null;
-        cancelAnimationFrame(this.matchedLoginsPanelStubRaf);
-    }
-
-    public updateMatchedLoginsPanelPosition() {
-        this.matchedLoginsPanelStub.updateBoundingClientRect();
-        this.matchedLoginsPanelStubRaf = requestAnimationFrame(() =>
-            this.updateMatchedLoginsPanelPosition()
-        );
+        this.panel.close();
     }
 
     // Requires KeePassRPC #101
