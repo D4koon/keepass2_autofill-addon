@@ -122,6 +122,15 @@ export default defineConfig(({ command }) => ({
     test: {
         globals: true,
         environment: "node",
-        setupFiles: ["./tests/setup.ts"]
+        setupFiles: ["./tests/setup.ts"],
+        coverage: {
+            provider: "v8",
+            reporter: ["text", "text-summary", "lcov"],
+            reportsDirectory: "../coverage",
+            // Paths are relative to `root` (src/). Measure the logic-heavy,
+            // testable areas; not .vue components (no component test setup yet).
+            include: ["common/**/*.ts", "page/**/*.ts", "store/**/*.ts"],
+            exclude: ["**/*.d.ts", "**/PublicSuffixListData.ts", "**/DefaultSiteConfig.ts"]
+        }
     }
 }));

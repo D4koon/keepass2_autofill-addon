@@ -14,10 +14,13 @@
         "build/**/*": true
     },
     "typescript.tsdk": "node_modules/typescript/lib",
+
+    // ESLint (with --fix) is the single formatter for this project. There is no
+    // Prettier pass - keep formatOnSave off so a Prettier extension can't fight it,
+    // and let ESLint auto-fix on save instead.
     "eslint.enable": true,
     "editor.formatOnSave": false,
-    // "editor.codeActionsOnSave": {
-
-    //     "source.fixAll.eslint": true,
-    // }
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    }
 }

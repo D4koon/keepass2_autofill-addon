@@ -7,8 +7,11 @@ module.exports = {
         "eslint:recommended",
         'plugin:@typescript-eslint/recommended',
         'plugin:vue/recommended',
-        "plugin:prettier/recommended",
-        "plugin:vuetify/base"
+        "plugin:vuetify/base",
+        // Last: disable core/TS style rules that would fight the explicit
+        // stylistic rules configured below. ESLint (with --fix) is the single
+        // formatter for this project; there is no separate Prettier pass.
+        "prettier"
     ],
     "env": {
         "browser": true,
@@ -27,11 +30,9 @@ module.exports = {
     },
     "plugins": [
         "@typescript-eslint",
-        "prettier",
         "vue"
     ],
     "rules": {
-        "prettier/prettier": "off",
         "vue/html-indent": "off",
         "vue/max-attributes-per-line": "off",
         "vue/html-closing-bracket-newline": "off",

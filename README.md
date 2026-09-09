@@ -37,7 +37,8 @@ It's set up for Visual Studio Code but it shouldn't be too hard to work out how 
    1. Keep the 1st and 2nd terminal commands on the same browser. Mismatched pairs mostly still work but produce console warnings - and for Firefox paired with `npm run dev` you get the non-functional UI described above.
 1. Preparing for release or Pull Request:
    1. `npm run tsc` to verify that no type errors have been introduced during recent development changes
-   1. `npm run lint`
+   1. `npm run lint` (`npm run lint:fix` to auto-fix formatting)
+   1. `npm run test`
 
 You may need to modify the vite config files or some of the build scripts if you add significant new sections to the WebExtension structure but it's unlikely and we can help you with that if necessary.
 

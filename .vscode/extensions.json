@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "Vue.volar"
+    ],
+    // Prettier is intentionally not used here (ESLint is the formatter). Having
+    // the extension active tends to reformat files in a way ESLint then rejects.
+    "unwantedRecommendations": [
+        "esbenp.prettier-vscode"
+    ]
+}

@@ -41,7 +41,15 @@ jobs:
         run: npm run tsc
 
       - name: Test
-        run: npm run test
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.job }}
+          path: coverage/
+          retention-days: 14
 
       - name: Lint
         run: npm run lint
