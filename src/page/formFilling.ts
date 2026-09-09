@@ -12,6 +12,7 @@ import { SubmitButtonDeps, findSubmitButton, submitForm } from "./submitButtonFi
 import { FieldFillingDeps, fillManyFormFields } from "./fieldFilling";
 import { decideFill, resolveFillTarget, shouldAnnounceEntries } from "./fillDecision";
 import { MatchResult } from "./MatchResult";
+import { FrameMatchState } from "./frameMatchState";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { KeeLogger, KeeLog } from "../common/Logger";
 import { Config } from "../common/config";
@@ -23,8 +24,7 @@ import punycode from "punycode/";
 import NonReactiveStore from "../store/NonReactiveStore";
 
 export class FormFilling {
-    private findLoginOp: any = {};
-    private matchResult: MatchResult = new MatchResult();
+    private state = new FrameMatchState();
     private keeFieldIcon: KeeFieldIcon;
     private panel: MatchedLoginsPanel;
 
@@ -67,16 +67,16 @@ export class FormFilling {
 
     public executePrimaryAction() {
         if (
-            this.matchResult.entries &&
-            this.matchResult.entries.length > 0 &&
-            this.matchResult.mostRelevantFormIndex != null &&
-            this.matchResult.mostRelevantFormIndex >= 0
+            this.state.current.entries &&
+            this.state.current.entries.length > 0 &&
+            this.state.current.mostRelevantFormIndex != null &&
+            this.state.current.mostRelevantFormIndex >= 0
         ) {
-            if (this.matchResult.entries[this.matchResult.mostRelevantFormIndex].length == 1) {
-                this.fillAndSubmit(false, this.matchResult.mostRelevantFormIndex, 0);
+            if (this.state.current.entries[this.state.current.mostRelevantFormIndex].length == 1) {
+                this.fillAndSubmit(false, this.state.current.mostRelevantFormIndex, 0);
                 this.closeMatchedLoginsPanel();
             } else if (
-                this.matchResult.entries[this.matchResult.mostRelevantFormIndex].length > 1
+                this.state.current.entries[this.state.current.mostRelevantFormIndex].length > 1
             ) {
                 this.closeMatchedLoginsPanel();
                 this.panel.createInCenter(this.parentFrameId);
@@ -128,48 +128,6 @@ export class FormFilling {
     //     }
     //     return 0;
     // }
-
-    private initMatchResult(behaviour: FindMatchesBehaviour) {
-        //TODO:5: #6 create new object might cause issues with multi-page or submit behaviour? if not, this would be neater:
-        // matchResult = new MatchResult();
-        this.matchResult.UUID = "";
-        this.matchResult.entries = [];
-        this.matchResult.mostRelevantFormIndex = null;
-
-        this.matchResult.mustAutoFillForm = false;
-        this.matchResult.cannotAutoFillForm = false;
-        this.matchResult.mustAutoSubmitForm = false;
-        this.matchResult.cannotAutoSubmitForm = false;
-
-        if (behaviour.UUID != undefined && behaviour.UUID != null && behaviour.UUID != "") {
-            // Keep a record of the specific entry we are going to search for (we delete
-            // the tabstate below and re-create it during form fill)
-            this.matchResult.UUID = behaviour.UUID;
-            this.matchResult.dbFileName = behaviour.dbFileName;
-
-            // we want to fill the form with this data
-            this.matchResult.mustAutoFillForm = true;
-
-            if (behaviour.mustAutoSubmitForm) this.matchResult.mustAutoSubmitForm = true;
-        }
-
-        this.matchResult.doc = window.document;
-
-        this.matchResult.formReadyForSubmit = false; // tracks whether we actually auto-fill on this page
-        this.matchResult.autofillOnSuccess = behaviour.autofillOnSuccess;
-        this.matchResult.autosubmitOnSuccess = behaviour.autosubmitOnSuccess;
-        this.matchResult.notifyUserOnSuccess = behaviour.notifyUserOnSuccess;
-        this.matchResult.wrappers = [];
-        this.matchResult.allMatchingLogins = [];
-        this.matchResult.formRelevanceScores = [];
-        this.matchResult.submitTargets = [];
-        this.matchResult.usernameIndexArray = [];
-        this.matchResult.passwordFieldsArray = [];
-        this.matchResult.otherFieldsArray = [];
-        this.matchResult.requestCount = 0;
-        this.matchResult.responseCount = 0;
-        this.matchResult.requestIds = []; // the JSONRPC request Ids that reference this matchResult object (to allow deletion after async callback processing)
-    }
 
     /* Expects this data object:
     {
@@ -236,8 +194,8 @@ export class FormFilling {
             "Finding matches in a document. readyState: " + window.document.readyState
         );
 
-        this.initMatchResult(behaviour);
-        this.matchResult.forms = forms;
+        this.state.reset(behaviour);
+        this.state.current.forms = forms;
 
         const conf = configManager.siteConfigFor(url.href);
 
@@ -248,11 +206,11 @@ export class FormFilling {
         // For every form, including any pseudo forms we created earlier
         for (let i = 0; i < forms.length; i++) {
             const form = forms[i];
-            this.matchResult.entries[i] = [];
+            this.state.current.entries[i] = [];
 
             // the overall relevance of this form is the maximum of it's
             // matching entries (so we fill the most relevant form)
-            this.matchResult.formRelevanceScores[i] = 0;
+            this.state.current.formRelevanceScores[i] = 0;
 
             this.Logger.debug("about to get form fields");
             let scanResult: {
@@ -312,25 +270,25 @@ export class FormFilling {
 
             this.attachSubmitHandlers(form, submitTargetNeighbour, i);
 
-            this.matchResult.usernameIndexArray[i] = usernameIndex;
-            this.matchResult.passwordFieldsArray[i] = passwordFields;
-            this.matchResult.otherFieldsArray[i] = otherFields;
-            this.matchResult.submitTargets[i] = submitTargetNeighbour;
+            this.state.current.usernameIndexArray[i] = usernameIndex;
+            this.state.current.passwordFieldsArray[i] = passwordFields;
+            this.state.current.otherFieldsArray[i] = otherFields;
+            this.state.current.submitTargets[i] = submitTargetNeighbour;
 
             // The entries returned from KeePass for every form will be identical (based on tab/frame URL)
             if (!searchSentToKeePass) {
-                this.findLoginOp.forms = forms;
-                this.findLoginOp.formIndexes = [i];
-                this.findLoginOp.wrappedBy = this.matchResult;
-                this.matchResult.wrappers[i] = this.findLoginOp;
-                this.matchResult.requestCount++;
+                this.state.loginOp.forms = forms;
+                this.state.loginOp.formIndexes = [i];
+                this.state.loginOp.wrappedBy = this.state.current;
+                this.state.current.wrappers[i] = this.state.loginOp;
+                this.state.current.requestCount++;
 
                 // Search for matching entries for the relevant URL. This request is asynchronous.
                 this.matchFinder(url.href);
                 searchSentToKeePass = true;
             } else {
                 this.Logger.debug("form[" + i + "]: reusing entries from last form.");
-                this.findLoginOp.formIndexes.push(i);
+                this.state.loginOp.formIndexes.push(i);
             }
         } // end of form for loop
     }
@@ -445,10 +403,11 @@ export class FormFilling {
             e => Entry.getUsernameField(e) || Entry.getPasswordField(e)
         );
 
-        this.matchResult = this.getRelevanceOfLoginMatchesAgainstAllForms(
+        // Mutates this.state.current in place (and returns it); no reassignment.
+        this.getRelevanceOfLoginMatchesAgainstAllForms(
             validEntries,
-            this.findLoginOp,
-            this.matchResult
+            this.state.loginOp,
+            this.state.current
         );
 
         this.fillAndSubmit(true);
@@ -529,9 +488,9 @@ export class FormFilling {
             // re-scan when there is no prior result at all - an existing result with no
             // login form is itself a useful finding, reported below.
             if (
-                !this.matchResult ||
-                !this.matchResult.forms ||
-                this.matchResult.forms.length === 0
+                !this.state.current ||
+                !this.state.current.forms ||
+                this.state.current.forms.length === 0
             ) {
                 add("Frame not scanned for forms yet - running form detection...");
                 this.findMatchesInThisFrame({
@@ -541,7 +500,7 @@ export class FormFilling {
             }
 
             const formCount =
-                this.matchResult && this.matchResult.forms ? this.matchResult.forms.length : 0;
+                this.state.current && this.state.current.forms ? this.state.current.forms.length : 0;
 
             if (formCount === 0) {
                 add(
@@ -553,7 +512,7 @@ export class FormFilling {
             }
 
             const scannedIndexes: number[] =
-                (this.findLoginOp && this.findLoginOp.formIndexes) || [];
+                (this.state.loginOp && this.state.loginOp.formIndexes) || [];
             add(
                 `Forms in this frame: ${formCount}; ` +
                     `treated as login forms: ${scannedIndexes.length}`
@@ -562,7 +521,7 @@ export class FormFilling {
             // Kee only scores/fills forms it classified as login forms. Describe every
             // form so the user can see which one was skipped and roughly why.
             for (let i = 0; i < formCount; i++) {
-                const f = this.matchResult.forms[i] as HTMLFormElement;
+                const f = this.state.current.forms[i] as HTMLFormElement;
                 const label = f?.id || f?.name || "unnamed";
                 if (scannedIndexes.indexOf(i) !== -1) {
                     add(`  Form #${i} (${label}): treated as a login form.`);
@@ -575,7 +534,7 @@ export class FormFilling {
             // and the real fields are elsewhere (shadow DOM, another iframe, loaded later).
             add(this.describeFrameFields());
 
-            if (scannedIndexes.length === 0 || !this.findLoginOp.forms) {
+            if (scannedIndexes.length === 0 || !this.state.loginOp.forms) {
                 add(
                     "Kee did not classify any form here as a login form, so it never searches " +
                         "for or fills entries on this page. Kee now also scans open shadow roots, " +
@@ -590,16 +549,17 @@ export class FormFilling {
 
             // Score this single entry against every scannable form, reusing the exact
             // production scoring path (which also emits its own per-field debug logging).
-            this.matchResult = this.getRelevanceOfLoginMatchesAgainstAllForms(
+            // Mutates this.state.current in place (and returns it); no reassignment.
+            this.getRelevanceOfLoginMatchesAgainstAllForms(
                 [entry],
-                this.findLoginOp,
-                this.matchResult
+                this.state.loginOp,
+                this.state.current
             );
 
-            this.matchResult.formRelevanceScores.forEach((score, i) => {
+            this.state.current.formRelevanceScores.forEach((score, i) => {
                 if (scannedIndexes.indexOf(i) === -1) return;
-                const f = this.matchResult.forms[i] as HTMLFormElement;
-                const scored = this.matchResult.entries[i] && this.matchResult.entries[i][0];
+                const f = this.state.current.forms[i] as HTMLFormElement;
+                const scored = this.state.current.entries[i] && this.state.current.entries[i][0];
                 add(
                     `Form #${i} (${f?.id || f?.name || "unnamed"}): relevance ${this.round(score)}` +
                         (scored
@@ -618,16 +578,16 @@ export class FormFilling {
             // Force the fill of the best form regardless of the auto-fill threshold - this is
             // the "try it here anyway" part. We never submit from a diagnosis.
             add("Force-filling the best form now (ignoring the threshold, never submitting)...");
-            this.matchResult.UUID = null;
-            this.matchResult.dbFileName = null;
-            this.matchResult.formReadyForSubmit = false;
-            this.matchResult.mustAutoFillForm = true;
-            this.matchResult.mustAutoSubmitForm = false;
+            this.state.current.UUID = null;
+            this.state.current.dbFileName = null;
+            this.state.current.formReadyForSubmit = false;
+            this.state.current.mustAutoFillForm = true;
+            this.state.current.mustAutoSubmitForm = false;
             this.fillAndSubmit(false, best.bestFormIndex, 0, true);
 
             const filled = [
-                ...(this.matchResult.lastFilledOther || []),
-                ...(this.matchResult.lastFilledPasswords || [])
+                ...(this.state.current.lastFilledOther || []),
+                ...(this.state.current.lastFilledPasswords || [])
             ];
             if (filled.length > 0) {
                 const names = filled
@@ -900,7 +860,7 @@ export class FormFilling {
     }
 
     getMostRelevantForm(formIndex?: number) {
-        const findMatchesResult = this.matchResult;
+        const findMatchesResult = this.state.current;
 
         // There may be no results for this frame (e.g. no forms found, search failed, etc.)
         if (!findMatchesResult) {
@@ -950,7 +910,7 @@ export class FormFilling {
                 entryIndex
         );
 
-        const matchResult = this.matchResult;
+        const matchResult = this.state.current;
         let submitTargetNeighbour;
 
         // Give up if we have no results for this frame (i.e. there were no forms to fill)
@@ -1174,7 +1134,7 @@ export class FormFilling {
         } else if (isMatchedLoginRequest) {
             this.Logger.debug("Matched entry request is not being auto-submitted.");
         } else {
-            if (this.matchResult.allMatchingLogins.length > 0) {
+            if (this.state.current.allMatchingLogins.length > 0) {
                 if (automated) {
                     this.Logger.debug("Automatic form fill complete.");
                 } else {

@@ -184,7 +184,7 @@ export function createHarness(bodyHtml: string, opts: HarnessOptions = {}): Harn
                 "Auto"
             ),
         matchResult: () =>
-            (formFilling as unknown as { matchResult: unknown }).matchResult,
+            (formFilling as unknown as { state: { current: unknown } }).state.current,
         submitted: () => submitObs,
         postedEntries: () =>
             port.postMessage.mock.calls
