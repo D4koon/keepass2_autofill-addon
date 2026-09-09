@@ -14,6 +14,72 @@ import { accountManager } from "./AccountManager";
 
 // callbacks for messaging / ports
 
+// --- Fill diagnosis ("Why won't this fill here?") --------------------------
+// The diagnosis is broadcast to every frame of the active tab; each frame
+// replies with a report. We buffer the replies briefly and surface a single
+// combined notification rather than one per frame.
+type DiagnoseFillCollection = {
+    expectedFrames: number;
+    frames: Map<number, { url: string; lines: string[] }>;
+    timer: ReturnType<typeof setTimeout> | null;
+};
+let diagnoseFillCollection: DiagnoseFillCollection | null = null;
+
+function beginDiagnoseFillCollection(expectedFrames: number) {
+    if (diagnoseFillCollection?.timer) clearTimeout(diagnoseFillCollection.timer);
+    diagnoseFillCollection = {
+        expectedFrames,
+        frames: new Map(),
+        // Safety flush if one or more frames never reply.
+        timer: setTimeout(flushDiagnoseFillReports, 3000)
+    };
+}
+
+function addDiagnoseFillReport(frameId: number, url: string, lines: string[]) {
+    if (!diagnoseFillCollection) {
+        diagnoseFillCollection = { expectedFrames: 1, frames: new Map(), timer: null };
+    }
+    diagnoseFillCollection.frames.set(frameId, { url, lines });
+    if (diagnoseFillCollection.timer) clearTimeout(diagnoseFillCollection.timer);
+    if (diagnoseFillCollection.frames.size >= diagnoseFillCollection.expectedFrames) {
+        flushDiagnoseFillReports();
+    } else {
+        diagnoseFillCollection.timer = setTimeout(flushDiagnoseFillReports, 800);
+    }
+}
+
+function flushDiagnoseFillReports() {
+    const collection = diagnoseFillCollection;
+    diagnoseFillCollection = null;
+    if (!collection || collection.frames.size === 0) return;
+
+    const isInteresting = (lines: string[]) =>
+        lines.some(
+            l =>
+                l.startsWith("Filled ") ||
+                l.startsWith("Best form:") ||
+                l.startsWith("  Form #")
+        );
+
+    const frames = [...collection.frames.entries()].sort((a, b) => a[0] - b[0]);
+    const interesting = frames.filter(([, r]) => isInteresting(r.lines));
+    const shown = interesting.length > 0 ? interesting : frames.slice(0, 1);
+
+    const out: string[] = ["Fill diagnosis:"];
+    for (const [frameId, r] of shown) {
+        if (shown.length > 1 || frameId !== 0) {
+            out.push("", `--- frame ${frameId}${r.url ? " (" + r.url + ")" : ""} ---`);
+        }
+        out.push(...r.lines);
+    }
+    const others = frames.length - shown.length;
+    if (others > 0) out.push("", `(${others} other frame(s) had no login form)`);
+
+    kee.notifyUser(
+        new KeeNotification("kee-diagnose-fill", [], utils.newGUID(), out, "Medium")
+    );
+}
+
 export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg: AddonMessage) {
     if (msg.mutation) {
         kee.store.onRemoteMessage(this, msg.mutation);
@@ -143,26 +209,32 @@ export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg:
             null
         );
         const entry = result && result[0];
-        const frame = kee.tabStates
-            .get(kee.foregroundTabId)
-            ?.framePorts.get(msg.frameId || 0);
+        const framePorts = kee.tabStates.get(kee.foregroundTabId)?.framePorts;
         if (!entry) {
             kee.browserPopupPort.postMessage({
                 diagnoseFillReport: ["Could not load the full entry from KeePass to diagnose."]
             } as AddonMessage);
-        } else if (!frame) {
+        } else if (!framePorts || framePorts.size === 0) {
             kee.browserPopupPort.postMessage({
                 diagnoseFillReport: [
-                    "No connected page in the active tab" +
-                        (msg.frameId ? ` frame ${msg.frameId}` : "") +
-                        " to run the diagnosis against."
+                    "No connected page in the active tab to run the diagnosis against."
                 ]
             } as AddonMessage);
         } else {
-            frame.postMessage({
-                action: Action.DiagnoseFill,
-                diagnoseFillEntry: entry
-            } as AddonMessage);
+            // Run the diagnosis in every frame of the tab (the login form may be
+            // in an iframe) and collect the per-frame reports in flushDiagnoseFillReports.
+            beginDiagnoseFillCollection(framePorts.size);
+            framePorts.forEach((port, frameId) => {
+                try {
+                    port.postMessage({
+                        action: Action.DiagnoseFill,
+                        diagnoseFillEntry: entry,
+                        frameId
+                    } as AddonMessage);
+                } catch (e) {
+                    /* frame went away between listing and sending */
+                }
+            });
         }
     }
     if (msg.loginEditor) {
@@ -219,14 +291,10 @@ export async function pageMessageHandler(this: chrome.runtime.Port, msg: AddonMe
         }
     }
     if (msg.diagnoseFillReport) {
-        kee.notifyUser(
-            new KeeNotification(
-                "kee-diagnose-fill",
-                [],
-                utils.newGUID(),
-                ["Fill diagnosis:", ...msg.diagnoseFillReport],
-                "Medium"
-            )
+        addDiagnoseFillReport(
+            this.sender?.frameId ?? 0,
+            this.sender?.url || "",
+            msg.diagnoseFillReport
         );
     }
     if (msg.entries) {
