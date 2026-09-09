@@ -227,6 +227,27 @@ describe("fill diagnosis", () => {
             false
         );
     });
+
+    it("runs a full diagnosis without the internal error guard tripping", () => {
+        const h = createHarness(`
+            <form id="loginForm">
+                <input id="u" name="username" type="text">
+                <input id="p" name="password" type="password">
+                <button type="submit">Sign in</button>
+            </form>`);
+        h.formFilling.diagnoseFillForEntry(
+            makeEntry([
+                { type: "text", value: "alice", name: "username", id: "u" },
+                { type: "password", value: "s3cret", name: "password", id: "p" }
+            ])
+        );
+        const lines = report(h);
+        expect(lines.some(l => l.startsWith("Diagnosis stopped with an error"))).toBe(false);
+        // force-fill path reached and the fields were populated
+        expect(lines.some(l => l.startsWith("Filled "))).toBe(true);
+        expect(h.fieldValue("u")).toBe("alice");
+        expect(h.fieldValue("p")).toBe("s3cret");
+    });
 });
 
 describe("field filling", () => {
