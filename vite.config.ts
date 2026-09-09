@@ -129,7 +129,12 @@ export default defineConfig(({ command }) => ({
             reportsDirectory: "../coverage",
             // Paths are relative to `root` (src/). Measure the logic-heavy,
             // testable areas; not .vue components (no component test setup yet).
-            include: ["common/**/*.ts", "page/**/*.ts", "store/**/*.ts"],
+            include: [
+                "common/**/*.ts",
+                "page/**/*.ts",
+                "store/**/*.ts",
+                "background/**/*.ts"
+            ],
             exclude: ["**/*.d.ts", "**/PublicSuffixListData.ts", "**/DefaultSiteConfig.ts"]
         }
     }
