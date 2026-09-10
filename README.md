@@ -42,6 +42,20 @@ It's set up for Visual Studio Code but it shouldn't be too hard to work out how 
 
 You may need to modify the vite config files or some of the build scripts if you add significant new sections to the WebExtension structure but it's unlikely and we can help you with that if necessary.
 
+### VS Code tasks (Firefox)
+
+`.vscode/tasks.json` wraps the Firefox commands above so you don't have to juggle two terminals by hand. Run them from **Terminal > Run Task...**, or press `Ctrl+Shift+B` for the default (**Kee: Build & Run in Firefox**). Each task carries a one-line description in the picker.
+
+| Task | What it does |
+| --- | --- |
+| **Kee: Build & Run in Firefox** *(default build task)* | Runs `build:prod` to completion, then launches Firefox with the built `./extension`. One-off; does not watch for changes. |
+| **Kee: Dev (watch + Firefox)** | Starts the watch build (`dev-firefox`), waits for the first build, then launches Firefox. `web-ext` reloads the extension as you edit; press `r` in the Firefox terminal to force a full reload. This is the one to use for day-to-day development. |
+| Kee: Build (production) | Just `npm run build:prod` - no browser launched. |
+| Kee: Run in Firefox | Just `npm run start:firefox` against whatever is already in `./extension`. |
+| Kee: Dev build (watch) | Just `npm run dev-firefox` - the watch build on its own. |
+
+The Firefox tasks use `web-ext`, which needs a `firefox` binary on `PATH` (or the `WEB_EXT_FIREFOX` env var - see above) and reuses the throw-away profile in `./.testing-web-ext-firefox-profile`.
+
 ## Reproducing a build
 
 ### Introduction

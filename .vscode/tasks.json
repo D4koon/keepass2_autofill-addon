@@ -17,6 +17,7 @@
     "tasks": [
         {
             "label": "Kee: Build (production)",
+            "detail": "One-off production build (npm run build:prod). Cleans ./extension and rebuilds the web/background/page/vault bundles into it. No browser is launched.",
             "type": "npm",
             "script": "build:prod",
             "problemMatcher": [],
@@ -29,6 +30,7 @@
         },
         {
             "label": "Kee: Run in Firefox",
+            "detail": "Launch Firefox with the current ./extension build (npm run start:firefox). Uses web-ext and the reusable profile in ./.testing-web-ext-firefox-profile; stays running and live-reloads when ./extension changes. Build first if ./extension is empty.",
             "type": "npm",
             "script": "start:firefox",
             // web-ext stays running (it owns the Firefox process); treat it as a
@@ -43,6 +45,7 @@
         },
         {
             "label": "Kee: Build & Run in Firefox",
+            "detail": "Default build task. Runs \"Kee: Build (production)\" to completion, then \"Kee: Run in Firefox\". Use this for a one-off try-it-in-Firefox; it does not watch for changes.",
             "dependsOrder": "sequence",
             "dependsOn": ["Kee: Build (production)", "Kee: Run in Firefox"],
             "problemMatcher": [],
@@ -53,6 +56,7 @@
         },
         {
             "label": "Kee: Dev build (watch)",
+            "detail": "Watch build for Firefox (npm run dev-firefox). Rebuilds ./extension on every save; pages are bundled to disk (no HMR - Firefox rejects the dev server's localhost CSP entry). Never exits; stop it to end the watch.",
             "type": "npm",
             "script": "dev-firefox",
             "isBackground": true,
@@ -79,6 +83,7 @@
         },
         {
             "label": "Kee: Dev (watch + Firefox)",
+            "detail": "Iterative workflow. Starts \"Kee: Dev build (watch)\", waits for its first build, then \"Kee: Run in Firefox\". Edit source and web-ext reloads the extension automatically; press r in the Firefox task terminal to force a full reload.",
             "dependsOrder": "sequence",
             "dependsOn": ["Kee: Dev build (watch)", "Kee: Run in Firefox"],
             "problemMatcher": [],
