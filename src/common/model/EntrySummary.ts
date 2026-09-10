@@ -2,6 +2,7 @@ import { Entry } from "./Entry";
 import { Icon } from "./Icon";
 import { utils } from "../utils";
 import { EntrySummaryDto } from "./KPRPCDTOs";
+import type { AutoFillExplanation } from "./AutoFillExplanation";
 
 export class EntrySummary {
     icon: Icon;
@@ -16,6 +17,7 @@ export class EntrySummary {
     relevanceScore: number;
     fullDetails?: Entry; //TODO:5: remove circular reference by maintaining independent Entry lookup by uuid?
     isPreferredMatch?: boolean;
+    autoFillReason?: AutoFillExplanation;
 
     constructor(e: Partial<EntrySummary>) {
         this.icon = e.icon || { version: 1, iconImageData: "" };
@@ -30,6 +32,7 @@ export class EntrySummary {
         this.relevanceScore = e.relevanceScore;
         this.fullDetails = e.fullDetails;
         this.isPreferredMatch = e.isPreferredMatch;
+        this.autoFillReason = e.autoFillReason;
     }
 
     public static fromEntry(entry: Entry) {
@@ -43,7 +46,8 @@ export class EntrySummary {
             uuid: entry.uuid,
             dbFileName: entry.database.fileName,
             fullDetails: entry,
-            isPreferredMatch: entry.isPreferredMatch
+            isPreferredMatch: entry.isPreferredMatch,
+            autoFillReason: entry.autoFillReason
         });
     }
 

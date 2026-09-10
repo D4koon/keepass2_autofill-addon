@@ -2,8 +2,8 @@
     <v-hover>
         <template #default="{ isHovering, props }">
             <v-card
-            :data-index="dataIndex"
-v-bind="props" ref="card" :tabindex="`${tabindex}`" :elevation="isHovering ? 12 : 3" class="my-2"
+            v-bind="props"
+ref="card" :data-index="dataIndex" :tabindex="`${tabindex}`" :elevation="isHovering ? 12 : 3" class="my-2"
                 :ripple="false" @focusin="focusin" @focusout="focusout"
                 @keyup.context-menu.stop.prevent="showFullDetails" @keyup.arrow-down.stop.prevent="nextInList"
                 @keyup.arrow-up.stop.prevent="prevInList" @keyup.arrow-right.stop.prevent="showFullDetails"
@@ -28,6 +28,15 @@ class="mr-3 ml-12 my-0"
 :style="`${expanded ? 'visibility:hidden' : ''}`"
                                             class="text-truncate text-caption">
                                             {{ usernameDisplayValue }}
+                                        </v-col>
+                                    </v-row>
+                                    <v-row v-if="showAutoFillReason && !expanded" no-gutters class="my-0">
+                                        <v-col
+                                            class="text-truncate text-caption d-flex align-center"
+                                            :class="autoFillReasonBlocked ? 'text-warning' : 'text-success'">
+                                            <mdi-alert-circle-outline v-if="autoFillReasonBlocked" class="mr-1" />
+                                            <mdi-check-circle-outline v-else class="mr-1" />
+                                            {{ autoFillReasonText }}
                                         </v-col>
                                     </v-row>
                                 </v-container>
@@ -112,7 +121,7 @@ import { Entry } from "../../common/model/Entry";
 import { EntrySummary } from "../../common/model/EntrySummary";
 import { tooltipDelay } from "../../common/Timings";
 import { mapState } from "pinia";
-import { $STR } from "~/common/DollarPolyfills";
+import { $STR, $STRF } from "~/common/DollarPolyfills";
 
 export default {
     components: { Field },
@@ -181,6 +190,35 @@ export default {
             // No entryIndex means this came from the search box rather than the
             // automatically matched list, so a click navigates instead of filling.
             return this.entryIndex === undefined || this.entryIndex === null;
+        },
+        autoFillReasonBlocked: function () {
+            const e = this.entrySummary as EntrySummary;
+            return !!e.autoFillReason && e.autoFillReason.blocked;
+        },
+        showAutoFillReason: function () {
+            return this.isMatchedEntry && !!this.autoFillReasonText;
+        },
+        autoFillReasonText: function () {
+            const r = (this.entrySummary as EntrySummary).autoFillReason;
+            if (!r) return null;
+            switch (r.code) {
+                case "fills-here":
+                    return $STR("autofill_status_fills_here");
+                case "autofill-disabled":
+                    return $STR("autofill_blocked_disabled");
+                case "context-notify-only":
+                    return $STR("autofill_blocked_notify_only");
+                case "multiple-matches":
+                    return $STRF("autofill_blocked_multiple", [String(r.matchCount ?? "")]);
+                case "entry-never":
+                    return $STR("autofill_blocked_entry_never");
+                case "low-relevance":
+                    return $STR("autofill_blocked_low_relevance");
+                case "low-field-match":
+                    return $STR("autofill_blocked_low_field_match");
+                default:
+                    return null;
+            }
         }
     },
     methods: {

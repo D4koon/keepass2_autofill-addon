@@ -5,6 +5,7 @@ import { Field } from "./Field";
 import { EntryDto, FormFieldTypeDTO } from "./KPRPCDTOs";
 import { DatabaseSummary } from "./DatabaseSummary";
 import { GroupSummary } from "./GroupSummary";
+import type { AutoFillExplanation } from "./AutoFillExplanation";
 
 // Although we use uuids for Fields and possibly Locators, we don't allow them to exist outside of their parent entry.
 
@@ -52,6 +53,8 @@ export class Entry {
     formIndex: number;
     entryIndex: number;
     isPreferredMatch?: boolean;
+    // Why this entry did / didn't auto-fill on the current page (for the popup).
+    autoFillReason?: AutoFillExplanation;
 
     constructor(e: Partial<Entry>) {
         this.alwaysAutoFill = e.alwaysAutoFill || false;
@@ -72,6 +75,7 @@ export class Entry {
         this.formIndex = e.formIndex;
         this.entryIndex = e.entryIndex;
         this.isPreferredMatch = e.isPreferredMatch;
+        this.autoFillReason = e.autoFillReason;
     }
 
     public static getUsernameField(entry: Entry) {

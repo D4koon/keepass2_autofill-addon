@@ -20,6 +20,7 @@ import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { KeeLogger } from "../common/Logger";
 import { Config } from "../common/config";
 import { Entry } from "../common/model/Entry";
+import { explainAutoFill } from "../common/model/AutoFillExplanation";
 import NonReactiveStore from "../store/NonReactiveStore";
 
 export class FormFilling {
@@ -316,6 +317,18 @@ export class FormFilling {
                 matchResult.entries[matchResult.mostRelevantFormIndex]
             )
         ) {
+            // Tell the popup, per entry, whether Kee will auto-fill it here and if
+            // not why not (multiple matches, weak match, auto-fill turned off, ...).
+            const explainCtx = {
+                automated,
+                cannotAutoFillForm: automated && matchResult.autofillOnSuccess === false,
+                matchCount: orderedEntriesWithPreference.length,
+                config: this.config
+            };
+            for (const e of orderedEntriesWithPreference) {
+                e.autoFillReason = explainAutoFill(e, explainCtx);
+            }
+
             this.myPort.postMessage({
                 entries: orderedEntriesWithPreference
             });
