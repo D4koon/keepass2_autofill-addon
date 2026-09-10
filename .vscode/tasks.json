@@ -1,0 +1,88 @@
+{
+    // Build the extension and load it in Firefox.
+    //
+    //   Terminal > Run Task...  (or Run Build Task = Ctrl+Shift+B)
+    //
+    // "Kee: Build & Run in Firefox" is the default build task: it runs a full
+    // production build, then launches Firefox (via web-ext) with the unpacked
+    // extension from ./extension and a throw-away profile kept under
+    // ./.testing-web-ext-firefox-profile.
+    //
+    // For iterative work use "Kee: Dev (watch + Firefox)" instead - it starts the
+    // watch build (rebuilds ./extension on save) and Firefox together; web-ext
+    // reloads the extension when the build output changes.
+    //
+    // Requires: `npm ci` already run, and a `firefox` binary on PATH.
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Kee: Build (production)",
+            "type": "npm",
+            "script": "build:prod",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "build"
+        },
+        {
+            "label": "Kee: Run in Firefox",
+            "type": "npm",
+            "script": "start:firefox",
+            // web-ext stays running (it owns the Firefox process); treat it as a
+            // long-lived background task.
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "kee-firefox"
+            }
+        },
+        {
+            "label": "Kee: Build & Run in Firefox",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Kee: Build (production)", "Kee: Run in Firefox"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Kee: Dev build (watch)",
+            "type": "npm",
+            "script": "dev-firefox",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "kee-firefox"
+            },
+            // vite --watch never exits; tell VS Code when the first build is done
+            // so a dependent task may start.
+            "problemMatcher": {
+                "owner": "kee-dev",
+                "pattern": {
+                    "regexp": "^\\s*(ERROR)\\s+(.*)$",
+                    "severity": 1,
+                    "message": 2
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*(vite v|build started|transforming).*",
+                    "endsPattern": ".*(built in|watching for file changes|page reload).*"
+                }
+            }
+        },
+        {
+            "label": "Kee: Dev (watch + Firefox)",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Kee: Dev build (watch)", "Kee: Run in Firefox"],
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}
