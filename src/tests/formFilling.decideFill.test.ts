@@ -138,10 +138,11 @@ describe("decideFill - automated, single match", () => {
         expect(d.logs.some(l => l.message.includes("low field match ratio"))).toBe(true);
     });
 
-    it("T4: an undefined relevanceScore passes the threshold (undefined < 1 is false)", () => {
+    it("[T4] an undefined / NaN relevanceScore fails the threshold", () => {
         const e = entry({ relevanceScore: undefined });
         const d = decideFill(baseInput({ entriesForForm: [e] }));
-        expect(d.matchingLogin).toBe(e);
+        expect(d.matchingLogin).toBeNull();
+        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(true);
     });
 
     it("respects autoSubmitForms for the automated path", () => {
@@ -177,28 +178,30 @@ describe("decideFill - automated, multiple matches", () => {
     ];
 
     it("picks the first ordered entry and fills when multi-match fill is allowed", () => {
+        const live = many();
         const ordered = many();
         const d = decideFill(
             baseInput({
-                entriesForForm: many(),
+                entriesForForm: live,
                 orderedEntriesWithPreference: ordered,
                 config: cfg({ autoFillFormsWithMultipleMatches: true })
             })
         );
-        expect(d.matchingLogin).toBe(ordered[0]);
+        expect(d.matchingLogin?.uuid).toBe(ordered[0].uuid);
         expect(d.action.fill).toBe(true);
     });
 
     it("still selects an entry but does not fill when multi-match fill is disabled", () => {
+        const live = many();
         const ordered = many();
         const d = decideFill(
             baseInput({
-                entriesForForm: many(),
+                entriesForForm: live,
                 orderedEntriesWithPreference: ordered,
                 config: cfg({ autoFillFormsWithMultipleMatches: false, autoFillForms: true })
             })
         );
-        expect(d.matchingLogin).toBe(ordered[0]);
+        expect(d.matchingLogin?.uuid).toBe(ordered[0].uuid);
         expect(d.action.fill).toBe(false);
     });
 
@@ -210,17 +213,17 @@ describe("decideFill - automated, multiple matches", () => {
         const d = decideFill(
             baseInput({ entriesForForm: many(), orderedEntriesWithPreference: ordered })
         );
-        expect(d.matchingLogin).toBe(ordered[1]);
+        expect(d.matchingLogin?.uuid).toBe("b");
     });
 
-    it("T7: the multi-match branch returns a clone, not the live entry object", () => {
+    it("[T7] the multi-match branch returns the live scored entry, not the clone", () => {
         const live = many();
         const ordered = many();
         const d = decideFill(
             baseInput({ entriesForForm: live, orderedEntriesWithPreference: ordered })
         );
-        expect(d.matchingLogin).toBe(ordered[0]);
-        expect(d.matchingLogin).not.toBe(live[0]);
+        expect(d.matchingLogin).toBe(live[0]);
+        expect(d.matchingLogin).not.toBe(ordered[0]);
     });
 });
 
@@ -282,6 +285,50 @@ describe("decideFill - entryIndex directed (matched-login request)", () => {
         );
         expect(d.action.submit).toBe(false);
     });
+
+    it("[T2] accepts a numeric-string entryIndex", () => {
+        const live = two();
+        const d = decideFill(
+            baseInput({
+                automated: false,
+                isMatchedLoginRequest: true,
+                entryIndex: "1",
+                entriesForForm: live
+            })
+        );
+        expect(d.matchingLogin).toBe(live[1]);
+        expect(d.clearUuid).toBe(true);
+    });
+
+    it("[T2] null / non-numeric entryIndex is not treated as an explicit index", () => {
+        const live = two();
+        for (const bad of [null, undefined, "", "abc", -1]) {
+            const d = decideFill(
+                baseInput({
+                    entriesForForm: live,
+                    orderedEntriesWithPreference: live,
+                    entryIndex: bad as never,
+                    uuidHint: "b"
+                })
+            );
+            // falls through to the UUID branch instead of indexing entriesForForm[bad]
+            expect(d.matchingLogin).toBe(live[1]);
+            expect(d.clearUuid).toBe(false);
+        }
+    });
+
+    it("[T2] resolveFillTarget: a non-numeric entryIndex is not a matched-login request", () => {
+        const r = resolveFillTarget(
+            {
+                automated: false,
+                formIndex: 0,
+                entryIndex: null as never,
+                currentMostRelevantFormIndex: 2
+            },
+            () => 5
+        );
+        expect(r.isMatchedLoginRequest).toBe(false);
+    });
 });
 
 describe("decideFill - UUID directed", () => {
@@ -313,7 +360,7 @@ describe("decideFill - UUID directed", () => {
         expect(d.logs.some(l => l.level === "warn")).toBe(true);
     });
 
-    it("T3: a single-entry form takes the length==1 branch before the uuid branch", () => {
+    it("[T3] a UUID hint on a single-entry form selects by UUID and skips the threshold", () => {
         const live = [entry({ uuid: "only", relevanceScore: 0.2 })];
         const d = decideFill(
             baseInput({
@@ -322,9 +369,22 @@ describe("decideFill - UUID directed", () => {
                 uuidHint: "only"
             })
         );
-        // threshold applied (automated) despite the uuid hint => dropped
+        // UUID branch runs before the single-entry branch => low score is not applied
+        expect(d.matchingLogin).toBe(live[0]);
+        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(false);
+    });
+
+    it("[T3] a UUID hint that misses on a single-entry form fills nothing", () => {
+        const live = [entry({ uuid: "only", relevanceScore: 40 })];
+        const d = decideFill(
+            baseInput({
+                entriesForForm: live,
+                orderedEntriesWithPreference: live,
+                uuidHint: "different"
+            })
+        );
         expect(d.matchingLogin).toBeNull();
-        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(true);
+        expect(d.logs.some(l => l.level === "warn")).toBe(true);
     });
 });
 

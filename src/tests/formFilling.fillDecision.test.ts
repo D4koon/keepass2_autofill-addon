@@ -82,10 +82,10 @@ describe("automated fill - single match", () => {
         expect(h.matchResult().cannotAutoFillForm).toBe(false);
     });
 
-    it("#7 relevanceScore left undefined still fills (NaN < 1 is false) [T4]", () => {
+    it("#7 a normally-scored single match clears the relevance threshold and fills", () => {
+        // visible + names match -> ratio ok, matchAccuracy default -> score >= 1.
+        // (The undefined/NaN-score case is covered by the decideFill unit tests.)
         const h = createHarness(LOGIN_FORM);
-        // visible, names match -> ratio ok; matchAccuracy high -> score >= 1 anyway,
-        // this pins that an undefined score does not itself block.
         h.run([goodEntry()]);
         expect(h.fieldValue("pass")).toBe("s3cret");
     });
@@ -345,15 +345,37 @@ describe("UUID-directed fill (scan behaviour.UUID)", () => {
         expect(h.submitted().via).not.toBeNull();
     });
 
-    it("#35 single delivered entry wins B1 over the UUID path, threshold still applies [T3]", () => {
+    it("#35 UUID-directed fill on a single-entry form bypasses the relevance threshold [T3 fixed]", () => {
+        // Invisible fields + matchAccuracy 0 => the automated relevance threshold
+        // would reject this entry, but an explicit UUID request must not be gated.
         const h = createHarness(`
             <form id="loginForm">
-                <input name="aaa" type="text" style="display:none">
-                <input name="bbb" type="password" style="display:none">
+                <input id="u" name="aaa" type="text" style="display:none">
+                <input id="p" name="bbb" type="password" style="display:none">
             </form>`);
-        h.scanWith({ UUID: "e2", dbFileName: TEST_DB });
-        h.deliverEntries([goodEntry({ uuid: "e1", matchAccuracy: 0 })]);
-        expect(h.fieldValue("bbb")).toBe(""); // present but not filled
+        h.scanWith({ UUID: "e1", dbFileName: TEST_DB });
+        h.deliverEntries([
+            makeEntry(
+                [
+                    { type: "text", value: "alice", name: "aaa" },
+                    { type: "password", value: "s3cret", name: "bbb" }
+                ],
+                { uuid: "e1", matchAccuracy: 0 }
+            )
+        ]);
+        expect(h.fieldValue("bbb")).toBe("s3cret");
+    });
+
+    it("#35b UUID-directed fill on a single-entry form fills nothing when the UUID is absent", () => {
+        const h = createHarness(LOGIN_FORM);
+        h.scanWith({ UUID: "not-here", dbFileName: TEST_DB });
+        h.deliverEntries([goodEntry({ uuid: "e1" })]);
+        expect(h.fieldValue("pass")).toBe("");
+        expect(
+            h.logger.warn.mock.calls.some(c =>
+                /Could not find the required KeePass entry/.test(String(c[0]))
+            )
+        ).toBe(true);
     });
 });
 
@@ -378,10 +400,12 @@ describe("form selection", () => {
     });
 });
 
-describe("stale-state / crash-path freezes (behaviour, not correctness)", () => {
-    it("#40 fillAndSubmit before any scan throws [T6]", () => {
+describe("stale-state / crash-path guards", () => {
+    it("#40 fillAndSubmit before any scan is a no-op [T6 fixed]", () => {
         const h = createHarness(LOGIN_FORM);
-        expect(() => h.manualFill(0)).toThrow();
+        expect(() => h.manualFill(0)).not.toThrow();
+        expect(h.fieldValue("pass")).toBe("");
+        expect(h.formSaving.updateMatchResult).not.toHaveBeenCalled();
     });
 });
 

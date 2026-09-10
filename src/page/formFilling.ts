@@ -275,8 +275,17 @@ export class FormFilling {
         const matchResult = this.state.current;
         let submitTargetNeighbour;
 
-        // Give up if we have no results for this frame (i.e. there were no forms to fill)
-        if (!matchResult) return;
+        // Give up if this frame has not been scanned yet (no forms to work with).
+        // Without this guard the `matchResult.forms[...]` / `matchResult.entries[...]`
+        // reads below throw a TypeError when fillAndSubmit runs before findMatches.
+        if (!matchResult || !matchResult.forms || matchResult.forms.length === 0) return;
+
+        // formReadyForSubmit is scoped to a single fillAndSubmit call: it is set
+        // true only when this invocation actually fills the form below. Reset it
+        // up front so a value left over from an earlier call on the same
+        // matchResult can't make us sync a null matchingLogin's uuid or submit
+        // with an undefined submit target.
+        matchResult.formReadyForSubmit = false;
 
         // We do some things differently if we're being manually asked to fill and
         // submit a specific matched entry, and we pick the form to work on.
@@ -434,18 +443,15 @@ export class FormFilling {
             this.formSaving.updateMatchResult(matchResult);
         }
 
-        // We only do this if any forms were auto-filled successfully
-        if (matchResult.formReadyForSubmit) {
+        // We only do this if this call auto-filled a form (formReadyForSubmit is
+        // reset at the top of fillAndSubmit, so matchingLogin is non-null here).
+        if (matchResult.formReadyForSubmit && matchingLogin != null) {
             // if we didn't already define a uuid, we set it up now
             if (
                 matchResult.UUID == undefined ||
                 matchResult.UUID == null ||
                 matchResult.UUID == ""
             ) {
-                // TODO (T1): matchingLogin can be null here if formReadyForSubmit is
-                // left over from an earlier fillAndSubmit call on the same matchResult
-                // (it is only reset in initMatchResult / diagnoseFillForEntry), in
-                // which case the next two lines throw. Preserved as-is.
                 this.Logger.debug("Syncing UUID to: " + matchingLogin.uuid);
                 matchResult.UUID = matchingLogin.uuid;
                 matchResult.dbFileName = matchingLogin.database.fileName;

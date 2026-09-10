@@ -2,30 +2,25 @@ import { Entry } from "../common/model/Entry";
 import { Config } from "../common/config";
 
 // The auto vs. manual / relevance-threshold / multi-match / per-entry-override
-// decision logic, extracted verbatim from FormFilling.fillAndSubmit. These
-// functions are pure: they make no DOM changes and mutate no shared state. The
-// caller (fillAndSubmit) applies the returned data to matchResult and performs
-// the actual DOM fill / submit.
+// decision logic, extracted from FormFilling.fillAndSubmit. These functions are
+// pure: they make no DOM changes and mutate no shared state. The caller
+// (fillAndSubmit) applies the returned data to matchResult and performs the
+// actual DOM fill / submit.
 //
-// Behaviour is preserved 1:1, including several latent bugs that are only
-// flagged with a TODO here, never fixed:
-//
-//  T2 (resolveFillTarget / decideFill): entryIndex can be a string ("1") at
-//     runtime (MatchedLoginsPanel, commands.ts). `null >= 0` and `"1" >= 0` are
-//     both true, so entryIndex is neither coerced with Number() nor typed as
-//     number.
-//  T3 (decideFill): the single-entry branch (entriesForForm.length == 1) is
-//     tested before the UUID branch, so a UUID-directed fill against a
-//     single-entry form ignores the UUID and applies the automated relevance
-//     threshold.
-//  T4 (decideFill): matchingLogin.relevanceScore can be undefined; `undefined <
-//     1` is false, so such an entry passes the relevance test.
-//  T5 (decideFill): manualSubmitOverrideProhibited === true DISABLES the
-//     per-entry submit overrides on a manual fill (the name suggests the
-//     opposite).
-//  T7 (decideFill): the multi-match branch returns a clone from
-//     orderedEntriesWithPreference, the other branches return the live object
-//     from entriesForForm.
+// Note on manualSubmitOverrideProhibited: when true (settings checkbox
+// "Editing the Auto-submit behaviour of an entry also overrides this behaviour"
+// UNticked), a manual fill ignores the entry's alwaysAutoSubmit / neverAutoSubmit
+// flags. That is the documented meaning of the option, not a bug.
+
+// entryIndex reaches us as a number (popup, executePrimaryAction), a numeric
+// string (context menu, in-page matched-logins panel), or nothing. Return the
+// non-negative integer index, or null for "no explicit entry was chosen" -
+// including undefined, null, "", and non-numeric or negative values. Avoids the
+// `null >= 0 === true` / `"1" >= 0 === true` traps of a bare comparison.
+function parseEntryIndex(value: number | string | null | undefined): number | null {
+    const n = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+    return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : null;
+}
 
 export interface FillAction {
     fill: boolean;
@@ -40,7 +35,7 @@ export interface DecideFillLog {
 export interface FillTargetInput {
     automated: boolean;
     formIndex?: number;
-    entryIndex?: number | string;
+    entryIndex?: number | string | null;
     // matchResult.mostRelevantFormIndex as it stands when fillAndSubmit is entered.
     currentMostRelevantFormIndex: number | null;
 }
@@ -50,9 +45,8 @@ export interface FillTarget {
     mostRelevantFormIndex: number | null;
 }
 
-// Lines 1256-1268 of the original fillAndSubmit. getBestFormIndex is a thunk so
-// getMostRelevantForm() (which logs) only runs on the non-matched-login path,
-// exactly as before.
+// getBestFormIndex is a thunk so getMostRelevantForm() (which logs) only runs on
+// the non-matched-login path.
 export function resolveFillTarget(
     input: FillTargetInput,
     getBestFormIndex: () => number
@@ -62,7 +56,7 @@ export function resolveFillTarget(
         ((input.currentMostRelevantFormIndex !== null &&
             input.currentMostRelevantFormIndex >= 0) ||
             typeof input.formIndex != "undefined") &&
-        typeof input.entryIndex != "undefined";
+        parseEntryIndex(input.entryIndex) !== null;
 
     let mostRelevantFormIndex = input.currentMostRelevantFormIndex;
 
@@ -79,8 +73,8 @@ export function resolveFillTarget(
 }
 
 // Whether fillAndSubmit announces the matches to the popup / adds the field
-// icons. Line 1280-1282 of the original - the `.length` read is deliberately
-// unguarded (throws today if entriesForForm is undefined, must keep throwing).
+// icons. entriesForForm is matchResult.entries[formIndex], which scanFrameForForms
+// always initialises to [] for a scanned frame.
 export function shouldAnnounceEntries(
     isMatchedLoginRequest: boolean,
     entriesForForm: Entry[]
@@ -100,7 +94,8 @@ type DecideFillConfig = Pick<
 export interface DecideFillInput {
     automated: boolean;
     isMatchedLoginRequest: boolean;
-    entryIndex?: number | string;
+    // A number, a numeric string, or nothing - see parseEntryIndex.
+    entryIndex?: number | string | null;
     // matchResult.entries[mostRelevantFormIndex] - the live, scored entry objects.
     entriesForForm: Entry[];
     // sortMatchedEntries + flagUserPreferredEntry output - clones.
@@ -119,12 +114,12 @@ export interface FillDecision {
     cannotAutoSubmitForm: boolean;
     matchingLogin: Entry | null;
     action: FillAction;
-    // Today: matchResult.UUID / dbFileName are nulled when entryIndex >= 0.
+    // Caller nulls matchResult.UUID / dbFileName - set when an explicit entryIndex
+    // was chosen, so the fill's own UUID sync can run afterwards.
     clearUuid: boolean;
     logs: DecideFillLog[];
 }
 
-// Lines 1297-1392 / 1445-1469 of the original fillAndSubmit.
 export function decideFill(input: DecideFillInput): FillDecision {
     const logs: DecideFillLog[] = [];
 
@@ -142,32 +137,25 @@ export function decideFill(input: DecideFillInput): FillDecision {
     if (!cannotAutoFillForm) {
         logs.push({ level: "debug", message: "We are allowed to auto-fill this form." });
 
-        // If we've been instructed to fill a specific entry, we need to select that
-        // entry and clear any previously set information about an auto-filled entry
-        // so it can be set correctly later.
-        //
-        // TODO (T2): entryIndex is not coerced. `null >= 0` and `"1" >= 0` are both
-        // true at runtime, and entriesForForm["1"] indexes the array by string just
-        // like entriesForForm[1]. The `as unknown as number` casts only keep the
-        // compiler happy; the runtime value (possibly a string) is unchanged.
+        // If we've been instructed to fill a specific entry by index, select it
+        // and clear any previously recorded auto-filled entry so it can be set
+        // correctly later. An explicit index wins over the UUID hint.
         let effectiveUuid = input.uuidHint;
-        const entryIndexLoose = input.entryIndex as unknown as number;
-        if (entryIndexLoose >= 0) {
-            matchingLogin = input.entriesForForm[entryIndexLoose];
+        const explicitEntryIndex = parseEntryIndex(input.entryIndex);
+        if (explicitEntryIndex !== null) {
+            matchingLogin = input.entriesForForm[explicitEntryIndex];
             clearUuid = true;
             effectiveUuid = null;
         }
 
+        const haveUuidHint =
+            effectiveUuid != undefined && effectiveUuid != null && effectiveUuid != "";
+
         let checkMatchingLoginRelevanceThreshold = false;
-        if (matchingLogin == null && input.entriesForForm.length == 1) {
-            matchingLogin = input.entriesForForm[0];
-            checkMatchingLoginRelevanceThreshold = true;
-        } else if (
-            effectiveUuid != undefined &&
-            effectiveUuid != null &&
-            effectiveUuid != ""
-        ) {
-            // Skip the relevance tests if we have been told to use a specific UUID
+        if (matchingLogin == null && haveUuidHint) {
+            // A specific UUID was requested: use exactly that entry (skipping the
+            // relevance threshold) or nothing. Checked before the single-entry
+            // branch so a one-entry form does not silently ignore the UUID.
             logs.push({
                 level: "debug",
                 message: "We've been told to use an entry with this UUID: " + effectiveUuid
@@ -185,6 +173,9 @@ export function decideFill(input: DecideFillInput): FillDecision {
                         "Could not find the required KeePass entry. Maybe the website redirected you to a different domain or hostname?"
                 });
             }
+        } else if (matchingLogin == null && input.entriesForForm.length == 1) {
+            matchingLogin = input.entriesForForm[0];
+            checkMatchingLoginRelevanceThreshold = true;
         } else if (
             matchingLogin == null &&
             (!input.entriesForForm || !input.entriesForForm.length)
@@ -195,9 +186,13 @@ export function decideFill(input: DecideFillInput): FillDecision {
                 level: "debug",
                 message: "Multiple entries for form, so using preferred or most relevant."
             });
-            matchingLogin =
+            const picked =
                 input.orderedEntriesWithPreference.find(e => e.isPreferredMatch) ||
                 input.orderedEntriesWithPreference[0];
+            // orderedEntriesWithPreference are sort/flag clones; return the live
+            // scored entry, consistent with the other branches.
+            matchingLogin =
+                (picked && input.entriesForForm.find(e => e.uuid === picked.uuid)) || picked;
             multipleMatches = true;
             checkMatchingLoginRelevanceThreshold = true;
         }
@@ -207,7 +202,8 @@ export function decideFill(input: DecideFillInput): FillDecision {
             checkMatchingLoginRelevanceThreshold &&
             matchingLogin != null
         ) {
-            if (matchingLogin.relevanceScore < 1) {
+            if (!(matchingLogin.relevanceScore >= 1)) {
+                // >= 1 rather than < 1 so a missing / NaN score also fails.
                 logs.push({
                     level: "info",
                     message:
