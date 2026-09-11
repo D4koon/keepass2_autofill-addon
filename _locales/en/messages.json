@@ -461,31 +461,55 @@
   },
   "autofill_status_fills_here": {
       "message": "Auto-fills here",
-      "description": "Status line under a matched entry in the popup: Kee did / will automatically fill this entry into the current page's login form."
+      "description": "Short status line under a matched entry in the popup: Kee did / will automatically fill this entry into the current page's login form."
+  },
+  "autofill_blocked_disabled_short": {
+      "message": "Auto-fill is off",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_disabled": {
-      "message": "Not auto-filled: automatic filling is turned off in Kee's settings",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - the global auto-fill setting is off."
+      "message": "Automatic form filling is turned off in Kee's settings.",
+      "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+  },
+  "autofill_blocked_notify_only_short": {
+      "message": "Not filling this time",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_notify_only": {
-      "message": "Not auto-filled: Kee is only listing matches for this form right now",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - this form scan was told to list matches only, e.g. a form that appeared after the page loaded."
+      "message": "Kee is only listing matches for this form scan; it isn't set up to auto-fill right now.",
+      "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+  },
+  "autofill_blocked_multiple_short": {
+      "message": "$1 matches - pick one",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_multiple": {
-      "message": "Not auto-filled: $1 entries match this page - pick one to fill",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - more than one entry matches and auto-fill with multiple matches is off. $1 is the number of matching entries."
+      "message": "$1 entries match this page, so Kee waits for you to pick one instead of guessing.",
+      "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+  },
+  "autofill_blocked_entry_never_short": {
+      "message": "Never auto-fills",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_entry_never": {
-      "message": "Not auto-filled: this entry is set to never auto-fill",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - the entry has the 'never auto-fill' option set in the password database."
+      "message": "This entry is set to never auto-fill in your password database.",
+      "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+  },
+  "autofill_blocked_low_relevance_short": {
+      "message": "Weak match",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below Kee's threshold. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_low_relevance": {
-      "message": "Not auto-filled: not a close enough match for this page's form",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - the entry's relevance score for this form is below Kee's threshold."
+      "message": "This entry isn't a close enough match for this page's login form.",
+      "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+  },
+  "autofill_blocked_low_field_match_short": {
+      "message": "Few fields match",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
   },
   "autofill_blocked_low_field_match": {
-      "message": "Not auto-filled: too few of this form's fields match this entry",
-      "description": "Status line under a matched entry in the popup explaining why it was not auto-filled - the proportion of form fields that line up with the entry's fields is too low."
+      "message": "Too few of this form's fields line up with this entry's fields.",
+      "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
   },
   "site_specific_settings_checkbox_explanation": {
       "message": "Settings from \"All Websites\" will apply to each section below unless you enable the setting using the checkbox next to it." ,

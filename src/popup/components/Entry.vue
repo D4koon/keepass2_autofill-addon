@@ -34,6 +34,11 @@ class="mr-3 ml-12 my-0"
                                         <v-col
                                             class="text-truncate text-caption d-flex align-center"
                                             :class="autoFillReasonBlocked ? 'text-warning' : 'text-success'">
+                                            <v-tooltip
+                                                v-if="autoFillReasonTooltip" location="top"
+                                                :open-delay="tooltipDelay" activator="parent">
+                                                <span>{{ autoFillReasonTooltip }}</span>
+                                            </v-tooltip>
                                             <mdi-alert-circle-outline v-if="autoFillReasonBlocked" class="mr-1" />
                                             <mdi-check-circle-outline v-else class="mr-1" />
                                             {{ autoFillReasonText }}
@@ -198,12 +203,36 @@ export default {
         showAutoFillReason: function () {
             return this.isMatchedEntry && !!this.autoFillReasonText;
         },
+        // Short label that fits a narrow popup card on one line. Hover it (see
+        // autoFillReasonTooltip) for the full explanation.
         autoFillReasonText: function () {
             const r = (this.entrySummary as EntrySummary).autoFillReason;
             if (!r) return null;
             switch (r.code) {
                 case "fills-here":
                     return $STR("autofill_status_fills_here");
+                case "autofill-disabled":
+                    return $STR("autofill_blocked_disabled_short");
+                case "context-notify-only":
+                    return $STR("autofill_blocked_notify_only_short");
+                case "multiple-matches":
+                    return $STRF("autofill_blocked_multiple_short", [
+                        String(r.matchCount ?? "")
+                    ]);
+                case "entry-never":
+                    return $STR("autofill_blocked_entry_never_short");
+                case "low-relevance":
+                    return $STR("autofill_blocked_low_relevance_short");
+                case "low-field-match":
+                    return $STR("autofill_blocked_low_field_match_short");
+                default:
+                    return null;
+            }
+        },
+        autoFillReasonTooltip: function () {
+            const r = (this.entrySummary as EntrySummary).autoFillReason;
+            if (!r || r.code === "fills-here") return null;
+            switch (r.code) {
                 case "autofill-disabled":
                     return $STR("autofill_blocked_disabled");
                 case "context-notify-only":
