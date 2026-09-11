@@ -11,6 +11,12 @@ import { Config } from "../common/config";
 // "Editing the Auto-submit behaviour of an entry also overrides this behaviour"
 // UNticked), a manual fill ignores the entry's alwaysAutoSubmit / neverAutoSubmit
 // flags. That is the documented meaning of the option, not a bug.
+//
+// Note on alwaysAutoFill: it bypasses the global auto-fill setting and the
+// multi-match hold (as before), and also the relevance / field-match-ratio
+// threshold on the automated path - so an entry the user has explicitly marked
+// "always auto-fill" in their password manager will fill even against a weakly
+// detected form. neverAutoFill still wins if both flags are set on the entry.
 
 // entryIndex reaches us as a number (popup, executePrimaryAction), a numeric
 // string (context menu, in-page matched-logins panel), or nothing. Return the
@@ -202,7 +208,13 @@ export function decideFill(input: DecideFillInput): FillDecision {
             checkMatchingLoginRelevanceThreshold &&
             matchingLogin != null
         ) {
-            if (!(matchingLogin.relevanceScore >= 1)) {
+            if (matchingLogin.alwaysAutoFill) {
+                logs.push({
+                    level: "debug",
+                    message:
+                        "Entry is flagged alwaysAutoFill, so the relevance / field match ratio threshold is skipped."
+                });
+            } else if (!(matchingLogin.relevanceScore >= 1)) {
                 // >= 1 rather than < 1 so a missing / NaN score also fails.
                 logs.push({
                     level: "info",

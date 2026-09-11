@@ -154,6 +154,26 @@ describe("per-entry overrides - automated", () => {
         expect(h.fieldValue("pass")).toBe("s3cret");
     });
 
+    it("#13b alwaysAutoFill fills even with a low relevance / field match ratio", () => {
+        // Same shape as #3 (invisible fields, matchAccuracy 0) - the automated
+        // relevance threshold would normally reject this entry.
+        const h = createHarness(`
+            <form id="loginForm">
+                <input id="user" name="aaa" type="text" style="display:none">
+                <input id="pass" name="bbb" type="password" style="display:none">
+            </form>`);
+        h.run([
+            makeEntry(
+                [
+                    { type: "text", value: "alice", name: "aaa" },
+                    { type: "password", value: "s3cret", name: "bbb" }
+                ],
+                { matchAccuracy: 0, alwaysAutoFill: true }
+            )
+        ]);
+        expect(h.fieldValue("bbb")).toBe("s3cret");
+    });
+
     it("#14 alwaysAutoFill + neverAutoFill => not filled (never applied last)", () => {
         const h = createHarness(LOGIN_FORM);
         h.run([goodEntry({ alwaysAutoFill: true, neverAutoFill: true })]);

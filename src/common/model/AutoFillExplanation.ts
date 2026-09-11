@@ -44,8 +44,9 @@ export function explainAutoFill(
         return { code: "context-notify-only", blocked: true };
     }
 
-    // alwaysAutoFill overrides the global setting and the multi-match hold, but
-    // not the relevance / field-match thresholds below.
+    // alwaysAutoFill overrides the global setting, the multi-match hold, and the
+    // relevance / field-match thresholds below - but not neverAutoFill (checked
+    // last, regardless of always).
     if (!always) {
         if (!ctx.config.autoFillForms) {
             return { code: "autofill-disabled", blocked: true };
@@ -53,15 +54,12 @@ export function explainAutoFill(
         if (ctx.matchCount > 1 && !ctx.config.autoFillFormsWithMultipleMatches) {
             return { code: "multiple-matches", blocked: true, matchCount: ctx.matchCount };
         }
-    }
-
-    // fillAndSubmit drops a low-scoring match before applying the per-entry
-    // overrides, so these gate the automated path even for alwaysAutoFill.
-    if (ctx.automated && !(entry.relevanceScore >= 1)) {
-        return { code: "low-relevance", blocked: true };
-    }
-    if (ctx.automated && entry.lowFieldMatchRatio) {
-        return { code: "low-field-match", blocked: true };
+        if (ctx.automated && !(entry.relevanceScore >= 1)) {
+            return { code: "low-relevance", blocked: true };
+        }
+        if (ctx.automated && entry.lowFieldMatchRatio) {
+            return { code: "low-field-match", blocked: true };
+        }
     }
 
     if (never) {

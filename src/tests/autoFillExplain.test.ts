@@ -41,7 +41,7 @@ describe("explainAutoFill", () => {
         expect(r.blocked).toBe(true);
     });
 
-    it("alwaysAutoFill overrides the global disable (but still passes thresholds)", () => {
+    it("alwaysAutoFill overrides the global disable", () => {
         const r = explainAutoFill(
             entry({ alwaysAutoFill: true }),
             ctx({ config: { autoFillForms: false, autoFillFormsWithMultipleMatches: false } })
@@ -67,11 +67,8 @@ describe("explainAutoFill", () => {
         expect(r.code).toBe("fills-here");
     });
 
-    it("low relevance blocks - even with alwaysAutoFill - on the automated path", () => {
+    it("low relevance blocks a plain entry", () => {
         expect(explainAutoFill(entry({ relevanceScore: 0.4 }), ctx()).code).toBe("low-relevance");
-        expect(
-            explainAutoFill(entry({ relevanceScore: 0.4, alwaysAutoFill: true }), ctx()).code
-        ).toBe("low-relevance");
     });
 
     it("an undefined relevance score is treated as too low", () => {
@@ -80,14 +77,34 @@ describe("explainAutoFill", () => {
         );
     });
 
-    it("low field-match ratio blocks", () => {
+    it("low field-match ratio blocks a plain entry", () => {
         expect(explainAutoFill(entry({ lowFieldMatchRatio: true }), ctx()).code).toBe(
             "low-field-match"
         );
     });
 
+    it("alwaysAutoFill overrides low relevance and low field-match ratio", () => {
+        expect(
+            explainAutoFill(entry({ alwaysAutoFill: true, relevanceScore: 0.4 }), ctx()).code
+        ).toBe("fills-here");
+        expect(
+            explainAutoFill(
+                entry({ alwaysAutoFill: true, lowFieldMatchRatio: true }),
+                ctx()
+            ).code
+        ).toBe("fills-here");
+    });
+
     it("neverAutoFill blocks a match that otherwise passes", () => {
         expect(explainAutoFill(entry({ neverAutoFill: true }), ctx()).code).toBe("entry-never");
+    });
+
+    it("neverAutoFill still wins when alwaysAutoFill is also set", () => {
+        const r = explainAutoFill(
+            entry({ alwaysAutoFill: true, neverAutoFill: true, relevanceScore: 0.1 }),
+            ctx()
+        );
+        expect(r.code).toBe("entry-never");
     });
 
     it("thresholds are not applied on a manual (non-automated) announce", () => {

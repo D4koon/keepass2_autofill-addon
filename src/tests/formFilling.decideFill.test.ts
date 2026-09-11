@@ -399,6 +399,29 @@ describe("decideFill - per-entry overrides (automated, non-matched)", () => {
         expect(d.action.fill).toBe(true);
     });
 
+    it("alwaysAutoFill bypasses the relevance threshold on the automated path", () => {
+        const e = entry({ alwaysAutoFill: true, relevanceScore: 0.2 });
+        const d = decideFill(baseInput({ entriesForForm: [e] }));
+        expect(d.matchingLogin).toBe(e);
+        expect(d.action.fill).toBe(true);
+    });
+
+    it("alwaysAutoFill bypasses a low field-match ratio on the automated path", () => {
+        const e = entry({ alwaysAutoFill: true, lowFieldMatchRatio: true });
+        const d = decideFill(baseInput({ entriesForForm: [e] }));
+        expect(d.matchingLogin).toBe(e);
+        expect(d.action.fill).toBe(true);
+    });
+
+    it("neverAutoFill still wins when both flags are set and the score is low", () => {
+        const e = entry({ alwaysAutoFill: true, neverAutoFill: true, relevanceScore: 0.2 });
+        const d = decideFill(baseInput({ entriesForForm: [e] }));
+        // the threshold is bypassed (matchingLogin survives) but neverAutoFill
+        // is applied after alwaysAutoFill, so it still does not fill
+        expect(d.matchingLogin).toBe(e);
+        expect(d.action.fill).toBe(false);
+    });
+
     it("neverAutoFill blocks fill even when autoFillForms is on", () => {
         const d = decideFill(
             baseInput({
