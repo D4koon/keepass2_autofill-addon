@@ -54,6 +54,19 @@ const RESCAN_DEBOUNCE_MAX = 5000;
 const RESCAN_HARD_LIMIT = 250; // give up observing on pathologically chatty pages
 let rescanCount = 0;
 
+// A login form is often revealed by toggling an attribute on an existing
+// (already-present) element - display:none removed, a "hidden" class dropped,
+// the hidden attribute cleared, or a honeypot input's type flipped from
+// "hidden" to "text"/"password" - rather than by adding new DOM nodes. Watch
+// just these few attributes (not the unfiltered firehose) so such reveals
+// trigger a rescan the same way a newly-added form does.
+const MUTATION_OBSERVER_OPTIONS: MutationObserverInit = {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["style", "class", "hidden", "type"]
+};
+
 function resetRescanBackoff() {
     rescanCount = 0;
 }
@@ -125,6 +138,19 @@ if (document.body) {
                         break;
                     }
                 }
+            } else if (mutation.type === "attributes") {
+                // A style/class/hidden/type change on an existing element - either
+                // the form/field itself, or a wrapper that was hiding it - can reveal
+                // a login form without adding any DOM nodes. Treat that the same as
+                // a newly-added node.
+                const element = mutation.target as Element;
+                if (
+                    (element.matches && element.matches(interestingNodes.join(","))) ||
+                    (typeof element.querySelector === "function" &&
+                        formUtils.deepContains(element, interestingNodes))
+                ) {
+                    rescan = true;
+                }
             }
         });
 
@@ -144,10 +170,7 @@ if (document.body) {
             // Only now (we already have a reason to rescan) do the full-tree walk to
             // pick up any new open shadow roots - keeps mutation-heavy pages cheap.
             try {
-                formUtils.observeOpenShadowRoots(observer, document.body, {
-                    childList: true,
-                    subtree: true
-                });
+                formUtils.observeOpenShadowRoots(observer, document.body, MUTATION_OBSERVER_OPTIONS);
             } catch (e) {
                 /* non-fatal */
             }
@@ -206,14 +229,11 @@ if (document.body) {
         );
         passwordGenerator = new PasswordGenerator(frameId);
 
-        inputsObserver.observe(document.body, { childList: true, subtree: true });
+        inputsObserver.observe(document.body, MUTATION_OBSERVER_OPTIONS);
         // Also watch existing open shadow roots (web-component pages render their
         // real login fields there and the top-level observer does not see inside).
         try {
-            formUtils.observeOpenShadowRoots(inputsObserver, document.body, {
-                childList: true,
-                subtree: true
-            });
+            formUtils.observeOpenShadowRoots(inputsObserver, document.body, MUTATION_OBSERVER_OPTIONS);
         } catch (e) {
             KeeLog.debug("could not observe shadow roots: " + e);
         }
