@@ -408,7 +408,7 @@ class Kee {
         const iconPath = actionConfig.notificationAvailable || actionConfig.saveAvailable ? "/assets/images/highlight-48.png" : "/assets/images/48.png";
         const text = (!actionConfig.connectionAvailable || !actionConfig.dbAvailable) ? "OFF" : (actionConfig.matchedEntries > 0 ? actionConfig.matchedEntries.toString() : "");
         const color = !actionConfig.connectionAvailable ? "red" : !actionConfig.dbAvailable ? "orange" : "blue";
-        const title = "Kee";
+        const title = "KeeLink";
         chrome.action.setIcon({ path: iconPath });
         chrome.action.setBadgeText({ text: text });
         chrome.action.setBadgeBackgroundColor({ color: color });
@@ -420,10 +420,10 @@ class Kee {
     }
 
     _keeBrowserStartup() {
-        KeeLog.debug("Kee initialising");
+        KeeLog.debug("KeeLink initialising");
         this.KeePassRPC = new jsonrpcClient(this.store);
         KeeLog.info(
-            "Kee initialised OK although the connection to a KeePassRPC server is probably not established just yet..."
+            "KeeLink initialised OK although the connection to a KeePassRPC server is probably not established just yet..."
         );
     }
 
@@ -448,7 +448,7 @@ class Kee {
 
         commandManager.setupContextMenuItems();
 
-        KeeLog.info("Kee paused.");
+        KeeLog.info("KeeLink paused.");
     }
 
     _refreshKPDB() {
@@ -523,7 +523,7 @@ class Kee {
                             "failed to request form field reset/update on tab " +
                             tabId +
                             ". Assuming port is broken (possible browser bug) and deleting the port. " +
-                            "Kee may no longer work in the affected tab, if indeed the tab even " +
+                            "KeeLink may no longer work in the affected tab, if indeed the tab even " +
                             "exists any more. The exception that caused this is: " +
                             e.message +
                             " : " +

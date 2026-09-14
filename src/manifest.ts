@@ -60,7 +60,7 @@ export async function getManifest() {
                 "48": "./assets/images/48.png",
                 "64": "./assets/images/64.png"
             },
-            "default_title": "Kee",
+            "default_title": "KeeLink",
             default_popup: "./dist/popup/index.html"
         },
         options_ui: {

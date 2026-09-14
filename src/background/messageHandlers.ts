@@ -110,7 +110,7 @@ export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg:
             kee.store.updateGeneratedPassword(generatedPassword);
         } else {
             KeeLog.warn(
-                "Kee received an empty/missing password. Check the configuration of your password manager."
+                "KeeLink received an empty/missing password. Check the configuration of your password manager."
             );
         }
     }
@@ -466,7 +466,7 @@ export async function iframeMessageHandler(this: chrome.runtime.Port, msg: Addon
             } as AddonMessage);
         } else {
             KeeLog.warn(
-                "Kee received an empty/missing password. Check the configuration of your password manager."
+                "KeeLink received an empty/missing password. Check the configuration of your password manager."
             );
         }
     }

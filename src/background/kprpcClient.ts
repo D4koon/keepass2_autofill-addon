@@ -871,8 +871,11 @@ export class kprpcClient {
 
                 // these parameters allows KPRPC to identify which type of client is making
                 // this request. We can't trust it but it can help the user to understand what's going on.
+                // clientTypeId is a protocol-level identifier KeePassRPC uses to recognise the
+                // client type - kept as "keefox" (this addon's lineage) rather than renamed for
+                // this fork's branding, unlike clientDisplayName which is purely cosmetic.
                 clientTypeId: "keefox",
-                clientDisplayName: "Kee",
+                clientDisplayName: "KeeLink",
                 clientDisplayDescription: $STR("conn_display_description")
             };
 

@@ -153,7 +153,7 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
 
         if (scannedIndexes.length === 0 || !host.state.loginOp.forms) {
             add(
-                "Kee did not classify any form here as a login form, so it never searches " +
+                "KeeLink did not classify any form here as a login form, so it never searches " +
                     "for or fills entries on this page. Kee now also scans open shadow roots, " +
                     "so if fields still were not found the likely reasons are: a CLOSED " +
                     "shadow root (not scriptable at all), the real form is in another iframe, " +

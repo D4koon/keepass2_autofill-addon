@@ -171,7 +171,7 @@ if (document.body) {
             rescanCount++;
             if (rescanCount > RESCAN_HARD_LIMIT) {
                 KeeLog.warn(
-                    "Kee: this page mutates too much; stopping the form observer. " +
+                    "KeeLink: this page mutates too much; stopping the form observer. " +
                         "Reload the page if a login form appears later."
                 );
                 observer.disconnect();

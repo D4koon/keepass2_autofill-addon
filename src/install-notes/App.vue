@@ -1,25 +1,35 @@
 <template>
     <v-app>
         <div id="i18n_root">
-            <h1 style="font-size: 42px;"><img src="/assets/images/64.png"
+            <h1 style="font-size: 42px;">
+<img
+src="/assets/images/64.png"
                     style="margin-bottom: 4px; margin-right: 10px; display: inline;" />{{ $i18n("welcome_to_kee") }}
             </h1>
 
-            <p style="font-weight: bold;">{{ $i18n("introduction_to_kee") }}</p>
+            <p style="font-weight: bold;">
+{{ $i18n("introduction_to_kee") }}
+</p>
 
-            <p v-if="showPermissionsInfo">{{ $i18n("all_sites_permissions_required_start") }} <a
+            <p v-if="showPermissionsInfo">
+{{ $i18n("all_sites_permissions_required_start") }} <a
                     href="https://kee.pm/open-source/" target="_blank">{{ $i18n("all_sites_permissions_required_why_open_source_link_text")
                     }}</a> {{ $i18n("all_sites_permissions_required_middle") }} <a
                     href="https://kee.pm/extension-permissions/" target="_blank">{{
                         $i18n("all_sites_permissions_required_permissions_link_text") }}</a> {{
-        $i18n("all_sites_permissions_required_end") }}</p>
+        $i18n("all_sites_permissions_required_end") }}
+</p>
 
-            <v-btn v-if="showPermissionsInfo" color="primary" style="margin-top: 24px;" size="x-large"
+            <v-btn
+v-if="showPermissionsInfo" color="primary" style="margin-top: 24px;" size="x-large"
                 @click="requestPermissions">{{ $i18n("continue") }}</v-btn>
 
-            <p v-if="showToolbarInfo">{{ $i18n("recommend_action_button_should_be_pinned") }}</p>
+            <p v-if="showToolbarInfo">
+{{ $i18n("recommend_action_button_should_be_pinned") }}
+</p>
 
-            <img v-if="showToolbarInfo" style="margin-top: 24px;" width="309"
+            <img
+v-if="showToolbarInfo" style="margin-top: 24px;" width="309"
                 src="/assets/images/pinChromeScreenshot.png" />
 
             <div v-if="showDatabaseSourceOptions">
@@ -33,7 +43,8 @@
                     $i18n("load_kee_vault_now")
                 }}</v-btn>
 
-                <p>{{ $i18n("you_can_use_KeePass_instead") }} {{ $i18n("table_summarises_differences") }}
+                <p>
+{{ $i18n("you_can_use_KeePass_instead") }} {{ $i18n("table_summarises_differences") }}
                 </p>
 
                 <table>
@@ -66,11 +77,13 @@
 
                 <p>* {{ $i18n("keepass_sync_config_explanation") }}</p>
 
-                <p>{{ $i18n("point_user_to_keepass_install_instructions_start") }} <a
+                <p>
+{{ $i18n("point_user_to_keepass_install_instructions_start") }} <a
                         href="https://forum.kee.pm/t/installing-kee-instructions/23" target="_blank">{{
                             $i18n("point_user_to_forum_link_text") }}</a>{{
         $i18n("point_user_to_keepass_install_instructions_end")
-    }}</p>
+    }}
+</p>
             </div>
         </div>
     </v-app>
@@ -121,7 +134,7 @@ async function initialiseDatabaseSourcePossibilities(permissionsInfoWasShown: bo
 }
 
 async function asyncSetup() {
-    document.title = "Kee " + extensionVersion.value;
+    document.title = "KeeLink " + extensionVersion.value;
     if (await checkPermissions()) {
         await initialiseDatabaseSourcePossibilities();
     } else {
