@@ -102,15 +102,21 @@ jobs:
       #     WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
       #     NEW_KEE_VERSION: ${{ env.NEW_KEE_VERSION }}
       
-      - name: Publish the new release to Chrome beta users
-        if: ${{ success() || ( failure() && steps.firefoxsign.conclusion == 'failure' ) }}
-        uses: mnao305/chrome-extension-upload@v5.0.0
-        with:
-          extension-id: hlicbbodnlbbflfihnjjffnjeaoglici
-          file-path: "dist/extension-beta.zip"
-          publish-target: trustedTesters
-          client-id: ${{ secrets.CHROME_CLIENT_ID }}
-          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
-          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+      # Disabled after forking from upstream Kee: extension-id hlicbbodnlbbflfihnjjffnjeaoglici
+      # is the upstream project's own Chrome Web Store listing, and the CHROME_CLIENT_ID /
+      # CHROME_CLIENT_SECRET / CHROME_REFRESH_TOKEN secrets belong to their developer account,
+      # not this fork's. To publish this fork to your own Chrome Web Store listing: create your
+      # own listing, add your own client-id/secret/refresh-token as repo secrets, set
+      # extension-id to your listing's id below, and uncomment this step.
+      # - name: Publish the new release to Chrome beta users
+      #   if: ${{ success() || ( failure() && steps.firefoxsign.conclusion == 'failure' ) }}
+      #   uses: mnao305/chrome-extension-upload@v5.0.0
+      #   with:
+      #     extension-id: hlicbbodnlbbflfihnjjffnjeaoglici
+      #     file-path: "dist/extension-beta.zip"
+      #     publish-target: trustedTesters
+      #     client-id: ${{ secrets.CHROME_CLIENT_ID }}
+      #     client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+      #     refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
 
         #TODO: Edge auto-deployment

@@ -140,17 +140,22 @@ export async function getManifest() {
         },
         "browser_specific_settings": {
             "gecko": {
-                "id": "keefox@chris.tomlinson",
-                "update_url": "https://raw.githubusercontent.com/kee-org/browser-addon-updates/master/beta/update.json",
+                // A fork of Kee needs its own id - reusing the upstream one would
+                // collide with the real Kee addon (Firefox treats matching ids as the
+                // same addon). This UUID is only guaranteed unique, not meaningful;
+                // replace it with your own {uuid} or name@domain string if you want a
+                // more memorable one before publishing anywhere.
+                "id": "{5114543a-b350-4f17-931c-d4bf93a81ca7}",
                 "strict_min_version": "126.0"
+                // No update_url: that pointed at kee-org's own update feed, which does
+                // not know about this fork. Add your own hosted update manifest URL
+                // here if you set up self-distribution with auto-updates.
             }
         },
         minimum_chrome_version: "123"
     };
 
-    if (!isBeta) {
-        delete manifest.browser_specific_settings.gecko.update_url;
-    } else {
+    if (isBeta) {
         manifest.version_name += " beta";
     }
 
