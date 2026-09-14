@@ -144,9 +144,20 @@ if (document.body) {
                 // a login form without adding any DOM nodes. Treat that the same as
                 // a newly-added node.
                 const element = mutation.target as Element;
+                // <html>/<body> themselves are an extremely common target for
+                // unrelated attribute churn (theme toggles, scroll-lock classes,
+                // app-root re-render markers) and, being the mutated element, would
+                // make deepContains search the entire page on every such toggle.
+                // A form is essentially never revealed by an attribute directly on
+                // <html>/<body> - it's some more specific wrapper further down that
+                // gets its own mutation record - so skip the expensive whole-page
+                // search for exactly these two elements.
+                const isDocumentRoot =
+                    element === document.documentElement || element === document.body;
                 if (
                     (element.matches && element.matches(interestingNodes.join(","))) ||
-                    (typeof element.querySelector === "function" &&
+                    (!isDocumentRoot &&
+                        typeof element.querySelector === "function" &&
                         formUtils.deepContains(element, interestingNodes))
                 ) {
                     rescan = true;
