@@ -146,10 +146,18 @@ export async function getManifest() {
                 // replace it with your own {uuid} or name@domain string if you want a
                 // more memorable one before publishing anywhere.
                 "id": "{5114543a-b350-4f17-931c-d4bf93a81ca7}",
-                "strict_min_version": "126.0"
+                "strict_min_version": "126.0",
                 // No update_url: that pointed at kee-org's own update feed, which does
                 // not know about this fork. Add your own hosted update manifest URL
                 // here if you set up self-distribution with auto-updates.
+
+                // Required by Mozilla since Nov 2025 (https://mzl.la/firefox-builtin-data-consent).
+                // This extension doesn't collect or transmit any data off-device - it only talks
+                // to the local KeePass instance and, if the user configures it, their own Kee
+                // Vault server.
+                "data_collection_permissions": {
+                    "required": ["none"]
+                }
             }
         },
         minimum_chrome_version: "123"
