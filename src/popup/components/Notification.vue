@@ -66,9 +66,6 @@ export default {
                     configManager.current.connSLClient = 3;
                     configManager.save();
                     break;
-                case "loadUrlUpgradeKee":
-                    pm({ loadUrlUpgradeKee: true });
-                    break;
                 case "disableNotifyWhenEntryUpdated":
                     configManager.current.notifyWhenEntryUpdated = false;
                     configManager.save();

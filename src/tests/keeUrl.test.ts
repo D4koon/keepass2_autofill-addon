@@ -3,10 +3,10 @@ import { KeeURL } from "../common/KeeURL";
 
 describe("KeeURL.fromString", () => {
     it("assumes https:// when no scheme is given", () => {
-        const u = KeeURL.fromString("www.kee.pm/path");
+        const u = KeeURL.fromString("www.example.com/path");
         expect(u).not.toBeNull();
         expect(u.url.protocol).toBe("https:");
-        expect(u.url.hostname).toBe("www.kee.pm");
+        expect(u.url.hostname).toBe("www.example.com");
     });
 
     it("keeps an explicit http:// / file:// scheme", () => {
@@ -15,8 +15,8 @@ describe("KeeURL.fromString", () => {
     });
 
     it("derives the registrable domain via the public suffix list", () => {
-        expect(KeeURL.fromString("https://a.b.kee.pm/x").domain).toBe("kee.pm");
-        expect(KeeURL.fromString("https://kee.pm").domain).toBe("kee.pm");
+        expect(KeeURL.fromString("https://a.b.example.com/x").domain).toBe("example.com");
+        expect(KeeURL.fromString("https://example.com").domain).toBe("example.com");
     });
 
     it("recognises IPv4 hosts and does not treat them as domains", () => {
@@ -27,12 +27,12 @@ describe("KeeURL.fromString", () => {
     });
 
     it("domainOrIPAddress falls back to the domain for normal hosts", () => {
-        expect(KeeURL.fromString("https://www.kee.pm").domainOrIPAddress).toBe("kee.pm");
+        expect(KeeURL.fromString("https://www.example.com").domainOrIPAddress).toBe("example.com");
     });
 
     it("domainWithPort appends the port only when present", () => {
-        expect(KeeURL.fromString("https://www.kee.pm").domainWithPort).toBe("kee.pm");
-        expect(KeeURL.fromString("https://www.kee.pm:8443").domainWithPort).toBe("kee.pm:8443");
+        expect(KeeURL.fromString("https://www.example.com").domainWithPort).toBe("example.com");
+        expect(KeeURL.fromString("https://www.example.com:8443").domainWithPort).toBe("example.com:8443");
     });
 
     it("returns an empty domainWithPort when there is no domain (IP host)", () => {

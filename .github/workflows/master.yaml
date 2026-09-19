@@ -77,16 +77,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # - name: Transifex upload
-      #   run: pip install transifex-client && echo $'[https://www.transifex.com]\nhostname = https://www.transifex.com\nusername = api\ntoken = \npassword = '"$TRANSIFEX_API_TOKEN"$'\n' > .transifexrc && tx -d --traceback push -s;
-      #   env:
-      #     TRANSIFEX_API_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
-
-      - name: Transifex upload
-        uses: transifex/cli-action@v2
-        with:
-          token: ${{ secrets.TRANSIFEX_API_TOKEN }}
-
       - name: Push version commit and git tag
         run: |
           git push origin HEAD:refs/heads/${{ github.ref_name }}
@@ -99,6 +89,6 @@ jobs:
           tag_name: ${{ env.NEW_KEE_VERSION }}
           fail_on_unmatched_files: true
           prerelease: true
-          body: "This is an automatically generated pre-release. Some releases will be thoroughly tested and their derivatives marked as ready for beta and eventually stable release. If the status of this version changes, this message will be replaced. You may want to install the files in this release if you wish to test a specific change that is included within this version. More information can be found at https://forum.kee.pm/t/versioning-and-releases/550"
+          body: "This is an automatically generated pre-release. Some releases will be thoroughly tested and their derivatives marked as ready for beta and eventually stable release. If the status of this version changes, this message will be replaced. You may want to install the files in this release if you wish to test a specific change that is included within this version."
           files: |
             dist/*

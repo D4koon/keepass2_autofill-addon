@@ -30,17 +30,8 @@ export async function getManifest() {
         content_scripts: [{
             all_frames: true,
             matches: ["<all_urls>"],
-            exclude_globs: ["https://app-dev.kee.pm:8087/*", "https://app-beta.kee.pm/*", "https://app.kee.pm/*", "https://keevault.pm/*"],
             js: [
                 "./dist/page/index.global.js"
-            ],
-            run_at: "document_end"
-        }, {
-            all_frames: false,
-            matches: ["<all_urls>"],
-            include_globs: ["https://app-dev.kee.pm:8087/*", "https://app-beta.kee.pm/*", "https://app.kee.pm/*", "https://keevault.pm/*"],
-            js: [
-                "./dist/vault/index.global.js"
             ],
             run_at: "document_end"
         }
@@ -81,24 +72,15 @@ export async function getManifest() {
             "notifications",
             "unlimitedStorage",
             "idle",
-            "scripting" // new requirement for MV3 to support reliable enabling of Kee Vault website and in-page assistance for tabs already open when extension is installed/updated
+            "scripting" // new requirement for MV3 to support in-page assistance for tabs already open when extension is installed/updated
         ] as any, // type error - doesn't support webRequestAuthProvider
 
-        // As of 2024 host permission management is still chaotic across Firefox and Chrome but if
-        // they can ever come up with the promised solution for optional per-site management, we
-        // could look into requesting "optional_host_permissions": ["<all_urls>"] and
-        // host_permissions: ["*://*.kee.pm/*", "*://*.keevault.pm/*"] to give end users more
-        // options for risk management.
         host_permissions: ["<all_urls>"],
 
         // http and https only(no file) - otherwise should be identical to <all_urls>
         //host_permissions: ["*://*/*"],
 
         web_accessible_resources: [
-            {
-                resources: ["lib/linkContentScriptToKeeVaultWebsite.js"],
-                matches: ["*://*.kee.pm/*", "*://*.keevault.pm/*"]
-            },
             {
                 resources: ["dist/panels/*"],
                 matches: ["<all_urls>"]
@@ -157,8 +139,7 @@ export async function getManifest() {
 
                 // Required by Mozilla since Nov 2025 (https://mzl.la/firefox-builtin-data-consent).
                 // This extension doesn't collect or transmit any data off-device - it only talks
-                // to the local KeePass instance and, if the user configures it, their own Kee
-                // Vault server.
+                // to the local KeePass instance.
                 "data_collection_permissions": {
                     "required": ["none"]
                 }

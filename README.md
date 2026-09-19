@@ -1,12 +1,8 @@
 # Simple and secure password management
 
-## Kee automatically fills login forms to save you time and protect you from security risks.
+## KeeLink automatically fills login forms to save you time and protect you from security risks.
 
-Kee is a free Firefox and Chrome add-on for linking browsers to [Kee Vault](https://keevault.pm) or KeePass (latter requires using the [KeePassRPC KeePass plugin](https://github.com/kee-org/keepassrpc)).
-
-Official website with sign-up and download links: https://www.kee.pm
-
-Support forum: https://forum.kee.pm
+KeeLink is a free Firefox and Chrome add-on for linking browsers to KeePass (requires the [KeePassRPC KeePass plugin](https://github.com/kee-org/keepassrpc)).
 
 # Build
 
@@ -15,7 +11,7 @@ Support forum: https://forum.kee.pm
 * node 20.19 or higher (required by web-ext 10 and vite 7; CI uses 20)
 * a node package manager (tested with npm 8, 9 and 10)
 * a web browser (tested with Firefox 117)
-* a Supporter's subscription to [Kee Vault](https://keevault.pm) OR KeePass 2.x (+ .NET/Mono) + KeePassRPC.plgx
+* KeePass 2.x (+ .NET/Mono) + KeePassRPC.plgx
 
 It's set up for Visual Studio Code but it shouldn't be too hard to work out how to develop using other IDEs.
 
@@ -90,7 +86,6 @@ Firefox refuses to install an unsigned `.xpi` outside of Developer Edition/Night
 ## Repo/project structure
 
 * `/_locales` Localisation data (language translations).
-* `.tx` Used by Transifex localisation scripts to help manage multiple language translation.
 * `dist` Output folder for build packages (e.g. an XPI file for installation in Firefox). Created automatically by development scripts or manually if you're only building for packaging/release.
 * `extension` Output folder for compiled files when developing or building for packaging/release.
 * `lib` Files that are directly included in the resulting extension, undergoing no further adjustment or compilation.
@@ -102,13 +97,12 @@ Firefox refuses to install an unsigned `.xpi` outside of Developer Edition/Night
    * `common` Modules that are used across multiple extension scopes (e.g. background, popup, content script, etc.) 
    * `dialogs` Standalone dialogs within the extension context (e.g. for the Network Authentication window).
    * `install-notes` A Vue app that is shown after an extension installation has occurred.
-   * `page` The content page script that gets injected to every web page that is not Kee Vault.
+   * `page` The content page script that gets injected to every web page.
    * `panels` Small pages that are rendered as in-page panels, within an iframe, within any web page.
    * `popup` The main browser popup that clicking on the browser toolbar button will display.
    * `release-notes` Pages that are shown after an extension update has occurred.
    * `settings` Page to allow user to adjust many extension settings.
    * `store` The Pinia Store definitions that are used for both Vue/Vuetify UI state storage and for automated data transfer across multiple extension execution scopes (popup, settings page, background, in-page panels, etc.)
-   * `vault` The content page script that gets injected to the Kee Vault website.
 
 ## Vue devtools
 

@@ -55,10 +55,6 @@
         "message": "Kee muss für den Zugriff auf KeePass Password Safe aktualisiert werden. Stellen Sie sicher, dass Sie die aktuelle Version des Browser-Add-ons nutzen.",
         "description": "The KeePassRPC server requires features from Kee that this version does not contain."
     },
-    "conn_setup_server_features_missing": {
-        "message": "Ihr Passwortmanager muss aktualisiert werden, damit Kee eine Verbindung herstellen kann. Laden Sie die Kee Vault-Webseite erneut und/oder stellen Sie sicher, dass Sie die aktuelle Version des KeePassRPC-Plug-ins verwenden. Folgen Sie den einfachen Schritten unter $1",
-        "description": "The KeePassRPC server does not offer some features that this version of Kee requires."
-    },
     "conn_sl_high_label": {
         "message": "Beim Start meines Webbrowsers oder von KeePass jedes Mal nach einem neuen Verbindungspasswort fragen",
         "description": "Checkbox label to enable high security connection mode when authorising a connection to KeePassRPC"
@@ -211,10 +207,6 @@
         "message": "Bei Speichermöglichkeit eines Eintrags das Kee-Icon animieren",
         "description": "Option to enable or disable the animation of the Kee icon that displays when an entry is available for saving from the main popup panel"
     },
-    "pref_rememberMRUDB_label": {
-        "message": "Zuletzt verwendete Kee Vault- oder KeePass-Datenbanken speichern",
-        "description": ""
-    },
     "pref_preferToSkipWhere_label": {
         "message": "Neue Einträge automatisch in der Gruppe speichern, die zuletzt verwendet wurde",
         "description": "Whether Kee will save new entries to the group most recently chosen by the user without presenting them with the usual Where group chooser interface"
@@ -222,10 +214,6 @@
     "pref_saveFavicons_label": {
         "message": "Webseiten-Symbol (Favicon) speichern",
         "description": "Whether or not Kee will save the website's icon when a new entry is saved"
-    },
-    "pref_searchAllOpenDBs_label": {
-        "message": "Alle offenen Kee Vault- und KeePass-Datenbanken durchsuchen",
-        "description": ""
     },
     "pref_when_kee_chooses_standard_form_desc": {
         "message": "Wenn Kee passende Log-in-Daten für ein Standardformular wählt, dann soll Kee",
@@ -247,10 +235,6 @@
         "message": "Formulare finden",
         "description": "Settings heading for how Kee finds forms it is (or isn't) interested in filling in with entries from the password manager"
     },
-    "site_options_valid_form_intro_desc": {
-        "message": "Kee wird versuchen, übereinstimmende Kee Vault- und KeePass-Einträge für alle Formulare zu füllen, die ein Passwortfeld (Box) haben. Sie können dieses Verhalten unten anpassen.",
-        "description": "Explains how Kee chooses which forms to fill in"
-    },
     "text_field_id": {
         "message": "Textfeld-ID",
         "description": ""
@@ -262,10 +246,6 @@
     "white_list": {
         "message": "Positivliste",
         "description": "List of items that cause behaviour to be enabled if they match. For example, the list of names of form fields that force Kee to search for logins for the form containing that field."
-    },
-    "Help_Centre_Button_label": {
-        "message": "Hilfe-Zentrum",
-        "description": ""
     },
     "cancel": {
         "message": "Abbrechen",
@@ -291,16 +271,8 @@
         "message": "KeePass öffnen",
         "description": "Action button to launch, unlock and/or focus KeePass"
     },
-    "Menu_Button_open_kee_vault_label": {
-        "message": "Kee Vault öffnen",
-        "description": "Action button to launch, unlock and/or focus Kee Vault"
-    },
     "Search_label": {
         "message": "Suchen...",
-        "description": ""
-    },
-    "PasswordProfilesExplanation_label": {
-        "message": "Optional können Sie unten ein anderes Passwortprofil erstellen. Kee Vault oder KeePass zum Speichern neuer Profile verwenden.",
         "description": ""
     },
     "copy_password_label": {
@@ -381,7 +353,7 @@
     },
     "loggedIn_tip": {
         "message": "Sie sind an Ihrer '$1'-Datenbank angemeldet.",
-        "description": "Tells the user they are logged into a Kee Vault or KeePass database (and gives its name, if any)"
+        "description": "Tells the user they are logged into a KeePass database (and gives its name, if any)"
     },
     "loggedInMultiple_tip": {
         "message": "Sie sind an der '$1'-Datenbank angemeldet. '$2' ist aktiv.",
@@ -405,10 +377,6 @@
     },
     "notifyBarLaunchKeePass_label": {
         "message": "Sie sind nicht an Ihrer Passwortdatenbank angemeldet.",
-        "description": ""
-    },
-    "notifyBarLaunchKeePassButton_tip": {
-        "message": "Bitte Kee Vault oder KeePass starten, um Kee zu aktivieren.",
         "description": ""
     },
     "notifyBarLoginToKeePassButton_tip": {
@@ -507,10 +475,6 @@
         "message": "Nachricht nicht mehr anzeigen",
         "description": "Button user can click on to cause a message to hide and not reappear"
     },
-    "upgrade_kee": {
-        "message": "Kee aktualisieren",
-        "description": "Button user can click on to load a web page with instructions on how to upgrade Kee"
-    },
     "pref_when_one_matching_network_login": {
         "message": "Automatisch anmelden, wenn Kee nur eine passende Netzwerkanmeldung (z. B. HTTP-Authentifikation) findet",
         "description": "When the user selects this option, they will be shown the popup dialog with all matching entries for network authentication, unless there is only one match. If not enabled, the user will always see the list of matching logins."
@@ -539,26 +503,6 @@
         "message": "Kee füllt automatisch Anmeldeformulare aus, um Zeit zu sparen und Sie vor Sicherheitsrisiken zu schützen.",
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
-    "all_sites_permissions_required_start": {
-        "message": "Ihr Browser erfordert einen zusätzlichen Schritt, bevor Kee funktionieren kann. Wenn Sie zusätzliche Sicherheit wünschen, bevor Sie fortfahren, lesen Sie unbedingt darüber",
-        "description": "First part of a paragraph that contains 2 links. The first, directly follows this text (a space character is inserted either side of the link) is a link to information about why open source is important for a password manager."
-    },
-    "all_sites_permissions_required_why_open_source_link_text": {
-        "message": "Warum es wichtig ist, Open Source zu sein",
-        "description": "Text for a link to information about why open source is important for a password manager. A space character will be inserted either side of the link."
-    },
-    "all_sites_permissions_required_middle": {
-        "message": "und Sie können alle Details finden zu",
-        "description": "Middle part of the paragraph - surrounded by the two links."
-    },
-    "all_sites_permissions_required_permissions_link_text": {
-        "message": "Berechtigungen",
-        "description": "Text for a link to information about the extension permissions we require and why. A space character will be inserted either side of the link."
-    },
-    "all_sites_permissions_required_end": {
-        "message": "die wir auf unserer Website benötigen.",
-        "description": "Final part of the paragraph, directly preceded by the link to our website page about extension permissions."
-    },
     "continue": {
         "message": "fortfahren",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
@@ -570,82 +514,6 @@
     "kee_works_with_a_password_manager": {
         "message": "Die Zugangsdaten, die Kee für Sie eingibt, werden sicher in einem Passwortmanager hinter einem einzigen \"Hauptpasswort\" gespeichert.",
         "description": "Explains that Kee stores passwords in a password manager that users access through a single password."
-    },
-    "recommend_start_with_kee_vault": {
-        "message": "Wir empfehlen Ihnen, unseren Passwort-Manager Kee Vault auszuprobieren. Es kostet nach einer kostenlosen Testversion nur etwa 20£ pro Jahr, synchronisiert und sichert Ihre Passwörter nahtlos auf allen Ihren Geräten und ist Open Source, genau wie Kee.",
-        "description": "Recommend the quick and easy option for new users to increase likelihood of long-term usage of a password manager."
-    },
-    "recommend_start_with_kee_vault2": {
-        "message": "Wir bieten auch Apps an, mit denen Sie sich auf Ihren iOS- und Android-Geräten bei anderen Apps und Websites anmelden können.",
-        "description": "Further details about the Kee Vault service."
-    },
-    "kee_still_supports_keepass": {
-        "message": "Kee unterstützt weiterhin uneingeschränkt die Verwendung von KeePass als Passwort-Manager, sodass Sie nichts tun müssen, aber wir würden uns sehr über Ihre Unterstützung freuen, damit Kee noch viele Jahre am Laufen bleibt.",
-        "description": "Reassures users that nothing has changed regarding the support of KeePass as a password management source."
-    },
-    "load_kee_vault_now": {
-        "message": "Kee Vault jetzt laden",
-        "description": "Call To Action button text. On click, the Kee Vault app will load and focus in a new tab."
-    },
-    "you_can_use_KeePass_instead": {
-        "message": "Alternativ können Sie auch KeePass Password Safe 2 konfigurieren.",
-        "description": "Explains that Kee also works with KeePass so they can choose to configure that if they prefer to avoid all financial expenditure."
-    },
-    "table_summarises_differences": {
-        "message": "Die folgende Tabelle fasst die Hauptunterschiede zusammen.",
-        "description": "Introduces the summary table that will help users choose a password manager to start with."
-    },
-    "installation_required": {
-        "message": "Installation erforderlich",
-        "description": "States that the user will need to install components on their computer"
-    },
-    "access_from_multiple_devices": {
-        "message": "Zugriff von mehreren Desktop- und mobilen Geräten",
-        "description": "Covers web browsers and mobiles, laptops, tablets, etc."
-    },
-    "shared_preferences": {
-        "message": "Gemeinsame Einstellungen",
-        "description": "Labels the process of synchronising browser extension and password manager configuration options/preferences across multiple locations."
-    },
-    "yes_configure_once": {
-        "message": "Ja, einmalig konfigurieren",
-        "description": "Supports synchronising browser extension and password manager configuration options/preferences"
-    },
-    "no_configure_multiple": {
-        "message": "Nein, in jedem benutzten Webbrowser oder Gerät konfigurieren",
-        "description": "Does not support synchronising browser extension and password manager configuration options/preferences"
-    },
-    "difficulty": {
-        "message": "Schwierigkeit",
-        "description": "How hard or easy it is to complete a task"
-    },
-    "difficulty_kee_vault": {
-        "message": "Einfach",
-        "description": "Indicates that it is easy to get started with Kee Vault"
-    },
-    "difficulty_keepass": {
-        "message": "Mittel (hart auf Mac-Computern)",
-        "description": "Indicates that more work is required to get started with KeePass"
-    },
-    "keepass_sync_config_explanation": {
-        "message": "Für KeePass kann eine Teillösung für den Zugriff auf mehrere Geräte manuell mit Drittanbieterdiensten konfiguriert werden, von denen einige kostenpflichtig sind. Jedes Gerät muss vorab vorbereitet und konfiguriert werden.",
-        "description": ""
-    },
-    "point_user_to_keepass_install_instructions_start": {
-        "message": "Eine Anleitung zur Installation und Konfiguration von KeePass und dem benötigten KeePassRPC-Plug-in finden Sie in unserem",
-        "description": "Left part of a sentence that contains a link to the community forum in the middle. For new installations"
-    },
-    "point_user_to_keepass_install_instructions_end": {
-        "message": ".",
-        "description": "Right part of a sentence that contains a link to the community forum in the middle. For new installations"
-    },
-    "point_user_to_tutorial_link_text": {
-        "message": "interaktive Tutorial,",
-        "description": "Name of the link to the interactive tutorial page"
-    },
-    "point_user_to_forum_link_text": {
-        "message": "Community-Forum",
-        "description": "Name of the link to the community forum"
     },
     "notification_raised_title": {
         "message": "Kee hat eine Benachrichtigung für Sie",
@@ -687,18 +555,6 @@
         "message": "Neues Icon",
         "description": "Heading for text that explains we have a new icon / branding"
     },
-    "kee_vault_announcement_1": {
-        "message": "Kee Vault ist ein neuer Open-Source-Passwortmanager. Er wird in Ihrem Webbrowser ausgeführt, sodass keine Installation erforderlich ist.",
-        "description": "Introduction to what Kee Vault is"
-    },
-    "kee_vault_announcement_2": {
-        "message": "Es funktioniert auf jedem modernen Gerät oder Webbrowser, auch wenn dieser offline ist. Nachdem Sie Ihre vorhandene KeePass-Datenbank importiert haben, können Sie von überall aus auf Ihren Kee Vault zugreifen, wobei Ihre Änderungen und Konfigurationseinstellungen automatisch an jedes Ihrer Geräte und Browser gesendet werden.",
-        "description": "Outlines a few benefits of Kee Vault compared to KeePass"
-    },
-    "kee_vault_announcement_3": {
-        "message": "Seit Kee Version 3.0 können Sie Kee Vault anstelle der Desktopanwendung KeePass verwenden. Dabei werden alle vorhandenen Kee-Funktionen wie das Ausfüllen und Speichern von Formularen sowie das Suchen und Generieren von Passwörtern unterstützt.",
-        "description": "Explains that Kee v3 works with Kee Vault"
-    },
     "pref_automatic": {
         "message": "Automatisch",
         "description": "Group of settings that relate to the actions that Kee can take automatically when filling entries"
@@ -709,11 +565,11 @@
     },
     "pref_fill_override_hint": {
         "message": "Bearbeiten Sie einzelne Einträge in Ihrem Passwortmanager, um dieses Verhalten zu umgehen.",
-        "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via Kee Vault or KeePass."
+        "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
     },
     "pref_fill_override_option": {
         "message": "Das Bearbeiten des Verhaltens zum automatischen Senden eines Eintrags überschreibt auch dieses Verhalten.",
-        "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via Kee Vault or KeePass."
+        "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
     },
     "next": {
         "message": "Weiter",
@@ -753,7 +609,7 @@
     },
     "password_profile": {
         "message": "Passwortprofil",
-        "description": "Name of the profiles used by KeePass and Kee Vault to construct new random passwords."
+        "description": "Name of the profiles used by KeePass to construct new random passwords."
     },
     "url_mismatch_1": {
         "message": "Dieser Eintrag ist für eine andere Seite.",
@@ -777,7 +633,7 @@
     },
     "open_full_editor": {
         "message": "Erweiterten Editor öffnen",
-        "description": "Button action to open the full entry editor in KeePass or Kee Vault. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
+        "description": "Button action to open the full entry editor in KeePass. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
     },
     "where": {
         "message": "Wo?",
@@ -822,22 +678,6 @@
     "list_version_upgrade_4_0": {
         "message": "Unterstützung für die neuesten Webbrowser (MV3);Schnellere Verbindung zu KeePass auf einigen Systemen (erfordert KeePassRPC.plgx v2+);Viele Fehlerbehebungen und wahrscheinlich einige neue Fehler eingeführt",
         "description": "Changes for the version number in the string key name. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
-    },
-    "release_details_for_keepass_available_on_forum": {
-        "message": "Weitere Details, einschließlich wichtiger Informationen für KeePass-Benutzer, finden Sie in der Release-Ankündigung im Community-Forum:",
-        "description": "Statement - preceding a link - to notify users that there is a corresponding topic on the community forum that was posted just before this version was submitted to the web browser extension stores for review. Specifically this one calls out that it affects KeePass users (due to KeePassRPC.plgx related information)"
-    },
-    "thanks_for_beta_testing": {
-        "message": "Vielen Dank für den Betatest von Kee! Sie helfen uns, Kee für alle besser zu machen. Wenn Sie Feedback haben oder neue Probleme mit dieser Version feststellen, schließen Sie sich bitte dem Community-Forum an und teilen Sie uns dies mit.",
-        "description": "Message thanking the user for being a Kee beta tester"
-    },
-    "beta_testing_is_good": {
-        "message": "Kee-Betatester genießen bereits seit vielen Monaten einige dieser Verbesserungen.",
-        "description": "Brief highlight of one of the benefits of being a Kee beta tester"
-    },
-    "join_the_community_cta": {
-        "message": "Machen Sie jetzt mit!",
-        "description": "Call to action to join a community. Initially for beta testing but could be reused for other purposes such as the community forum in future."
     },
     "ignore_case": {
         "message": "Groß-/Kleinschreibung ignorieren",

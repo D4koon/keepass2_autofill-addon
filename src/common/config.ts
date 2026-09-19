@@ -88,9 +88,6 @@ export class Config {
     currentSearchTermTimeout: number;
     notifyPasswordAvailableForPaste: boolean;
     animateWhenOfferingSave: boolean;
-    keeVaultLaunchMessageDismissed: boolean;
-    keeVaultLaunchStart: number;
-    keeVaultLaunchEnd: number;
     manualSubmitOverrideProhibited: boolean;
     theme: string;
     hideConfirmationAfterSave: boolean;

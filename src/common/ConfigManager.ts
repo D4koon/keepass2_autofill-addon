@@ -70,9 +70,6 @@ defaultConfig.notificationCountSavePassword = 0;
 defaultConfig.currentSearchTermTimeout = 30;
 defaultConfig.notifyPasswordAvailableForPaste = true;
 defaultConfig.animateWhenOfferingSave = true;
-defaultConfig.keeVaultLaunchMessageDismissed = false;
-defaultConfig.keeVaultLaunchStart = 8640000000000000;
-defaultConfig.keeVaultLaunchEnd = 8640000000000000;
 defaultConfig.manualSubmitOverrideProhibited = false;
 defaultConfig.theme = null;
 defaultConfig.hideConfirmationAfterSave = false;
@@ -225,20 +222,6 @@ export class ConfigManager {
                 migrations.migrateToVersion7(this.current);
             case 7:
                 migrations.migrateToVersion8(this.current);
-        }
-        /* eslint-enable no-fallthrough */
-        void this.save().catch(() => {});
-    }
-
-    public migrateFromRemoteToLatestVersion() {
-        if (this.current.version >= LATEST_VERSION) return;
-        const migrations = new ConfigMigrations();
-        /* eslint-disable no-fallthrough */
-        switch (this.current.version) {
-            case 5:
-                migrations.migrateToVersion6(this.current);
-            case 6:
-                migrations.migrateToVersion7(this.current);
         }
         /* eslint-enable no-fallthrough */
         void this.save().catch(() => {});

@@ -1,6 +1,5 @@
 import type { AddonMessage } from "./AddonMessage";
 import { KeeLog } from "./Logger";
-import type { VaultMessage } from "./VaultMessage";
 
 class ContentPortManager {
     private port: chrome.runtime.Port;
@@ -13,7 +12,7 @@ class ContentPortManager {
     //     }
     // };
 
-    public postMessage(msg: AddonMessage | VaultMessage) {
+    public postMessage(msg: AddonMessage) {
         try {
             this.port.postMessage(msg);
         } catch (e) {

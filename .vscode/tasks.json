@@ -17,7 +17,7 @@
     "tasks": [
         {
             "label": "Kee: Build (production)",
-            "detail": "One-off production build (npm run build:prod). Cleans ./extension and rebuilds the web/background/page/vault bundles into it. No browser is launched.",
+            "detail": "One-off production build (npm run build:prod). Cleans ./extension and rebuilds the web/background/page bundles into it. No browser is launched.",
             "type": "npm",
             "script": "build:prod",
             "problemMatcher": [],

@@ -1,7 +1,6 @@
 export type ButtonAction =
     | "enableHighSecurityKPRPCConnection"
     | "disableNotifyWhenEntryUpdated"
-    | "loadUrlUpgradeKee"
     | "launchLoginEditorFromNotification";
 
 export interface Button {

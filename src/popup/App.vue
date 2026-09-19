@@ -63,16 +63,8 @@
 
         <v-footer app height="auto" style="padding:8px;">
             <!-- <v-container style="padding:8px;"></v-container> -->
-            <v-btn id="password-open-kee-vault" :aria-label="$i18n('Menu_Button_open_kee_vault_label')"
-                class="ml-0 mr-1" size="small" icon @click="openKeeVault">
-                <v-img width="24px" height="24px" src="/assets/images/48-kee-vault.png" />
-                <v-tooltip location="top" :open-delay="tooltipDelay" activator="parent">
-                    <span>{{ $i18n("Menu_Button_open_kee_vault_label") }}</span>
-                </v-tooltip>
-            </v-btn>
-
             <v-btn v-show="showOpenKeePassButton" id="password-open-keepass"
-                :aria-label="$i18n('Menu_Button_open_keepass_label')" class="mr-1 ml-n1" size="small" icon
+                :aria-label="$i18n('Menu_Button_open_keepass_label')" class="ml-0 mr-1" size="small" icon
                 @click="openKeePass">
                 <v-img width="24px" height="24px" src="/assets/images/48-keepass.png" />
                 <v-tooltip location="top" :open-delay="tooltipDelay" activator="parent">
@@ -95,14 +87,6 @@
                 <mdi-menu scale="150" />
                 <v-menu location="top" activator="parent">
                     <v-list>
-                        <v-list-item @click="showHelp">
-                            <v-list-item-title class="text-right text-body-2">
-                                {{ $i18n("Help_Centre_Button_label") }}
-                            </v-list-item-title>
-                            <template #append>
-                                <mdi-help class="ml-2" />
-                            </template>
-                        </v-list-item>
                         <v-list-item @click="showOptions">
                             <v-list-item-title class="text-right text-body-2">
                                 {{ $i18n("Menu_Button_options_label") }}
@@ -348,30 +332,6 @@ export default {
             this.displayWhereReason = displayWhereReason;
             this.preferredGroupUuid = preferredGroupUuid;
             this.showSaveWhere = true;
-        },
-        showHelp: () => {
-            chrome.tabs.create({ url: "https://www.kee.pm/help" });
-            window.close();
-        },
-        openKeeVault: async function () {
-            KeeLog.debug("open Kee Vault requested");
-            const vaultTabs = await chrome.tabs.query({
-                url: [
-                    "https://keevault.pm/*",
-                    "https://app-beta.kee.pm/*",
-                    "https://app-dev.kee.pm/*"
-                ]
-            });
-            if (vaultTabs && vaultTabs[0]) {
-                chrome.tabs.update(vaultTabs[0].id, { active: true });
-                chrome.windows.update(vaultTabs[0].windowId, { focused: true });
-            } else {
-                chrome.tabs.create({
-                    url: "https://keevault.pm/",
-                    active: true
-                });
-            }
-            window.close();
         },
         openKeePass: function () {
             KeeLog.debug("open KeePass requested");

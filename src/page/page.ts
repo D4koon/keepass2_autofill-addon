@@ -198,30 +198,6 @@ if (document.body) {
         Port.postMessage({ findMatches: { uri } });
     }
 
-    function tutorialIntegration() {
-        if (window.location.hostname.endsWith("tutorial-addon.kee.pm")) {
-            const transferElement = document.createElement("KeeFoxAddonStateTransferElement");
-            transferElement.setAttribute(
-                "state",
-                JSON.stringify({
-                    connected: store?.state?.connected || false,
-                    version: chrome.runtime.getManifest().version,
-                    dbLoaded: store?.state?.KeePassDatabases?.length > 0,
-                    sessionNames: store?.state?.KeePassDatabases?.map?.(db =>
-                        db.sessionType.toString()
-                    ).filter((v, i, a) => a.indexOf(v) === i)
-                })
-            );
-            document.documentElement.appendChild(transferElement);
-
-            const event = new Event("KeeFoxAddonStateTransferEvent", {
-                bubbles: true,
-                cancelable: false
-            });
-            transferElement.dispatchEvent(event);
-        }
-    }
-
     function onFirstConnect(myFrameId: number) {
         frameId = myFrameId;
 
@@ -248,8 +224,6 @@ if (document.body) {
         } catch (e) {
             KeeLog.debug("could not observe shadow roots: " + e);
         }
-
-        tutorialIntegration();
     }
 
     function startup() {

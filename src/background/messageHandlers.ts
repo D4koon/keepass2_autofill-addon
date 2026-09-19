@@ -3,13 +3,10 @@ import { KeeLog } from "../common/Logger";
 import { KeeNotification } from "../common/KeeNotification";
 import { Action } from "../common/Action";
 import { configManager } from "../common/ConfigManager";
-import type { VaultMessage } from "../common/VaultMessage";
-import { VaultAction } from "../common/VaultAction";
 import { Entry } from "../common/model/Entry";
 import { copyStringToClipboard } from "../common/copyStringToClipboard";
 import { utils } from "../common/utils";
 import { kee } from "./KF";
-import { accountManager } from "./AccountManager";
 
 
 // callbacks for messaging / ports
@@ -91,11 +88,6 @@ export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg:
 
     if (msg.removeNotification) {
         kee.removeUserNotifications((n: KeeNotification) => n.id != msg.removeNotification);
-    }
-    if (msg.loadUrlUpgradeKee) {
-        chrome.tabs.create({
-            url: "https://www.kee.pm/upgrade-kprpc"
-        });
     }
     if (msg.action == Action.GetPasswordProfiles) {
         const passwordProfiles = await kee.getPasswordProfiles();
@@ -384,42 +376,6 @@ export async function pageMessageHandler(this: chrome.runtime.Port, msg: AddonMe
         if (this.sender.frameId === 0) {
             kee.deleteTabState(this.sender.tab.id);
         }
-    }
-}
-
-export function vaultMessageHandler(this: chrome.runtime.Port, msg: VaultMessage) {
-    if (msg.mutation) {
-        kee.store.onRemoteMessage(this, msg.mutation);
-    }
-
-    let result;
-    if (KeeLog && KeeLog.debug) {
-        KeeLog.debug("In background script, received message from vault script.");
-    }
-    switch (msg.action) {
-        case VaultAction.Init:
-            result = kee.KeePassRPC.startEventSession(
-                msg.sessionId,
-                msg.features,
-                msgToPage => this.postMessage(msgToPage)
-            );
-            if (result) {
-                this.postMessage(result);
-            }
-            return;
-        case VaultAction.MessageToClient:
-            result = kee.KeePassRPC.eventSessionMessageFromPage(msg);
-            if (result) {
-                this.postMessage(result);
-            }
-            return;
-        case VaultAction.FocusRequired:
-            chrome.tabs.update(this.sender.tab.id, { active: true });
-            chrome.windows.update(this.sender.tab.windowId, { focused: true });
-            return;
-        case VaultAction.AccountChanged:
-            accountManager.processNewTokens(msg.tokens);
-            return;
     }
 }
 

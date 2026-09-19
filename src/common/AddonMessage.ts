@@ -20,7 +20,6 @@ export interface AddonMessage {
     isForegroundTab?: boolean;
     tabId?: number;
     frameId?: number;
-    loadUrlUpgradeKee?: boolean;
     addNotification?: KeeNotification;
     removeNotification?: string;
     findMatches?: { uri?: string; uuid?: string; DBfilename?: string };

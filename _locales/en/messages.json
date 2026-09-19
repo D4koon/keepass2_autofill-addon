@@ -60,7 +60,7 @@
     "description": "The KeePassRPC server requires features from KeeLink that this version does not contain."
   },
   "conn_setup_server_features_missing": {
-    "message": "Your password manager must be upgraded to allow KeeLink to connect to it. Reload the Kee Vault website and/or ensure you are running the latest version of the KeePassRPC plugin by following the quick and easy instructions at $1",
+    "message": "Your password manager must be upgraded to allow KeeLink to connect to it. Ensure you are running the latest version of the KeePassRPC plugin.",
     "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
   },
   "conn_sl_high_label": {
@@ -216,7 +216,7 @@
       "description": "Option to enable or disable the animation of the KeeLink icon that displays when an entry is available for saving from the main popup panel"
   },
   "pref_rememberMRUDB_label": {
-    "message": "Remember the most recently used Kee Vault or KeePass database",
+    "message": "Remember the most recently used KeePass database",
     "description": ""
   },
   "pref_preferToSkipWhere_label": {
@@ -228,7 +228,7 @@
     "description": "Whether or not KeeLink will save the website's icon when a new entry is saved"
   },
   "pref_searchAllOpenDBs_label": {
-    "message": "Search all open Kee Vaults and KeePass databases",
+    "message": "Search all open KeePass databases",
     "description": ""
   },
   "pref_when_kee_chooses_standard_form_desc": {
@@ -252,7 +252,7 @@
     "description": "Settings heading for how KeeLink finds forms it is (or isn't) interested in filling in with entries from the password manager"
   },
   "site_options_valid_form_intro_desc": {
-    "message": "KeeLink will try to fill matching Kee Vault and KeePass entries for all forms that have a password field (box). You can adjust this behaviour below.",
+    "message": "KeeLink will try to fill matching KeePass entries for all forms that have a password field (box). You can adjust this behaviour below.",
     "description": "Explains how KeeLink chooses which forms to fill in"
   },
   "text_field_id": {
@@ -266,10 +266,6 @@
   "white_list": {
     "message": "Include List",
     "description": "List of items that cause behaviour to be enabled if they match. For example, the list of names of form fields that force KeeLink to search for logins for the form containing that field."
-  },
-  "Help_Centre_Button_label": {
-    "message": "Help Centre",
-    "description": ""
   },
   "cancel": {
     "message": "Cancel",
@@ -295,16 +291,8 @@
     "message": "Open KeePass",
     "description": "Action button to launch, unlock and/or focus KeePass"
   },
-  "Menu_Button_open_kee_vault_label": {
-    "message": "Open Kee Vault",
-    "description": "Action button to launch, unlock and/or focus Kee Vault"
-  },
   "Search_label": {
     "message": "Search...",
-    "description": ""
-  },
-  "PasswordProfilesExplanation_label": {
-    "message": "You can optionally create a different one by selecting a password profile below. Create new profiles in Kee Vault or KeePass.",
     "description": ""
   },
   "copy_password_label": {
@@ -385,7 +373,7 @@
   },
   "loggedIn_tip": {
     "message": "You are logged in to your '$1' password database",
-    "description": "Tells the user they are logged into a Kee Vault or KeePass database (and gives its name, if any)"
+    "description": "Tells the user they are logged into a KeePass database (and gives its name, if any)"
   },
   "loggedInMultiple_tip": {
     "message": "You are logged in to $1 password databases. '$2' is active.",
@@ -412,7 +400,7 @@
     "description": ""
   },
   "notifyBarLaunchKeePassButton_tip": {
-    "message": "Open Kee Vault or KeePass to enable KeeLink",
+    "message": "Open KeePass to enable KeeLink",
     "description": ""
   },
   "notifyBarLoginToKeePassButton_tip": {
@@ -567,10 +555,6 @@
       "message": "Don't show message again",
       "description": "Button user can click on to cause a message to hide and not reappear"
   },
-  "upgrade_kee": {
-      "message": "Upgrade KeeLink",
-      "description": "Button user can click on to load a web page with instructions on how to upgrade KeeLink"
-  },
   "pref_when_one_matching_network_login": {
     "message": "When KeeLink finds only one matching network login (e.g. HTTP Auth), automatically login",
     "description": "When the user selects this option, they will be shown the popup dialog with all matching entries for network authentication, unless there is only one match. If not enabled, the user will always see the list of matching logins."
@@ -599,26 +583,6 @@
       "message": "KeeLink automatically fills login forms to save you time and protect you from security risks.",
       "description": "Top-level description of what KeeLink does. Focuses on the most obvious/desirable features that are specific to KeeLink, rather than generic to the concept of a password manager."
   },
-  "all_sites_permissions_required_start": {
-      "message": "Your browser requires an additional step before KeeLink can work. If you want additional reassurance before continuing, make sure you read about",
-      "description": "First part of a paragraph that contains 2 links. The first, directly follows this text (a space character is inserted either side of the link) is a link to information about why open source is important for a password manager."
-  },
-  "all_sites_permissions_required_why_open_source_link_text": {
-      "message": "why being Open Source matters",
-      "description": "Text for a link to information about why open source is important for a password manager. A space character will be inserted either side of the link."
-  },
-  "all_sites_permissions_required_middle": {
-      "message": "and you can find details about all the",
-      "description": "Middle part of the paragraph - surrounded by the two links."
-  },
-  "all_sites_permissions_required_permissions_link_text": {
-      "message": "permissions",
-      "description": "Text for a link to information about the extension permissions we require and why. A space character will be inserted either side of the link."
-  },
-  "all_sites_permissions_required_end": {
-      "message": "we require on our website.",
-      "description": "Final part of the paragraph, directly preceded by the link to our website page about extension permissions."
-  },
   "continue": {
       "message": "continue",
       "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
@@ -631,81 +595,13 @@
       "message": "The credentials KeeLink enters for you are stored securely in a password manager behind a single \"main password\".",
       "description": "Explains that KeeLink stores passwords in a password manager that users access through a single password."
   },
-  "recommend_start_with_kee_vault": {
-      "message": "We recommend trying out our Kee Vault password manager. It only costs around £20 per year after a free trial, seamlessly synchronises and backs up your passwords across all of your devices and is Open Source, just like KeeLink.",
-      "description": "Recommend the quick and easy option for new users to increase likelihood of long-term usage of a password manager."
+  "all_sites_permissions_required": {
+      "message": "Your browser requires an additional step before KeeLink can work. Click Continue and allow KeeLink to access all websites so that it can fill in your logins.",
+      "description": "Explains why the user must grant the all-sites permission on first install."
   },
-  "recommend_start_with_kee_vault2": {
-      "message": "We also have apps to help you sign into other apps and websites on your iOS and Android devices.",
-      "description": "Further details about the Kee Vault service."
-  },
-  "kee_still_supports_keepass": {
-    "message": "KeeLink still fully supports using KeePass as your password manager so you don't have to do anything but we would really appreciate your support to keep KeeLink going for many years to come.",
-    "description": "Reassures users that nothing has changed regarding the support of KeePass as a password management source."
-  },
-  "load_kee_vault_now": {
-      "message": "Load Kee Vault now",
-      "description": "Call To Action button text. On click, the Kee Vault app will load and focus in a new tab."
-  },
-  "you_can_use_KeePass_instead": {
-      "message": "Alternatively, you can choose to configure KeePass Password Safe 2 instead.",
-      "description": "Explains that KeeLink also works with KeePass so they can choose to configure that if they prefer to avoid all financial expenditure."
-  },
-  "table_summarises_differences": {
-      "message": "The table below summarises the main differences.",
-      "description": "Introduces the summary table that will help users choose a password manager to start with."
-  },
-  "installation_required": {
-      "message": "Installation required",
-      "description": "States that the user will need to install components on their computer"
-  },
-  "access_from_multiple_devices": {
-      "message": "Access from multiple desktop and mobile devices",
-      "description": "Covers web browsers and mobiles, laptops, tablets, etc."
-  },
-  "shared_preferences": {
-      "message": "Shared preferences",
-      "description": "Labels the process of synchronising browser extension and password manager configuration options/preferences across multiple locations."
-  },
-  "yes_configure_once": {
-      "message": "Yes, configure once",
-      "description": "Supports synchronising browser extension and password manager configuration options/preferences"
-  },
-  "no_configure_multiple": {
-      "message": "No, configure on every web browser or device you use",
-      "description": "Does not support synchronising browser extension and password manager configuration options/preferences"
-  },
-  "difficulty": {
-      "message": "Difficulty",
-      "description": "How hard or easy it is to complete a task"
-  },
-  "difficulty_kee_vault": {
-      "message": "Easy",
-      "description": "Indicates that it is easy to get started with Kee Vault"
-  },
-  "difficulty_keepass": {
-      "message": "Medium (Hard on Mac computers)",
-      "description": "Indicates that more work is required to get started with KeePass"
-  },
-  "keepass_sync_config_explanation": {
-      "message": "For KeePass, a partial solution for multi-device access can be manually configured using 3rd party services, some of which charge a fee. Each device must be prepared and configured in advance.",
-      "description": ""
-  },
-  "point_user_to_keepass_install_instructions_start": {
-      "message": "Instructions for installing and configuring KeePass and the required KeePassRPC.plgx plugin can be found on our",
-      "description": "Left part of a sentence that contains a link to the community forum in the middle. For new installations"
-  },
-  "point_user_to_keepass_install_instructions_end": {
-      "message": ".",
-      "description": "Right part of a sentence that contains a link to the community forum in the middle. For new installations"
-  },
-  "point_user_to_tutorial_link_text": {
-      "message": "interactive tutorial",
-      "description": "Name of the link to the interactive tutorial page"
-  },
-  "point_user_to_forum_link_text": {
-      "message": "community forum",
-      "description": "Name of the link to the community forum"
+  "install_keepass_instructions": {
+      "message": "KeeLink works with KeePass Password Safe 2 and the KeePassRPC.plgx plugin. Install both, then open your password database in KeePass.",
+      "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
   },
   "notification_raised_title": {
       "message": "KeeLink has a notification to show you",
@@ -747,18 +643,6 @@
       "message": "New icon",
       "description": "Heading for text that explains we have a new icon / branding"
   },
-  "kee_vault_announcement_1": {
-      "message": "Kee Vault is a new open source password manager. It runs in your web browser so no installation is necessary.",
-      "description": "Introduction to what Kee Vault is"
-  },
-  "kee_vault_announcement_2": {
-      "message": "It works on any modern device or web browser, even when offline. After importing your existing KeePass database you can access your Kee Vault from everywhere, with your changes and configuration preferences automatically sent to each of your devices and browsers.",
-      "description": "Outlines a few benefits of Kee Vault compared to KeePass"
-  },
-  "kee_vault_announcement_3": {
-      "message": "KeeLink version 3.0 lets you use Kee Vault in place of the desktop KeePass application, with support for all the existing KeeLink features such as form filling and saving, searching and password generation.",
-      "description": "Explains that KeeLink v3 works with Kee Vault"
-  },
   "pref_automatic": {
       "message": "Automatic",
       "description": "Group of settings that relate to the actions that KeeLink can take automatically when filling entries"
@@ -769,11 +653,11 @@
   },
   "pref_fill_override_hint": {
       "message": "Edit individual entries in your password manager to override this behaviour.",
-      "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via Kee Vault or KeePass."
+      "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
   },
   "pref_fill_override_option": {
     "message": "Editing the Auto-submit behaviour of an entry also overrides this behaviour",
-    "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via Kee Vault or KeePass."
+    "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
   },
   "next": {
       "message": "Next",
@@ -813,7 +697,7 @@
   },
   "password_profile": {
       "message": "Password profile",
-      "description": "Name of the profiles used by KeePass and Kee Vault to construct new random passwords."
+      "description": "Name of the profiles used by KeePass to construct new random passwords."
   },
   "url_mismatch_1": {
       "message": "This entry is for a different site.",
@@ -837,7 +721,7 @@
   },
   "open_full_editor": {
       "message": "Open advanced editor",
-      "description": "Button action to open the full entry editor in KeePass or Kee Vault. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
+      "description": "Button action to open the full entry editor in KeePass. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
   },
   "where": {
       "message": "Where?",
@@ -882,22 +766,6 @@
   "list_version_upgrade_4_0": {
     "message": "Support for the latest web browsers (MV3);Faster connection to KeePass on some systems (requires KeePassRPC.plgx v2+);Lots of bug fixes and probably some new bugs introduced",
     "description": "Changes for the version number in the string key name. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
-  },
-  "release_details_for_keepass_available_on_forum": {
-    "message": "More details, including important information for KeePass users can be found in the release announcement on the community forum:",
-    "description": "Statement - preceding a link - to notify users that there is a corresponding topic on the community forum that was posted just before this version was submitted to the web browser extension stores for review. Specifically this one calls out that it affects KeePass users (due to KeePassRPC.plgx related information)"
-  },
-  "thanks_for_beta_testing": {
-    "message": "Thanks for beta testing KeeLink! You are helping us to make KeeLink better for everyone. If you have any feedback or find new issues with this release, please join those on the community forum and let us know.",
-    "description": "Message thanking the user for being a KeeLink beta tester"
-  },
-  "beta_testing_is_good": {
-    "message": "KeeLink beta testers have been enjoying some of these improvements for many months already.",
-    "description": "Brief highlight of one of the benefits of being a KeeLink beta tester"
-  },
-  "join_the_community_cta": {
-    "message": "Join them now!",
-    "description": "Call to action to join a community. Initially for beta testing but could be reused for other purposes such as the community forum in future."
   },
   "ignore_case": {
     "message": "Ignore case",

@@ -1,17 +1,13 @@
-import { EventSessionManager } from "./EventSession";
 import { SRPc } from "./SRP";
 import { WebsocketSessionManager } from "./WebsocketSession";
 import { SessionType } from "../common/SessionType";
-import type { VaultMessage } from "../common/VaultMessage";
 import { KeeLog } from "../common/Logger";
-import { VaultProtocol } from "../common/VaultProtocol";
 import { utils } from "../common/utils";
 import type { Button } from "../common/Button";
 import { FeatureFlags } from "../common/FeatureFlags";
 import { KeeNotification } from "../common/KeeNotification";
 import { configManager } from "../common/ConfigManager";
 import BackgroundStore from "~/store/BackgroundStore";
-import { accountManager } from "./AccountManager";
 import { kee } from "./KF";
 
 /*
@@ -58,7 +54,6 @@ export class kprpcClient {
     private srpClientInternals: SRPc;
     private secretKey;
     private websocketSessionManager: WebsocketSessionManager;
-    private eventSessionManager: EventSessionManager;
     private keyChallengeParams: { sc: string; cc: string };
     private store: BackgroundStore;
 
@@ -67,15 +62,8 @@ export class kprpcClient {
         this.clientVersion = [2, 0, 0];
         this.srpClientInternals = null;
         this.secretKey = null;
-        this.eventSessionManager = new EventSessionManager(
-            features => this.setupEventSession(features),
-            () => this.onEventSessionClosed(),
-            obj => this.receive(obj, this.eventSessionManager)
-        );
         this.websocketSessionManager = new WebsocketSessionManager(
-            () =>
-                accountManager.featureEnabledMultiSessionTypes ||
-                !this.eventSessionManager.isActive(),
+            () => true,
             () => this.setupWebsocketSession(),
             () => this.onWebsocketSessionClosed(),
             obj => this.receive(obj, this.websocketSessionManager),
@@ -88,33 +76,12 @@ export class kprpcClient {
         this.websocketSessionManager.startup();
     }
 
-    startEventSession(sessionId: string, features: string[], messageToWebPage) {
-        return this.eventSessionManager.startSession(sessionId, features, messageToWebPage);
-    }
-
-    closeEventSession() {
-        this.eventSessionManager.closeSession();
-    }
-
-    eventSessionMessageFromPage(data: VaultMessage) {
-        return this.eventSessionManager.messageReciever(data);
-    }
-
-    getSessionManagerByType(sessionType: SessionType) {
-        return sessionType === SessionType.Event
-            ? this.eventSessionManager
-            : this.websocketSessionManager;
-    }
-
-    getPrimarySessionManager() {
-        if (this.eventSessionManager.isActive()) return this.eventSessionManager;
-        else if (this.websocketSessionManager.isActive()) return this.websocketSessionManager;
-        else return null;
+    getSessionManagerByType(_sessionType: SessionType) {
+        return this.websocketSessionManager;
     }
 
     getManagersForActiveSessions() {
-        const activeSessions: (WebsocketSessionManager | EventSessionManager)[] = [];
-        if (this.eventSessionManager.isActive()) activeSessions.push(this.eventSessionManager);
+        const activeSessions: WebsocketSessionManager[] = [];
         if (this.websocketSessionManager.isActive()) {
             activeSessions.push(this.websocketSessionManager);
         }
@@ -123,7 +90,7 @@ export class kprpcClient {
 
     // Each request (uniquely identified by the requestId) may be distributed to one or more servers.
     request(
-        sessionManagers: (WebsocketSessionManager | EventSessionManager)[],
+        sessionManagers: WebsocketSessionManager[],
         method: string,
         params: any[]
     ): Promise<SessionResponse[]> {
@@ -137,31 +104,19 @@ export class kprpcClient {
         });
         KeeLog.debug("Sending a JSON-RPC request");
 
-        // May want to generalise to more than these two servers one day but this does the job for now
         const responseManager = new SessionResponseManager(sessionManagers.length);
         for (const sessionManager of sessionManagers) {
             try {
-                if (sessionManager instanceof EventSessionManager) {
-                    this.eventSessionManager.registerCallback(requestId, resultWrapper =>
+                // async webcrypto:
+                if (typeof crypto !== "undefined" && typeof crypto.subtle !== "undefined") {
+                    this.websocketSessionManager.registerCallback(requestId, resultWrapper =>
                         responseManager.onResponse(
-                            SessionType.Event,
+                            SessionType.Websocket,
                             resultWrapper,
                             sessionManager.features()
                         )
                     );
-                    this.sendJSONRPCUnencrypted(data);
-                } else {
-                    // async webcrypto:
-                    if (typeof crypto !== "undefined" && typeof crypto.subtle !== "undefined") {
-                        this.websocketSessionManager.registerCallback(requestId, resultWrapper =>
-                            responseManager.onResponse(
-                                SessionType.Websocket,
-                                resultWrapper,
-                                sessionManager.features()
-                            )
-                        );
-                        this.encrypt(data, this.sendJSONRPCEncrypted);
-                    }
+                    this.encrypt(data, this.sendJSONRPCEncrypted);
                 }
             } catch (ex) {
                 KeeLog.warn(
@@ -211,7 +166,7 @@ export class kprpcClient {
 
     sendJSONRPCEncrypted(encryptedContainer) {
         const data2server = {
-            protocol: VaultProtocol.Jsonrpc,
+            protocol: "jsonrpc",
             srp: null,
             key: null,
             error: null,
@@ -221,44 +176,17 @@ export class kprpcClient {
         this.websocketSessionManager.sendMessage(JSON.stringify(data2server));
     }
 
-    sendJSONRPCUnencrypted(json) {
-        const data2server = {
-            protocol: VaultProtocol.Jsonrpc,
-            srp: null,
-            key: null,
-            error: null,
-            jsonrpc: json,
-            encryptionNotRequired: true,
-            version: utils.versionAsInt(this.clientVersion)
-        };
-        this.eventSessionManager.sendMessage(data2server);
-    }
-
     // After the current connection has been closed we reset those variables
     // that are shared at the moment (e.g. secret key + authenticated status)
-    // and notify Kee Vault that it can try to connect now (if applicable)
     onWebsocketSessionClosed() {
         this.srpClientInternals = null;
         this.secretKey = null;
 
-        if (!this.eventSessionManager.isActive()) {
-            kee._pauseKee();
-            kee.inviteKeeVaultConnection();
-        } else {
-            kee._refreshKPDB();
-        }
-    }
-
-    onEventSessionClosed() {
-        if (!this.websocketSessionManager.isActive()) {
-            kee._pauseKee();
-        } else {
-            kee._refreshKPDB();
-        }
+        kee._pauseKee();
     }
 
     // data = JSON (underlying network/transport layer must have already formed incoming message(s) into JSON objects)
-    receive(data, sessionManager: EventSessionManager | WebsocketSessionManager) {
+    receive(data, sessionManager: WebsocketSessionManager) {
         if (data === undefined || data === null) return;
         if (data.protocol === undefined || data.protocol === null) return;
         switch (data.protocol) {
@@ -411,22 +339,9 @@ export class kprpcClient {
 
         if ((data.srp && data.srp.stage === "identifyToClient") || (data.key && data.key.sc)) {
             if (!this.serverHasRequiredFeatures(data.features)) {
-                KeeLog.error(
-                    $STRF("conn_setup_server_features_missing", [
-                        "https://www.kee.pm/upgrade-kprpc"
-                    ])
-                );
+                KeeLog.error($STR("conn_setup_server_features_missing"));
                 this.store.updateLatestConnectionError("VERSION_CLIENT_TOO_HIGH");
-                const button: Button = {
-                    label: $STR("upgrade_kee"),
-                    action: "loadUrlUpgradeKee"
-                };
-                this.showConnectionMessage(
-                    $STRF("conn_setup_server_features_missing", [
-                        "https://www.kee.pm/upgrade-kprpc"
-                    ]),
-                    [button]
-                );
+                this.showConnectionMessage($STR("conn_setup_server_features_missing"));
                 this.websocketSessionManager.closeSession();
                 return;
             }
@@ -590,10 +505,6 @@ export class kprpcClient {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const _this = this;
 
-        const vaultTabs = await chrome.tabs.query({
-            url: ["https://keevault.pm/*", "https://app-beta.kee.pm/*", "https://app-dev.kee.pm/*"]
-        });
-
         function handleMessage(request) {
             if (request.action !== "SRP_ok") return;
             _this.identifyToClient(request.password, s, B);
@@ -604,7 +515,7 @@ export class kprpcClient {
 
         const createData = {
             url: "/dist/dialogs/SRP.html",
-            active: !(vaultTabs && vaultTabs[0] && vaultTabs[0].active)
+            active: true
         };
         const tab = await chrome.tabs.create(createData);
         chrome.windows.update(tab.windowId, { focused: true, drawAttention: true });
@@ -666,26 +577,12 @@ export class kprpcClient {
 
     // No need to return anything from this function so sync or async implementation is fine
     receiveJSONRPC(data) {
-        if (data.encryptionNotRequired) {
-            this.receiveJSONRPCUnencrypted(data.jsonrpc);
-        } else {
-            // async webcrypto:
-            if (typeof crypto !== "undefined" && typeof crypto.subtle !== "undefined") {
-                this.decrypt(data.jsonrpc, this.receiveJSONRPCDecrypted);
-                return;
-            }
-            throw new Error("Webcrypto required but disabled or broken");
+        // async webcrypto:
+        if (typeof crypto !== "undefined" && typeof crypto.subtle !== "undefined") {
+            this.decrypt(data.jsonrpc, this.receiveJSONRPCDecrypted);
+            return;
         }
-    }
-
-    receiveJSONRPCUnencrypted(data) {
-        if (data === null) return; // duff data sent by server
-        const obj = JSON.parse(data);
-
-        // if we failed to parse an object from the JSON
-        if (!obj) return;
-
-        this.processJSONRPCresponse(obj, this.eventSessionManager);
+        throw new Error("Webcrypto required but disabled or broken");
     }
 
     receiveJSONRPCDecrypted(data) {
@@ -700,11 +597,8 @@ export class kprpcClient {
         this.processJSONRPCresponse(obj, this.websocketSessionManager);
     }
 
-    processJSONRPCresponse(obj, sessionManager: EventSessionManager | WebsocketSessionManager) {
-        const sessionType =
-            sessionManager instanceof EventSessionManager
-                ? SessionType.Event
-                : SessionType.Websocket;
+    processJSONRPCresponse(obj, sessionManager: WebsocketSessionManager) {
+        const sessionType = SessionType.Websocket;
         if ("result" in obj && obj.result !== false) {
             // A null result indicates something went wrong with the request to KPRPC but it could
             // be as simple as the user not being logged in to any databases. To ensure that all
@@ -777,60 +671,7 @@ export class kprpcClient {
         }
     }
 
-    setupEventSession(features: string[]) {
-        if (
-            !accountManager.featureEnabledMultiSessionTypes &&
-            this.websocketSessionManager.isActive()
-        ) {
-            KeeLog.debug(
-                "Session activation aborted: Existing session already active and account does not have the multiple sessions feature."
-            );
-            this.eventSessionManager.closeSession();
-            return;
-        }
-
-        // We don't expect this to happen because we can control the features offered
-        // by the server before we make them required by a new version of the browser-addon.
-        // An edge case may be if we remove a feature from the server and ancient versions
-        // of the browser addon still require it but since we intend to describe such removals
-        // via new feature flags anyway, we will be fine for the reasonably foreseeable future.
-        // Therefore the messages displayed to the user may not make complete sense - which
-        // is better than requiring translation of text that should not be rendered
-        if (!this.serverHasRequiredFeatures(features)) {
-            KeeLog.error(
-                "eventSession: " +
-                $STRF("conn_setup_server_features_missing", [
-                    "https://www.kee.pm/upgrade-kprpc"
-                ])
-            );
-            this.store.updateLatestConnectionError("VERSION_CLIENT_TOO_HIGH");
-            const button: Button = {
-                label: $STR("upgrade_kee"),
-                action: "loadUrlUpgradeKee"
-            };
-            this.showConnectionMessage(
-                $STRF("conn_setup_server_features_missing", ["https://www.kee.pm/upgrade-kprpc"]),
-                [button]
-            );
-            this.eventSessionManager.closeSession();
-            return;
-        }
-
-        this.onConnectStartup();
-    }
-
     setupWebsocketSession() {
-        if (
-            !accountManager.featureEnabledMultiSessionTypes &&
-            this.eventSessionManager.isActive()
-        ) {
-            KeeLog.debug(
-                "Session activation aborted: Existing session already active and account does not have the multiple sessions feature."
-            );
-            this.websocketSessionManager.closeSession();
-            return;
-        }
-
         // Sometimes things go wrong (e.g. user cancels master password
         // dialog box; maybe startup windows disappear)
         try {

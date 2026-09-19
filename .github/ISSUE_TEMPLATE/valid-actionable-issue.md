@@ -1,31 +1,18 @@
 ---
 name: Valid, actionable issue
-about: All issues go here after discussion on forum.kee.pm
+about: A clear and well defined change to project behaviour, appearance or code
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-Thanks for your interest in helping to improve Kee.
+Thanks for your interest in helping to improve KeeLink.
 
 GitHub issues are for clear and well defined changes to project behaviour, appearance and code.
 
-Issues may not always be worked on immediately but if there is not a clear plan and need for a change the issue may be closed, at least until the need or specification is more clearly evaluated on the community forum.
+Please describe the problem or change you are proposing, including the browser and KeePass / KeePassRPC versions where relevant.
 
-If you have not been asked to create an issue here and are unsure if creating an issue is the best way forward, please use https://forum.kee.pm instead.
+The full contribution guidelines can be found in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
-In particular, please note that initial discussion regarding any of the following should begin on the forum:
-* Help using Kee
-* Documentation
-* Bug reports
-* Change proposals
-* Feature requests
-* Questions/comments about security(*)
-* Help developing/building Kee
-
-The full contribution and support guidelines can be found at: https://github.com/kee-org/browser-addon/blob/master/CONTRIBUTING.md
-
-Thank you for following these guidelines - it will help us to keep each discussion focussed in a single place and improve the project more quickly.
-
-(*) Note that sensitive issues should always be addressed via a private contact - e.g. using the Security tab on GitHub.
+Note that sensitive security issues should always be reported privately - e.g. using the Security tab on GitHub.

@@ -5,7 +5,6 @@ import { KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
 import { Action } from "../common/Action";
 import type { AddonMessage } from "../common/AddonMessage";
-import { configSyncManager } from "./ConfigSyncManager";
 import { NetworkAuth } from "./NetworkAuth";
 
 // only on dev mode
@@ -59,9 +58,6 @@ async function ensureStarted() {
         await showReleaseNotesAfterUpdate();
         resolveInitialised(await kee.init());
         hasInitialised = true;
-        configManager.addChangeListener(() =>
-            configSyncManager.updateToRemoteConfig(configManager.current)
-        );
         chrome.action.enable();
         console.debug("LIFECYCLE: main enabled action");
     }
@@ -136,17 +132,6 @@ if (!isFirefox()) {
             const allFrames = script.all_frames;
             const url = script.matches;
 
-            // We have to define the list of expected Vault URLs here as well as in
-            // the manifest because there is no API available to automatically handle
-            // the manifest globs and it's not worth bundling a generic parser for
-            // just this one use case.
-            const vaultURLs = [
-                "https://app-dev.kee.pm:8087/",
-                "https://app-beta.kee.pm/",
-                "https://app.kee.pm/",
-                "https://keevault.pm/"
-            ];
-
             const loadOperations = [];
             const loadContentScripts = (tab: chrome.tabs.Tab) => {
                 // Firefox used to open every new tab with an about page so maybe it was important
@@ -154,12 +139,6 @@ if (!isFirefox()) {
                 // avoid the log noise by skipping those pages now.
                 if (tab.url && tab.url.startsWith("about:")) return;
                 if (tab.url && tab.url.startsWith("chrome://")) return;
-                if (script.exclude_globs && script.exclude_globs.length > 0) {
-                    if (vaultURLs.some(excludedURL => tab.url.startsWith(excludedURL))) return;
-                }
-                if (script.include_globs && script.include_globs.length > 0) {
-                    if (!vaultURLs.some(includedURL => tab.url.startsWith(includedURL))) return;
-                }
                 if (script?.js?.length > 0) {
                     loadOperations.push(chrome.scripting.executeScript({
                         target: { tabId: tab.id, allFrames },

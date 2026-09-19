@@ -18,7 +18,7 @@ export class Database {
         this.icon = db.icon || { version: 1, iconImageData: "" };
         this.root = db.root || new Group({});
         this.active = db.active || false;
-        this.sessionType = db.sessionType || SessionType.Event;
+        this.sessionType = db.sessionType || SessionType.Websocket;
         this.sessionFeatures = db.sessionFeatures || [""];
     }
 
