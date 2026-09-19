@@ -12,7 +12,6 @@ export class SearcherAll {
         this.validateConfig();
     }
     private configIsValid: boolean;
-    private _makeAsyncTimer;
     private searchConfig: SearchConfig;
 
     public execute(query, onComplete, filterDomains: string[]) {
@@ -97,7 +96,7 @@ export class SearcherAll {
 
         if (onComplete) {
             // Create a timer to make the search run async
-            this._makeAsyncTimer = window.setTimeout(actualSearch.bind(this), 1);
+            window.setTimeout(actualSearch.bind(this), 1);
             return;
         } else {
             actualSearch.call(this);

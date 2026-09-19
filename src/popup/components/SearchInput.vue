@@ -8,7 +8,6 @@ id="searchBox" single-line density="compact" variant="solo" :placeholder="$i18n(
 
 <script lang="ts">
 import { configManager } from "../../common/ConfigManager";
-import { Port } from "../../common/port";
 import { SearcherAll } from "../../common/SearcherAll";
 import useStore from "../../store";
 import { KeeLog } from "../../common/Logger";

@@ -1,4 +1,3 @@
-import { isFirefox } from "webext-detect-page";
 import { PersistentTabState } from "./PersistentTabState";
 import { jsonrpcClient } from "./jsonrpcClient";
 import { NetworkAuth } from "./NetworkAuth";
@@ -560,7 +559,7 @@ class Kee {
             this.KeePassRPC.selectDB(fileName, requestReturnFocus, sessionType);
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -572,7 +571,7 @@ class Kee {
             return this.KeePassRPC.selectAndFocusDatabase(keepassFilename);
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -591,7 +590,7 @@ class Kee {
             if (success) clearSubmittedData();
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -610,7 +609,7 @@ class Kee {
             if (success) clearSubmittedData();
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -622,7 +621,7 @@ class Kee {
             return this.KeePassRPC.getAllDatabases();
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -641,7 +640,7 @@ class Kee {
             );
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -653,7 +652,7 @@ class Kee {
             this.KeePassRPC.launchLoginEditor(uuid, dbFileName);
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -665,7 +664,7 @@ class Kee {
             this.KeePassRPC.launchGroupEditor(uuid, dbFileName);
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -677,7 +676,7 @@ class Kee {
             return this.KeePassRPC.getPasswordProfiles();
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;
@@ -689,7 +688,7 @@ class Kee {
             return this.KeePassRPC.generatePassword(profileName, url);
         } catch (e) {
             KeeLog.error(
-                "Unexpected exception while connecting to KeePassRPC. Please inform the Kee team that they should be handling this exception: " +
+                "Unexpected exception while connecting to KeePassRPC: " +
                 e
             );
             throw e;

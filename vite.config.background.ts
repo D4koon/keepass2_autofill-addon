@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { sharedConfig } from "./vite.config";
-import { isBeta, isChrome, isDev, r } from "./scripts/utils";
+import { isChrome, isDev, r } from "./scripts/utils";
 import packageJson from "./package.json";
 
 // bundling the content script using Vite

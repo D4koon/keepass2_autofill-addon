@@ -7,7 +7,7 @@ import IconsResolver from "unplugin-icons/resolver";
 import Components from "unplugin-vue-components/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import UnoCSS from "unocss/vite";
-import { isBeta, isChrome, isDev, port, r } from "./scripts/utils";
+import { isChrome, isDev, port, r } from "./scripts/utils";
 
 export const sharedConfig: UserConfig = {
     root: r("src"),

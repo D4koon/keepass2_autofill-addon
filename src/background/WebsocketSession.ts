@@ -22,10 +22,8 @@ export class WebsocketSessionManager {
     // of webSocket connections as per Firefox bug #711793 and RFC 7.2.3:
     // http://tools.ietf.org/html/rfc6455#section-7.2.3
     private httpChannelURI: string;
-    private _reconnectTimer;
     public connectionProhibitedUntil: Date;
     private speculativeWebSocketAttemptProhibitedUntil: Date;
-    private _webSocketTimer;
     private onOpening;
     private onOpen;
     private onClose;
@@ -87,7 +85,6 @@ export class WebsocketSessionManager {
         // http://tools.ietf.org/html/rfc6455#section-7.2.3
         // See KeeFox issue #189 for connection algorithm overview:
         // https://github.com/luckyrat/KeeFox/issues/189#issuecomment-23635771
-        this._reconnectTimer = null;
         this.connectionProhibitedUntil = new Date(0);
         this.speculativeWebSocketAttemptProhibitedUntil = new Date(0);
 
@@ -119,7 +116,7 @@ export class WebsocketSessionManager {
         // NB: overheads here include a HTTP GET request
         // and regular timer scheduling overheads - hopefully that's insignificant
         // but if not we can try more complicated connection strategies
-        this._reconnectTimer = setInterval(
+        setInterval(
             this.attemptConnection.bind(this),
             this.reconnectionAttemptFrequency
         );
@@ -155,7 +152,7 @@ export class WebsocketSessionManager {
         // KeePassRPC's TCP port. If we tried to connect now, we risk connecting
         // back to the browser and causing a deadlock. A small delay gives the browser
         // a chance to cleanly close the old port
-        this._webSocketTimer = self.setTimeout(this.tryToconnectToWebsocket.bind(this), 100);
+        self.setTimeout(this.tryToconnectToWebsocket.bind(this), 100);
     }
 
     // Initiates a connection to the KPRPC server.

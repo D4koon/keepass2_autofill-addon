@@ -167,16 +167,5 @@ export async function getManifest() {
         (manifest as any).action.default_area = "navbar";
     }
 
-    //TODO:f: test if below is possible on Firefox
-    // impossible unless https://bugs.chromium.org/p/chromium/issues/detail?id=1198822 is resolved.
-    // Until then, all changes to content scripts require a manual browser reload and content page reload.
-    // if (isDev) {
-    //     // for content script, as browsers will cache them for each reload,
-    //     // we use a background script to always inject the latest version
-    //     // see src/background/contentScriptHMR.ts
-    //     delete manifest.content_scripts;
-    //     //manifest.permissions?.push("webNavigation");
-    // }
-
     return manifest;
 }

@@ -11,9 +11,6 @@ import { NetworkAuth } from "./NetworkAuth";
 if (import.meta.hot) {
     // @ts-expect-error for background HMR
     import("/@vite/client");
-    // doesn't appear to work in MV3
-    // load latest content script
-    // import("./contentScriptHMR");
 }
 
 

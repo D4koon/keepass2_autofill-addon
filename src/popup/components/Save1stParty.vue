@@ -97,7 +97,6 @@ import { Group } from "../../common/model/Group";
 import { SearcherAll } from "../../common/SearcherAll";
 import useStore from "../../store";
 import { mapState } from "pinia";
-import { KeeLog } from "~/common/Logger";
 
 export default {
     components: {

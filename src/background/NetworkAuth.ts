@@ -1,4 +1,3 @@
-import { isFirefox } from "webext-detect-page";
 import { KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
 import { Entry } from "../common/model/Entry";

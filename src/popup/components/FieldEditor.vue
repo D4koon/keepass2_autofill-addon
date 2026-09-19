@@ -56,7 +56,6 @@
 import { Field } from "../../common/model/Field";
 import PasswordGenerator from "../../common/components/PasswordGenerator.vue";
 import { copyStringToClipboard } from "../../common/copyStringToClipboard";
-import { KeeLog } from "~/common/Logger";
 
 export default {
     components: {
