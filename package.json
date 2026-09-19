@@ -2,7 +2,7 @@
   "name": "keelink-browser-addon",
   "displayName": "KeeLink - Password Manager",
   "description": "KeeLink adds private, secure and easy password management features which save time and keep your private data more secure, via KeePass or Kee Vault.",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
