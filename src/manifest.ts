@@ -146,7 +146,11 @@ export async function getManifest() {
                 // replace it with your own {uuid} or name@domain string if you want a
                 // more memorable one before publishing anywhere.
                 "id": "{5114543a-b350-4f17-931c-d4bf93a81ca7}",
-                "strict_min_version": "126.0",
+                // 142.0 covers both desktop (140+) and Android (142+) support for
+                // data_collection_permissions below; bumped from 126.0 (originally the
+                // minimum for webRequestAuthProvider) to silence AMO's "not supported by
+                // the specified minimum Firefox version" warning.
+                "strict_min_version": "142.0",
                 // No update_url: that pointed at kee-org's own update feed, which does
                 // not know about this fork. Add your own hosted update manifest URL
                 // here if you set up self-distribution with auto-updates.

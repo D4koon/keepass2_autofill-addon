@@ -35,6 +35,10 @@ jobs:
           NEW_KEE_VERSION=`git describe --abbrev=0 --tags`
           echo "NEW_KEE_VERSION=$NEW_KEE_VERSION" >> $GITHUB_ENV
           sed -E 's/^(.*"version": ")(.*)("\,.*)/\1'"$NEW_KEE_VERSION"'\3/' package.json > package.json.tmp && mv package.json.tmp package.json
+          # Commit the bump and move the (still local) tag onto it so the tagged source,
+          # including GitHub's "Source code" archive, matches the released version.
+          git diff --quiet package.json || git commit -m "Release $NEW_KEE_VERSION" package.json
+          git tag -f -a "$NEW_KEE_VERSION" -m "$NEW_KEE_VERSION"
 
       - name: Setup
         run: |
@@ -77,8 +81,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Push git tag
-        run: git push --tags
+      - name: Push version commit and git tag
+        run: |
+          git push origin HEAD:refs/heads/${{ github.ref_name }}
+          git push origin "$NEW_KEE_VERSION"
 
       - name: Release
         uses: softprops/action-gh-release@v3

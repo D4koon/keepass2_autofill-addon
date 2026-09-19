@@ -85,6 +85,8 @@ Our builds are created by GitHub Actions using the following configuration:
 1. For a Chromium release: `npm run build-chrome:prod && npm run pack-chrome:prod` (for stable releases) and/or `npm run build-chrome:beta && npm run pack-chrome:beta` (for beta releases) 
 1. XPIs and ZIPs of each variant are put into the `dist` folder
 
+Firefox refuses to install an unsigned `.xpi` outside of Developer Edition/Nightly, so before you can install a locally built XPI in release Firefox you need to submit it for signing at https://addons.mozilla.org/de/developers/addon/submit/upload-listed .
+
 ## Repo/project structure
 
 * `/_locales` Localisation data (language translations).
