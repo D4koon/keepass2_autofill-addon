@@ -106,9 +106,7 @@ export default {
         },
         nextInList(currentIndex: number, listName: string, listLength: any) {
             const currentVueNode = (listName === "listAarray" ? this.aNodes : this.bNodes).find(
-                e => {
-            return parseInt(e.dataIndex) === currentIndex;
-                }
+                e => parseInt(e.dataIndex) === currentIndex
             );
             if (currentIndex < listLength - 1) {
                 // Current treeview implementation seems to have some text node get

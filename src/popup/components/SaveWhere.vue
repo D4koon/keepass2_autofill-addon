@@ -56,6 +56,7 @@ import { GroupSummary, TemporaryIDString } from "../../common/model/GroupSummary
 import { configManager } from "../../common/ConfigManager";
 import useStore from "../../store";
 import { mapState } from "pinia";
+import { reactive } from "vue";
 import { KeeLog } from "~/common/Logger";
 import GroupSelectorTree from "./GroupSelectorTree.vue";
 import { GroupListItem } from "./TreeItem.vue";
