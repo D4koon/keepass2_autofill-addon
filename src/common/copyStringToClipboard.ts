@@ -1,12 +1,14 @@
 import { KeeLog } from "./Logger";
-import { isChrome, isExtensionContext } from "webext-detect-page";
+import { isExtensionContext } from "webext-detect-page";
 
 // https://issues.chromium.org/issues/40738001
 // https://developer.chrome.com/docs/extensions/reference/api/offscreen
 // https://issues.chromium.org/issues/40252021
 
 export async function copyStringToClipboard(value: string) {
-    if (isChrome && isExtensionContext) {
+    // __IS_CHROME__ is a build-time constant so the Chrome-only offscreen API
+    // is not present in Firefox builds at all.
+    if (__IS_CHROME__ && isExtensionContext) {
         try {
             await mv3ClipboardWorkaround(value);
             return;

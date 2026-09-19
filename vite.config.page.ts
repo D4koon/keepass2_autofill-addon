@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { sharedConfig } from "./vite.config";
-import { isBeta, isDev, r } from "./scripts/utils";
+import { isBeta, isChrome, isDev, r } from "./scripts/utils";
 import packageJson from "./package.json";
 
 // bundling the content script using Vite
@@ -8,6 +8,7 @@ export default defineConfig({
     ...sharedConfig,
     define: {
         "__DEV__": isDev,
+        "__IS_CHROME__": isChrome,
         // https://github.com/vitejs/vite/issues/9320
         // https://github.com/vitejs/vite/issues/9186
         "process.env.NODE_ENV": JSON.stringify(isDev ? "development" : "production")
