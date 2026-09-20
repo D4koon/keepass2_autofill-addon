@@ -30,9 +30,6 @@ async function start() {
 
     let cancelAutoClose: () => void;
 
-    const isLegacy = params["panel"]?.endsWith("Legacy");
-    const darkTheme = params["theme"] === "dark";
-
     switch (params["panel"]) {
         case "matchedLoginsLegacy":
             matchedLoginsPanel = new MatchedLoginsPanel(Port.raw, closePanel, parentFrameId);

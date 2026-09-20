@@ -1,6 +1,6 @@
 import { KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
-import useStore, { KeeStore } from "../store";
+import useStore from "../store";
 import { App, createApp } from "vue";
 import { createVuetify } from "vuetify";
 import Root from "./App.vue";
@@ -11,7 +11,6 @@ import * as directives from "vuetify/directives";
 import { IPCPiniaPlugin } from "../common/IPCPiniaPlugin";
 
 let vueApp: App<Element>;
-let store: KeeStore;
 
 async function start() {
     await configManager.load();
@@ -64,7 +63,7 @@ async function start() {
         vueApp.use(piniaInstance);
         vueApp.config.globalProperties.$chrome = chrome;
         vueApp.config.globalProperties.$i18n = chrome.i18n.getMessage;
-        store = useStore();
+        useStore();
 
         vueApp.mount("#main");
 

@@ -1,5 +1,3 @@
-import { MatchedLoginsPanel } from "./MatchedLoginsPanel";
-import { FrameState } from "../common/FrameState";
 import { Action } from "../common/Action";
 import { KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
@@ -14,12 +12,6 @@ import { setup as i18nSetup } from "../common/i18n";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import { IPCPiniaPlugin } from "../common/IPCPiniaPlugin";
-
-let frameState: FrameState;
-
-function updateFrameState(newState: FrameState) {
-    frameState = newState;
-}
 
 let vueApp: App<Element>;
 let store: KeeStore;
@@ -106,15 +98,12 @@ async function start() {
                     store.onRemoteMessage(Port.raw, m.mutation);
                     return;
                 }
-                if (m.frameState) updateFrameState(m.frameState);
             });
             break;
     }
 
     KeeLog.info("iframe page ready");
 }
-
-let matchedLoginsPanel: MatchedLoginsPanel;
 
 const params: { [key: string]: string } = {};
 
