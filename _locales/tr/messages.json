@@ -44,7 +44,7 @@
         "description": "A technical error occurred during the attempt to authorise the link between Kee and KeePassRPC so we need to notify the user that they will need to re-authenticate"
     },
     "conn_setup_retype_password": {
-        "message": "Please type in the new password when prompted.",
+        "message": "İstendiğinde lütfen yeni parolayı girin.",
         "description": "The user needs to re-authorise the connection to KeePass by typing in the new KeePassRPC password they're being shown by KeePass."
     },
     "conn_setup_server_sl_low": {
@@ -88,7 +88,7 @@
         "description": "Link text to guide user to the manual to get more information about the security of the link to KeePass."
     },
     "conn_unknown_error": {
-        "message": "An unexpected error occurred when trying to connect to your password manager.",
+        "message": "Parola yöneticinize bağlanmaya çalışırken beklenmeyen bir hata oluştu.",
         "description": "Something went wrong with the KeePassRPC link but we have no idea what."
     },
     "conn_unknown_protocol": {
@@ -96,7 +96,7 @@
         "description": "Technical error in the communication between Kee and KeePassRPC. Not clear how user could resolve this or if they'll ever see it but it might happen."
     },
     "form_id": {
-        "message": "Form ID",
+        "message": "Form kimliği",
         "description": ""
     },
     "form_name": {
@@ -160,7 +160,7 @@
         "description": "Heading for section of options panel which contains settings relating to how Kee behaves when saving new entries"
     },
     "pref_autoFillFormsWithMultipleMatches_label": {
-        "message": "Take this automatic action even when multiple matching entries are found",
+        "message": "Birden fazla eşleşen kayıt bulunsa bile bu otomatik eylemi gerçekleştir",
         "description": "In reference to the Automatic form filling option, this checkbox option allows the user to say whether they want their selected action to be taken even when there is more than one matching entry."
     },
     "pref_keePassDBToOpen_label": {
@@ -176,11 +176,11 @@
         "description": "Displayed to the user near the setting for changing the KeePassRPC port"
     },
     "pref_logLevel_desc": {
-        "message": "Choose how verbose you want the log to be. Each higher log level produces more output.",
+        "message": "Günlüğün ne kadar ayrıntılı olmasını istediğinizi seçin. Her yüksek günlük düzeyi daha fazla çıktı üretir.",
         "description": ""
     },
     "pref_logLevelDebugging_label": {
-        "message": "Debugging",
+        "message": "Hata ayıklama",
         "description": "Logging level for the most verbose information about Kee's operation"
     },
     "pref_logLevelInformation_label": {
@@ -268,7 +268,7 @@
         "description": "Link to the add-on's settings"
     },
     "Menu_Button_open_keepass_label": {
-        "message": "Open KeePass",
+        "message": "KeePass'i aç",
         "description": "Action button to launch, unlock and/or focus KeePass"
     },
     "Search_label": {
@@ -288,19 +288,19 @@
         "description": "Prefixed before a field name and id to indicate to the user that when they click here the value for that field will be copied to the clipboard. Displayed before (left) of the field name with a space between this string and the field name."
     },
     "copy_value_to_clipboard": {
-        "message": "Copy value to clipboard",
+        "message": "Değeri panoya kopyala",
         "description": "Indicates to the user that when they click here the value for that field will be copied to the clipboard."
     },
     "click_to_reveal_hide": {
-        "message": "Click to reveal/hide",
+        "message": "Göstermek/gizlemek için tıklayın",
         "description": "Indicates to the user that when they click here the value of the protected field will be displayed or hidden (toggled)."
     },
     "no_name": {
-        "message": "no name",
+        "message": "adsız",
         "description": "Used in place of a field name when the specific field has no name. Will be surrounded by [ square brackets ]"
     },
     "matches_from_other_sites": {
-        "message": "Matches from other sites",
+        "message": "Diğer sitelerden eşleşmeler",
         "description": "Search results section header."
     },
     "create_new_entry": {
@@ -328,11 +328,11 @@
         "description": ""
     },
     "website_options_search_placeholder": {
-        "message": "e.g. www.google.com",
+        "message": "örn. www.google.com",
         "description": "A placeholder for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "website_options_search_tooltip": {
-        "message": "e.g. www.google.com (Do NOT include https:// or other protocols)",
+        "message": "örn. www.google.com (https:// veya başka protokoller EKLEMEYİN)",
         "description": "Tooltip/title for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "generatePassword_copied": {
@@ -340,15 +340,15 @@
         "description": ""
     },
     "generatePassword_instructions": {
-        "message": "Choose which type of password to create:",
+        "message": "Oluşturulacak parola türünü seçin:",
         "description": ""
     },
     "generatePassword_done_1": {
-        "message": "Password generated.",
+        "message": "Parola oluşturuldu.",
         "description": ""
     },
     "generatePassword_done_2": {
-        "message": "Paste it into a \"new password\" field or wherever else you want.",
+        "message": "Bunu bir “yeni parola” alanına veya istediğiniz başka bir yere yapıştırın.",
         "description": ""
     },
     "loggedIn_tip": {
@@ -360,7 +360,7 @@
         "description": "Tells the user they have more than one KeePass database open and tells them which one is active/selected"
     },
     "multiplePasswordSourcesEnabled": {
-        "message": "$1 password sources enabled",
+        "message": "$1 parola kaynağı etkin",
         "description": "Tells the user how many password databases they have open and unlocked"
     },
     "matchedLogin_label": {
@@ -368,7 +368,7 @@
         "description": "<username> <seperator> <entry title>"
     },
     "matchedLogin_tip": {
-        "message": "$1 in the $2 group ($3)",
+        "message": "$2 grubundaki $1 ($3)",
         "description": "Tooltip displayed over a matched login in the list of matched logins. Params: 1: entry title, 2: group name, 3: username"
     },
     "noUsername_partial_tip": {
@@ -376,7 +376,7 @@
         "description": ""
     },
     "notifyBarLaunchKeePass_label": {
-        "message": "You are not logged in to your password manager.",
+        "message": "Parola yöneticinizde oturum açmadınız.",
         "description": ""
     },
     "notifyBarLoginToKeePassButton_tip": {
@@ -420,7 +420,7 @@
         "description": "Action button for user to delete an item within a collection. E.g. delete an entry within the list of site-specific settings overrides"
     },
     "site_specific_settings_checkbox_explanation": {
-        "message": "Settings from \"All Websites\" will apply to each section below unless you enable the setting using the checkbox next to it.",
+        "message": "“Tüm Web Siteleri” ayarları, yanındaki onay kutusuyla ilgili ayarı etkinleştirmediğiniz sürece aşağıdaki her bölüme uygulanır.",
         "description": "Explains to the user how the site-specific settings can be enabled and what happens in the default situation"
     },
     "site_properties": {
@@ -428,11 +428,11 @@
         "description": "Site properties"
     },
     "enter_valid_regex": {
-        "message": "Enter a valid Regex or select a different type",
+        "message": "Geçerli bir düzenli ifade girin veya farklı bir tür seçin",
         "description": "Validation error message displayed to user when they have configured the properties of a site specific configuration to be a regular expression (Regex) but supplied a website value that is not a valid regex"
     },
     "site_properties_weight_warning": {
-        "message": "You'll need to carefully check the weights of other configurations if you choose to make use of this advanced feature.",
+        "message": "Bu gelişmiş özelliği kullanmayı seçerseniz diğer yapılandırmaların ağırlıklarını dikkatle kontrol etmeniz gerekir.",
         "description": "Warning to users that the match weighting feature of site-specific config is an advanced feature"
     },
     "target": {
@@ -444,7 +444,7 @@
         "description": "For differentiating how a text string will be matched - e.g exact, prefix or regex"
     },
     "weight": {
-        "message": "Weight",
+        "message": "Ağırlık",
         "description": "A number that can be compared to others in order to decide which associated configuration takes precendence."
     },
     "yes": {
@@ -484,11 +484,11 @@
         "description": "Heading for popup dialog displayed when HTTP Auth or a proxy requires authentication."
     },
     "network_auth_proxy_description": {
-        "message": "A proxy requires you to authenticate with it before you can access $1",
+        "message": "Bir proxy, $1 adresine erişmeden önce kimlik doğrulaması yapmanızı gerektiriyor",
         "description": "Instructions for popup dialog displayed when a proxy requires authentication."
     },
     "network_auth_http_auth_description": {
-        "message": "A website requires you to authenticate with it before you can access $1. The website says: $2",
+        "message": "$1 adresine erişmeden önce web sitesinde kimlik doğrulaması yapmanız gerekiyor. Web sitesi şunu diyor: $2",
         "description": "Instructions for popup dialog displayed when a site requires authentication using HTTP Auth."
     },
     "network_auth_choose": {
@@ -516,7 +516,7 @@
         "description": "Part of the message within a transient native notification displayed on the user's screen to alert them to a notification in the Kee browser action popup."
     },
     "notification_only_shown_some_times": {
-        "message": "This additional popup notification will only be shown a small number of times.",
+        "message": "Bu ek açılır bildirim yalnızca birkaç kez gösterilecektir.",
         "description": "Appended to the message of a transient native notification displayed on the user's screen when we show the message only a handful of times before assuming they have learnt the contents of the message."
     },
     "notification_save_password_tip": {
@@ -524,139 +524,139 @@
         "description": "Part of the message within a transient native notification displayed on the user's screen to tell them how to save a password (especially important for those upgrading from KeeFox since the behaviour has changed)"
     },
     "loading": {
-        "message": "Loading...",
+        "message": "Yükleniyor...",
         "description": "Holding message to be displayed when Kee has to display something to the user to indicate that the requested information or interface element will be displayed shortly."
     },
     "version_upgrade_heading_changes": {
-        "message": "Changes in version",
+        "message": "Sürümdeki değişiklikler",
         "description": "Heading for the list of changes in a version of Kee. A space and the current version number will be suffixed at the end of this string."
     },
     "pref_currentSearchTermTimeout_label": {
-        "message": "Clear search results after (seconds)",
+        "message": "Arama sonuçlarını şu süre sonra temizle (saniye)",
         "description": "Setting label to adjust how long the search text a user typed will remain cached, essentially persisting the popup search results for a short time."
     },
     "other_technical_improvements": {
-        "message": "Other technical improvements",
+        "message": "Diğer teknik iyileştirmeler",
         "description": "Heading for the list of additional technical changes in a version of Kee. The changes themselves may be too technical to be worth translating but it's useful if the user knows what the section of the page is about."
     },
     "reliability_improvements": {
-        "message": "Reliability improvements",
+        "message": "Güvenilirlik iyileştirmeleri",
         "description": "Heading for text that explains we have made improvements to the reliability of some aspect of Kee"
     },
     "new_icon": {
-        "message": "New icon",
+        "message": "Yeni simge",
         "description": "Heading for text that explains we have a new icon / branding"
     },
     "pref_automatic": {
-        "message": "Automatic",
+        "message": "Otomatik",
         "description": "Group of settings that relate to the actions that Kee can take automatically when filling entries"
     },
     "pref_manual": {
-        "message": "Manual",
+        "message": "Manuel",
         "description": "Group of settings that relate to the actions that Kee takes when the user explicitly asks Kee to fill an entry"
     },
     "pref_fill_override_hint": {
-        "message": "Edit individual entries in your password manager to override this behaviour.",
+        "message": "Bu davranışı geçersiz kılmak için parola yöneticinizde tek tek kayıtları düzenleyin.",
         "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
     },
     "pref_fill_override_option": {
-        "message": "Editing the Auto-submit behaviour of an entry also overrides this behaviour",
+        "message": "Bir kaydın otomatik gönderme davranışını düzenlemek bu davranışı da geçersiz kılar",
         "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
     },
     "next": {
-        "message": "Next",
+        "message": "İleri",
         "description": "Action button for user to advance to the next step in a multi-step process. E.g. to confirm username and password for a new entry and load the panel that allows selection of where to save the new entry."
     },
     "title": {
-        "message": "Title",
+        "message": "Başlık",
         "description": "E.g. the title of an entry."
     },
     "username": {
-        "message": "Username",
+        "message": "Kullanıcı adı",
         "description": "Use the most generic and common term available for the primary sign-in identifier for an account. In practice may be an email address, number, surname, username, etc. but in all cases this will refer to the string the user has stored in the entry's primary Username field."
     },
     "enabled": {
-        "message": "Enabled",
+        "message": "Etkin",
         "description": "Indicates that a boolean option such as a checkbox is in an enabled/on/true state"
     },
     "disabled": {
-        "message": "Disabled",
+        "message": "Devre dışı",
         "description": "Indicates that a boolean option such as a checkbox is in an disabled/off/false state"
     },
     "unsaved_changes": {
-        "message": "You have recent unsaved changes.",
+        "message": "Yakın zamanda yapılmış kaydedilmemiş değişiklikleriniz var.",
         "description": "Shown to user when the popup is opened and a new or existing entry is part-way through being edited from a recent popup session. Note that very recent popup sessions are automatically 'continued' without the user needing to consider this information."
     },
     "continue_saving": {
-        "message": "Continue saving",
+        "message": "Kaydetmeye devam et",
         "description": "Action for user to continue editing the same entry that was being edited when the popup recently closed."
     },
     "discard_changes": {
-        "message": "Discard changes",
+        "message": "Değişiklikleri at",
         "description": "Action for user to abandon the changes to the entry that were in progress when the popup recently closed."
     },
     "password_profile_hint": {
-        "message": "Select which set of rules the new password will follow. Rules include password length and the sort of characters that may be used. Create new profiles in your password manager.",
+        "message": "Yeni parolanın hangi kural setini izleyeceğini seçin. Kurallar, parola uzunluğunu ve kullanılabilecek karakter türlerini içerir. Yeni profilleri parola yöneticinizde oluşturun.",
         "description": "Explains what a password profile is and how to create new ones."
     },
     "password_profile": {
-        "message": "Password profile",
+        "message": "Parola profili",
         "description": "Name of the profiles used by KeePass to construct new random passwords."
     },
     "url_mismatch_1": {
-        "message": "This entry is for a different site.",
+        "message": "Bu kayıt farklı bir site için.",
         "description": "1st sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_2": {
-        "message": "Continuing with this update will enable you to fill these credentials into this site too.",
+        "message": "Bu güncellemeye devam ederseniz bu kimlik bilgilerini bu siteye de doldurabileceksiniz.",
         "description": "2nd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_3": {
-        "message": "Make sure this is not an attempt to trick you into revealing your password!",
+        "message": "Bunun, parolanızı ifşa etmeniz için sizi kandırma girişimi olmadığından emin olun!",
         "description": "3rd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_confirm": {
-        "message": "I understand the risk; Share these credentials with $1.",
+        "message": "Riski anlıyorum; bu kimlik bilgilerini $1 ile paylaş.",
         "description": "Label for a confirmation checkbox for the user to affirm that they want to enable the use of an entry on a new website."
     },
     "make_additional_changes_using_full_editor": {
-        "message": "Additional changes can be made using the full editor.",
+        "message": "Ek değişiklikler tam düzenleyici kullanılarak yapılabilir.",
         "description": "Note to user that the Kee interface does not allow every possible type of edit to an entry."
     },
     "open_full_editor": {
-        "message": "Open advanced editor",
+        "message": "Gelişmiş düzenleyiciyi aç",
         "description": "Button action to open the full entry editor in KeePass. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
     },
     "where": {
-        "message": "Where?",
+        "message": "Nerede?",
         "description": "Brief question to the user to introduce the section in the popup where they can select where their entry will be saved (which database, group, etc.)"
     },
     "will_be_copied_to_clipboard": {
-        "message": "This new password will be copied to your clipboard",
+        "message": "Bu yeni parola panonuza kopyalanacak",
         "description": ""
     },
     "password_will_be_set_on_field": {
-        "message": "Your password field will be set to this password",
+        "message": "Parola alanı bu parolaya ayarlanacak",
         "description": ""
     },
     "also_copy_to_clipboard": {
-        "message": "Also copy to clipboard",
+        "message": "Ayrıca panoya kopyala",
         "description": "Explains that enabling this option will copy the value to the clipboard in addition to the default behaviour"
     },
     "generator_action_copy": {
-        "message": "Copy",
+        "message": "Kopyala",
         "description": "Action button to copy to the clipboard a value such as a newly generated password"
     },
     "generator_action_apply": {
-        "message": "Apply",
+        "message": "Uygula",
         "description": "Action button to apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "generator_action_apply_and_copy": {
-        "message": "Apply and copy",
+        "message": "Uygula ve kopyala",
         "description": "Action button to both copy and apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "KB_shortcut_simple_2_desc": {
-        "message": "Sign in to password manager / Select matched login / Show matched logins list",
+        "message": "Parola yöneticisinde oturum aç / Eşleşen girişi seç / Eşleşen girişlerin listesini göster",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
     },
     "about_heading": {
@@ -674,5 +674,169 @@
     "modified_fork_notice": {
         "message": "KeeLink, özgün Kee tarayıcı eklentisinin değiştirilmiş bir sürümüdür. Bağımsız bir projedir; Kee Vault Ltd ile bağlantılı değildir ve onun tarafından desteklenmemektedir.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "KeeLink'in bağlanabilmesi için parola yöneticinizin yükseltilmesi gerekiyor. KeePassRPC eklentisinin en son sürümünü kullandığınızdan emin olun.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "En son kullanılan KeePass veritabanını hatırla",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Açık olan tüm KeePass veritabanlarında ara",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "KeeLink'i etkinleştirmek için KeePass'i açın",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Bu neden burada doldurulmuyor?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Burada otomatik doldurulur",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Otomatik doldurma kapalı",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Formların otomatik doldurulması KeeLink ayarlarında kapatılmış.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "Bu sefer doldurulmuyor",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink bu form taramasında yalnızca eşleşmeleri listeliyor; şu anda otomatik doldurma için ayarlanmamış.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 eşleşme - birini seçin",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "Bu sayfayla $1 kayıt eşleşiyor, bu yüzden KeeLink tahmin etmek yerine sizin birini seçmenizi bekliyor.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Asla otomatik doldurulmaz",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Bu kayıt, parola veritabanınızda asla otomatik doldurulmayacak şekilde ayarlanmış.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Zayıf eşleşme",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Bu kayıt, bu sayfanın giriş formuyla yeterince eşleşmiyor.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Az alan eşleşiyor",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Bu formun alanlarından çok azı bu kaydın alanlarıyla eşleşiyor.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "KeeLink'in çalışabilmesi için tarayıcınız ek bir adım gerektiriyor. “devam” düğmesine tıklayın ve KeeLink'in oturum açma bilgilerinizi doldurabilmesi için tüm web sitelerine erişmesine izin verin.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink, KeePass Password Safe 2 ve KeePassRPC.plgx eklentisiyle çalışır. İkisini de yükleyin, ardından parola veritabanınızı KeePass'te açın.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink, parola alanı olan tüm formlarda eşleşen KeePass kayıtlarını doldurmaya çalışacaktır. Bu davranışı aşağıdan ayarlayabilirsiniz.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink artık Kee'nin yalnızca KeePass'i destekleyen bağımsız bir çatalı olarak sürdürülüyor;Kee Vault entegrasyonu ve çevrimiçi hesap özellikleri kaldırıldı;Dahili temizlik ve hata düzeltmeleri",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
+    },
+    "pref_autoFillFieldsWithExistingValue_label": {
+        "message": "Zaten metin içeren alanları otomatik doldur",
+        "description": "This checkbox option allows the user to say whether they want fields to be auto-filled if they already have a value. It doesn't affect manual fill requests."
+    },
+    "continue": {
+        "message": "devam",
+        "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
+    },
+    "recommend_action_button_should_be_pinned": {
+        "message": "KeeLink çoğu sitede kullanıldığı için KeeLink düğmesini araç çubuğunuza sabitlemenizi öneririz:",
+        "description": "Recommends that the user might want to pin the extension to the main toolbar. A screenshot demonstrating this will be displayed directly below (English in the screenshot so not ideal but it's the icons that matter most)."
+    },
+    "ignore_case": {
+        "message": "Büyük/küçük harfi yoksay",
+        "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
+    },
+    "ignore_case_explanation_finding_forms": {
+        "message": "Örneğin, dahil etme veya hariç tutma listelerinden herhangi birindeki 'search' ifadesi 'search', 'Search' ve 'SEARCH' ile eşleşir. Çok alışılmadık ve karmaşık gereksinimleriniz yoksa bu seçeneği etkin bırakmak en iyisidir.",
+        "description": "Describes the ignore case setting when used for configuring the include and exclude lists for finding forms."
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "The visual theme applied to the extension's user interface. As per convention, the values refer to the predominant shade - i.e. the background colour"
+    },
+    "dark": {
+        "message": "Koyu",
+        "description": "Black colour or similar; Darkened visual appearance"
+    },
+    "light": {
+        "message": "Açık",
+        "description": "White colour or similar; Bright visual appearance"
+    },
+    "system_preference": {
+        "message": "Sistem Tercihi",
+        "description": "The user's configured preference/setting in their system. System is vague because different browsers will implement it in different ways so it could relate to either the user's operating system, their web browser or both."
+    },
+    "theme_system_preference_explanation": {
+        "message": "Tüm işletim sistemleri ve tarayıcılar tarayıcı eklentilerinin otomatik temalandırılmasını desteklemez. Gerekirse tercihinizi yukarıdan elle seçebilirsiniz.",
+        "description": "Explains what the Theme preference does and why"
+    },
+    "pref_Appearance_heading": {
+        "message": "Görünüm",
+        "description": "Heading for settings/options that relate to the visual appearance of the extension"
+    },
+    "pref_hidden_options_present_explanation": {
+        "message": "KeeLink bu site için ek seçenekleri otomatik olarak yönetiyor, bu nedenle siteyi silemezsiniz.",
+        "description": "Notification and explanation to user that one or more hidden settings are present for the configuration of a specific site"
+    },
+    "preferred_matching_entry": {
+        "message": "Tercih edilen eşleşen kayıt",
+        "description": "Label for toggle between preferred status for the specific matched entry the toggle is displayed upon."
+    },
+    "show_confirmation_after_save": {
+        "message": "Kayıt kaydedildikten sonra onay göster",
+        "description": "Label for option to display a confirmation message in the main popup after user has created or updated an entry."
+    },
+    "you_recently_saved": {
+        "message": "Yakın zamanda bir kayıt kaydettiniz",
+        "description": "A confirmation message after user has created or updated an entry."
+    },
+    "pref_preferToSkipWhere_label": {
+        "message": "Yeni kayıtları en son kaydettiğiniz gruba otomatik olarak kaydet",
+        "description": "Whether KeeLink will save new entries to the group most recently chosen by the user without presenting them with the usual Where group chooser interface"
+    },
+    "skip_where_reason_domain_entry_exists": {
+        "message": "Bu soruyu görüyorsunuz çünkü bu alan adı için zaten bir kayıt var",
+        "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
+    },
+    "skip_where_reason_group_not_found": {
+        "message": "Bu soruyu görüyorsunuz çünkü en son kaydettiğiniz grup bulunamıyor. Silinmiş veya KeeLink'ten gizlenmiş olabilir. Ya da gerekli parola kaynağının kilidi açılmamış olabilir.",
+        "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
+    },
+    "skip_where_enable_context": {
+        "message": "Yeni kayıtları her zaman buraya kaydet",
+        "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
     }
 }

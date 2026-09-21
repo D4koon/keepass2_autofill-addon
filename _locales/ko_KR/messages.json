@@ -504,7 +504,7 @@
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
     "continue": {
-        "message": "continue",
+        "message": "계속",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
     },
     "recommend_action_button_should_be_pinned": {
@@ -742,5 +742,93 @@
     "modified_fork_notice": {
         "message": "KeeLink는 원본 Kee 브라우저 추가 기능을 수정한 버전입니다. 독립적인 프로젝트이며 Kee Vault Ltd와 제휴 관계가 없고 Kee Vault Ltd의 보증을 받지 않았습니다.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "KeeLink가 연결할 수 있도록 비밀번호 관리자를 업그레이드해야 합니다. KeePassRPC 플러그인이 최신 버전인지 확인하세요.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "가장 최근에 사용한 KeePass 데이터베이스 기억",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "열려 있는 모든 KeePass 데이터베이스 검색",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "KeeLink를 사용하려면 KeePass를 여세요",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "여기에서 채워지지 않는 이유는 무엇인가요?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "여기에서 자동으로 채워짐",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "자동 채우기 꺼짐",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "KeeLink 설정에서 양식 자동 채우기가 꺼져 있습니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "이번에는 채우지 않음",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink는 이번 양식 검색에서 일치하는 항목만 나열하며, 지금은 자동 채우기를 하도록 설정되어 있지 않습니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1개 일치 - 하나를 선택하세요",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "이 페이지에 $1개 항목이 일치하므로 KeeLink는 추측하는 대신 사용자가 하나를 선택할 때까지 기다립니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "자동으로 채우지 않음",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "이 항목은 비밀번호 데이터베이스에서 자동으로 채우지 않도록 설정되어 있습니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "낮은 일치도",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "이 항목은 이 페이지의 로그인 양식과 충분히 일치하지 않습니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "일치하는 필드가 적음",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "이 양식의 필드 중 이 항목의 필드와 맞는 것이 너무 적습니다.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "KeeLink가 작동하려면 브라우저에서 추가 단계가 필요합니다. ‘계속’ 버튼을 클릭하고 KeeLink가 로그인 정보를 채울 수 있도록 모든 웹사이트에 대한 접근을 허용하세요.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink는 KeePass Password Safe 2 및 KeePassRPC.plgx 플러그인과 함께 작동합니다. 둘 다 설치한 다음 KeePass에서 비밀번호 데이터베이스를 여세요.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink는 비밀번호 입력란이 있는 모든 양식에 일치하는 KeePass 항목을 채우려고 시도합니다. 이 동작은 아래에서 조정할 수 있습니다.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink는 이제 KeePass만 지원하는 Kee의 독립 포크로 유지 관리됩니다;Kee Vault 연동 및 온라인 계정 기능이 제거되었습니다;내부 정리 및 버그 수정",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

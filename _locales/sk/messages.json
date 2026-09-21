@@ -742,5 +742,93 @@
     "modified_fork_notice": {
         "message": "KeeLink je upravená verzia pôvodného doplnku prehliadača Kee. Je to nezávislý projekt, ktorý nie je prepojený so spoločnosťou Kee Vault Ltd ani ňou podporovaný.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "Váš správca hesiel je potrebné aktualizovať, aby sa k nemu KeeLink mohol pripojiť. Uistite sa, že používate najnovšiu verziu doplnku KeePassRPC.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Pamätať si naposledy použitú databázu KeePass",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Prehľadávať všetky otvorené databázy KeePass",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "Otvorte KeePass, aby ste aktivovali KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Prečo sa tu nič nevyplní?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Tu sa vyplní automaticky",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Automatické vypĺňanie je vypnuté",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Automatické vypĺňanie formulárov je vypnuté v nastaveniach KeeLink.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "Tentoraz sa nevyplní",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink pri tomto skenovaní formulára iba vypisuje zhody; automatické vypĺňanie teraz nie je nastavené.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 zhôd – vyberte jednu",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "Tejto stránke zodpovedá $1 záznamov, preto KeeLink čaká, kým jeden vyberiete, namiesto hádania.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Nikdy sa nevypĺňa automaticky",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Tento záznam je vo vašej databáze hesiel nastavený tak, aby sa nikdy nevypĺňal automaticky.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Slabá zhoda",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Tento záznam dostatočne nezodpovedá prihlasovaciemu formuláru na tejto stránke.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Zhoduje sa málo polí",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Príliš málo polí tohto formulára zodpovedá poliam tohto záznamu.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Váš prehliadač vyžaduje pred spustením KeeLink ešte jeden krok. Kliknite na „pokračovať“ a povoľte KeeLink prístup ku všetkým webom, aby mohol vypĺňať vaše prihlasovacie údaje.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink funguje s aplikáciou KeePass Password Safe 2 a doplnkom KeePassRPC.plgx. Nainštalujte oba a potom v KeePasse otvorte svoju databázu hesiel.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink sa pokúsi vyplniť zodpovedajúce záznamy KeePass vo všetkých formulároch, ktoré majú pole na heslo. Toto správanie môžete upraviť nižšie.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink je teraz udržiavaný ako nezávislý fork Kee, ktorý podporuje iba KeePass;Integrácia Kee Vault a jej online funkcie účtu boli odstránené;Vnútorné upratovanie a opravy chýb",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

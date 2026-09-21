@@ -504,7 +504,7 @@
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
     "continue": {
-        "message": "continue",
+        "message": "продовжити",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
     },
     "recommend_action_button_should_be_pinned": {
@@ -742,5 +742,93 @@
     "modified_fork_notice": {
         "message": "KeeLink — це змінена версія оригінального розширення для браузера Kee. Це незалежний проєкт, не пов’язаний з Kee Vault Ltd і не схвалений нею.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "Ваш менеджер паролів потрібно оновити, щоб KeeLink міг до нього підключитися. Переконайтеся, що ви використовуєте останню версію плагіна KeePassRPC.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Запам’ятовувати останню використану базу даних KeePass",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Шукати в усіх відкритих базах даних KeePass",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "Відкрийте KeePass, щоб увімкнути KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Чому тут нічого не заповнюється?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Тут заповнюється автоматично",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Автозаповнення вимкнено",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Автоматичне заповнення форм вимкнено в налаштуваннях KeeLink.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "Цього разу не заповнюється",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink лише перелічує збіги для цього сканування форми; зараз він не налаштований на автоматичне заповнення.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "Збігів: $1 — виберіть один",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "Цій сторінці відповідає записів: $1, тому KeeLink чекає, поки ви виберете один, замість того щоб вгадувати.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Ніколи не заповнюється автоматично",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Цей запис налаштовано у вашій базі паролів так, щоб він ніколи не заповнювався автоматично.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Слабкий збіг",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Цей запис недостатньо збігається з формою входу на цій сторінці.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Мало збіжних полів",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Надто мало полів цієї форми відповідає полям цього запису.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Ваш браузер вимагає додаткового кроку, перш ніж KeeLink зможе працювати. Натисніть «продовжити» і дозвольте KeeLink доступ до всіх вебсайтів, щоб він міг заповнювати ваші облікові дані.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink працює з KeePass Password Safe 2 і плагіном KeePassRPC.plgx. Установіть обидва, а потім відкрийте свою базу паролів у KeePass.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink намагатиметься заповнити відповідними записами KeePass усі форми, що містять поле пароля. Цю поведінку можна змінити нижче.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink тепер підтримується як незалежний форк Kee, що працює лише з KeePass;Інтеграцію з Kee Vault та її функції онлайн-облікового запису вилучено;Внутрішнє прибирання та виправлення помилок",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

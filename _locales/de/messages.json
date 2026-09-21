@@ -746,5 +746,89 @@
         "list_version_upgrade_current": {
                 "message": "KeeLink wird jetzt als unabhängiger Fork von Kee gepflegt, der nur KeePass unterstützt;Die Kee-Vault-Anbindung und die zugehörigen Online-Kontofunktionen wurden entfernt;Interne Aufräumarbeiten und Fehlerbehebungen",
                 "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
-        }
+        },
+    "conn_setup_server_features_missing": {
+        "message": "Ihr Passwortmanager muss aktualisiert werden, damit KeeLink sich damit verbinden kann. Stellen Sie sicher, dass Sie die neueste Version des KeePassRPC-Plugins verwenden.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Zuletzt verwendete KeePass-Datenbank merken",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Alle geöffneten KeePass-Datenbanken durchsuchen",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "KeePass öffnen, um KeeLink zu aktivieren",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Warum wird hier nichts ausgefüllt?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Wird hier automatisch ausgefüllt",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Automatisches Ausfüllen ist aus",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Das automatische Ausfüllen von Formularen ist in den Einstellungen von KeeLink ausgeschaltet.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "Diesmal kein Ausfüllen",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink listet bei dieser Formularsuche nur Treffer auf; es ist derzeit nicht auf automatisches Ausfüllen eingestellt.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 Treffer – bitte auswählen",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "$1 Einträge passen zu dieser Seite. KeeLink wartet daher auf Ihre Auswahl, statt zu raten.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Füllt nie automatisch aus",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Dieser Eintrag ist in Ihrer Passwortdatenbank so eingestellt, dass er nie automatisch ausgefüllt wird.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Schwacher Treffer",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Dieser Eintrag passt nicht gut genug zum Anmeldeformular dieser Seite.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Wenige Felder passen",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Zu wenige Felder dieses Formulars entsprechen den Feldern dieses Eintrags.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Ihr Browser verlangt einen zusätzlichen Schritt, bevor KeeLink funktionieren kann. Klicken Sie auf „fortfahren“ und erlauben Sie KeeLink den Zugriff auf alle Webseiten, damit es Ihre Zugangsdaten ausfüllen kann.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink funktioniert mit KeePass Password Safe 2 und dem Plugin KeePassRPC.plgx. Installieren Sie beide und öffnen Sie dann Ihre Passwortdatenbank in KeePass.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink versucht, passende KeePass-Einträge in alle Formulare einzutragen, die ein Passwortfeld enthalten. Dieses Verhalten können Sie unten anpassen.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    }
 }

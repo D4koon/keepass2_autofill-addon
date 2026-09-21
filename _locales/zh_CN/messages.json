@@ -1,6 +1,6 @@
 {
     "black_list": {
-        "message": "Exclude List",
+        "message": "排除列表",
         "description": "List of items that cause behaviour to be disabled if they match. For example, the list of names of form fields that prevent Kee from searching for logins for the form containing that field."
     },
     "conn_display_description": {
@@ -88,7 +88,7 @@
         "description": "Link text to guide user to the manual to get more information about the security of the link to KeePass."
     },
     "conn_unknown_error": {
-        "message": "An unexpected error occurred when trying to connect to your password manager.",
+        "message": "尝试连接到您的密码管理器时发生意外错误。",
         "description": "Something went wrong with the KeePassRPC link but we have no idea what."
     },
     "conn_unknown_protocol": {
@@ -160,11 +160,11 @@
         "description": "Heading for section of options panel which contains settings relating to how Kee behaves when saving new entries"
     },
     "pref_autoFillFormsWithMultipleMatches_label": {
-        "message": "Take this automatic action even when multiple matching entries are found",
+        "message": "即使找到多个匹配的条目也执行此自动操作",
         "description": "In reference to the Automatic form filling option, this checkbox option allows the user to say whether they want their selected action to be taken even when there is more than one matching entry."
     },
     "pref_autoFillFieldsWithExistingValue_label": {
-        "message": "Automatically fill fields that already contain text",
+        "message": "自动填写已包含文本的字段",
         "description": "This checkbox option allows the user to say whether they want fields to be auto-filled if they already have a value. It doesn't affect manual fill requests."
     },
     "pref_keePassDBToOpen_label": {
@@ -208,7 +208,7 @@
         "description": "Option to enable or disable the animation of the Kee icon that displays when an entry is available for saving from the main popup panel"
     },
     "pref_preferToSkipWhere_label": {
-        "message": "Automatically save new entries to the group you most recently saved to",
+        "message": "自动将新条目保存到您最近保存到的组",
         "description": "Whether Kee will save new entries to the group most recently chosen by the user without presenting them with the usual Where group chooser interface"
     },
     "pref_saveFavicons_label": {
@@ -244,7 +244,7 @@
         "description": ""
     },
     "white_list": {
-        "message": "Include List",
+        "message": "包含列表",
         "description": "List of items that cause behaviour to be enabled if they match. For example, the list of names of form fields that force Kee to search for logins for the form containing that field."
     },
     "cancel": {
@@ -268,7 +268,7 @@
         "description": "Link to the add-on's settings"
     },
     "Menu_Button_open_keepass_label": {
-        "message": "Open KeePass",
+        "message": "打开 KeePass",
         "description": "Action button to launch, unlock and/or focus KeePass"
     },
     "Search_label": {
@@ -288,19 +288,19 @@
         "description": "Prefixed before a field name and id to indicate to the user that when they click here the value for that field will be copied to the clipboard. Displayed before (left) of the field name with a space between this string and the field name."
     },
     "copy_value_to_clipboard": {
-        "message": "Copy value to clipboard",
+        "message": "将值复制到剪贴板",
         "description": "Indicates to the user that when they click here the value for that field will be copied to the clipboard."
     },
     "click_to_reveal_hide": {
-        "message": "Click to reveal/hide",
+        "message": "点击显示/隐藏",
         "description": "Indicates to the user that when they click here the value of the protected field will be displayed or hidden (toggled)."
     },
     "no_name": {
-        "message": "no name",
+        "message": "无名称",
         "description": "Used in place of a field name when the specific field has no name. Will be surrounded by [ square brackets ]"
     },
     "matches_from_other_sites": {
-        "message": "Matches from other sites",
+        "message": "来自其他网站的匹配项",
         "description": "Search results section header."
     },
     "create_new_entry": {
@@ -328,11 +328,11 @@
         "description": ""
     },
     "website_options_search_placeholder": {
-        "message": "e.g. www.google.com",
+        "message": "例如 www.google.com",
         "description": "A placeholder for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "website_options_search_tooltip": {
-        "message": "e.g. www.google.com (Do NOT include https:// or other protocols)",
+        "message": "例如 www.google.com（请勿包含 https:// 或其他协议）",
         "description": "Tooltip/title for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "generatePassword_copied": {
@@ -340,15 +340,15 @@
         "description": ""
     },
     "generatePassword_instructions": {
-        "message": "Choose which type of password to create:",
+        "message": "选择要创建的密码类型：",
         "description": ""
     },
     "generatePassword_done_1": {
-        "message": "Password generated.",
+        "message": "密码已生成。",
         "description": ""
     },
     "generatePassword_done_2": {
-        "message": "Paste it into a \"new password\" field or wherever else you want.",
+        "message": "请将其粘贴到“新密码”字段或您想要的任何位置。",
         "description": ""
     },
     "loggedIn_tip": {
@@ -360,7 +360,7 @@
         "description": "Tells the user they have more than one KeePass database open and tells them which one is active/selected"
     },
     "multiplePasswordSourcesEnabled": {
-        "message": "$1 password sources enabled",
+        "message": "已启用 $1 个密码来源",
         "description": "Tells the user how many password databases they have open and unlocked"
     },
     "matchedLogin_label": {
@@ -376,7 +376,7 @@
         "description": ""
     },
     "notifyBarLaunchKeePass_label": {
-        "message": "You are not logged in to your password manager.",
+        "message": "您尚未登录密码管理器。",
         "description": ""
     },
     "notifyBarLoginToKeePassButton_tip": {
@@ -504,7 +504,7 @@
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
     "continue": {
-        "message": "continue",
+        "message": "继续",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
     },
     "recommend_action_button_should_be_pinned": {
@@ -544,127 +544,127 @@
         "description": "Setting label to adjust how long the search text a user typed will remain cached, essentially persisting the popup search results for a short time."
     },
     "other_technical_improvements": {
-        "message": "Other technical improvements",
+        "message": "其他技术改进",
         "description": "Heading for the list of additional technical changes in a version of Kee. The changes themselves may be too technical to be worth translating but it's useful if the user knows what the section of the page is about."
     },
     "reliability_improvements": {
-        "message": "Reliability improvements",
+        "message": "可靠性改进",
         "description": "Heading for text that explains we have made improvements to the reliability of some aspect of Kee"
     },
     "new_icon": {
-        "message": "New icon",
+        "message": "新图标",
         "description": "Heading for text that explains we have a new icon / branding"
     },
     "pref_automatic": {
-        "message": "Automatic",
+        "message": "自动",
         "description": "Group of settings that relate to the actions that Kee can take automatically when filling entries"
     },
     "pref_manual": {
-        "message": "Manual",
+        "message": "手动",
         "description": "Group of settings that relate to the actions that Kee takes when the user explicitly asks Kee to fill an entry"
     },
     "pref_fill_override_hint": {
-        "message": "Edit individual entries in your password manager to override this behaviour.",
+        "message": "如需覆盖此行为，请在您的密码管理器中编辑单个条目。",
         "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
     },
     "pref_fill_override_option": {
-        "message": "Editing the Auto-submit behaviour of an entry also overrides this behaviour",
+        "message": "编辑条目的自动提交行为也会覆盖此行为",
         "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
     },
     "next": {
-        "message": "Next",
+        "message": "下一步",
         "description": "Action button for user to advance to the next step in a multi-step process. E.g. to confirm username and password for a new entry and load the panel that allows selection of where to save the new entry."
     },
     "title": {
-        "message": "Title",
+        "message": "标题",
         "description": "E.g. the title of an entry."
     },
     "username": {
-        "message": "Username",
+        "message": "用户名",
         "description": "Use the most generic and common term available for the primary sign-in identifier for an account. In practice may be an email address, number, surname, username, etc. but in all cases this will refer to the string the user has stored in the entry's primary Username field."
     },
     "enabled": {
-        "message": "Enabled",
+        "message": "已启用",
         "description": "Indicates that a boolean option such as a checkbox is in an enabled/on/true state"
     },
     "disabled": {
-        "message": "Disabled",
+        "message": "已禁用",
         "description": "Indicates that a boolean option such as a checkbox is in an disabled/off/false state"
     },
     "unsaved_changes": {
-        "message": "You have recent unsaved changes.",
+        "message": "您有最近未保存的更改。",
         "description": "Shown to user when the popup is opened and a new or existing entry is part-way through being edited from a recent popup session. Note that very recent popup sessions are automatically 'continued' without the user needing to consider this information."
     },
     "continue_saving": {
-        "message": "Continue saving",
+        "message": "继续保存",
         "description": "Action for user to continue editing the same entry that was being edited when the popup recently closed."
     },
     "discard_changes": {
-        "message": "Discard changes",
+        "message": "放弃更改",
         "description": "Action for user to abandon the changes to the entry that were in progress when the popup recently closed."
     },
     "password_profile_hint": {
-        "message": "Select which set of rules the new password will follow. Rules include password length and the sort of characters that may be used. Create new profiles in your password manager.",
+        "message": "选择新密码将遵循的规则集。规则包括密码长度和可使用的字符类型。请在您的密码管理器中创建新的配置文件。",
         "description": "Explains what a password profile is and how to create new ones."
     },
     "password_profile": {
-        "message": "Password profile",
+        "message": "密码配置文件",
         "description": "Name of the profiles used by KeePass to construct new random passwords."
     },
     "url_mismatch_1": {
-        "message": "This entry is for a different site.",
+        "message": "此条目适用于其他网站。",
         "description": "1st sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_2": {
-        "message": "Continuing with this update will enable you to fill these credentials into this site too.",
+        "message": "继续此更新后，您也可以在此网站上填写这些凭据。",
         "description": "2nd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_3": {
-        "message": "Make sure this is not an attempt to trick you into revealing your password!",
+        "message": "请确保这不是诱骗您泄露密码的企图！",
         "description": "3rd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_confirm": {
-        "message": "I understand the risk; Share these credentials with $1.",
+        "message": "我了解风险；与 $1 共享这些凭据。",
         "description": "Label for a confirmation checkbox for the user to affirm that they want to enable the use of an entry on a new website."
     },
     "make_additional_changes_using_full_editor": {
-        "message": "Additional changes can be made using the full editor.",
+        "message": "可以使用完整编辑器进行其他更改。",
         "description": "Note to user that the Kee interface does not allow every possible type of edit to an entry."
     },
     "open_full_editor": {
-        "message": "Open advanced editor",
+        "message": "打开高级编辑器",
         "description": "Button action to open the full entry editor in KeePass. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
     },
     "where": {
-        "message": "Where?",
+        "message": "位置？",
         "description": "Brief question to the user to introduce the section in the popup where they can select where their entry will be saved (which database, group, etc.)"
     },
     "will_be_copied_to_clipboard": {
-        "message": "This new password will be copied to your clipboard",
+        "message": "此新密码将被复制到剪贴板",
         "description": ""
     },
     "password_will_be_set_on_field": {
-        "message": "Your password field will be set to this password",
+        "message": "您的密码字段将被设置为此密码",
         "description": ""
     },
     "also_copy_to_clipboard": {
-        "message": "Also copy to clipboard",
+        "message": "同时复制到剪贴板",
         "description": "Explains that enabling this option will copy the value to the clipboard in addition to the default behaviour"
     },
     "generator_action_copy": {
-        "message": "Copy",
+        "message": "复制",
         "description": "Action button to copy to the clipboard a value such as a newly generated password"
     },
     "generator_action_apply": {
-        "message": "Apply",
+        "message": "应用",
         "description": "Action button to apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "generator_action_apply_and_copy": {
-        "message": "Apply and copy",
+        "message": "应用并复制",
         "description": "Action button to both copy and apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "skip_where_reason_domain_entry_exists": {
-        "message": "You're seeing this question because an entry for this domain already exists",
+        "message": "您看到此问题是因为已存在此域名的条目",
         "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
     },
     "skip_where_reason_group_not_found": {
@@ -672,39 +672,39 @@
         "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
     },
     "skip_where_enable_context": {
-        "message": "Always save new entries here",
+        "message": "始终将新条目保存在此处",
         "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
     },
     "ignore_case": {
-        "message": "Ignore case",
+        "message": "忽略大小写",
         "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
     },
     "ignore_case_explanation_finding_forms": {
-        "message": "For example, 'search' in any of the include or exclude lists will match with 'search', 'Search' and 'SEARCH'. Unless you have very unusual and complex requirements, it is best to leave this option enabled.",
+        "message": "例如，包含或排除列表中的“search”将匹配“search”“Search”和“SEARCH”。除非您有非常特殊且复杂的需求，否则最好保持启用此选项。",
         "description": "Describes the ignore case setting when used for configuring the include and exclude lists for finding forms."
     },
     "theme": {
-        "message": "Theme",
+        "message": "主题",
         "description": "The visual theme applied to the extension's user interface. As per convention, the values refer to the predominant shade - i.e. the background colour"
     },
     "dark": {
-        "message": "Dark",
+        "message": "深色",
         "description": "Black colour or similar; Darkened visual appearance"
     },
     "light": {
-        "message": "Light",
+        "message": "浅色",
         "description": "White colour or similar; Bright visual appearance"
     },
     "system_preference": {
-        "message": "System Preference",
+        "message": "跟随系统",
         "description": "The user's configured preference/setting in their system. System is vague because different browsers will implement it in different ways so it could relate to either the user's operating system, their web browser or both."
     },
     "theme_system_preference_explanation": {
-        "message": "Not all operating systems and browsers support automatic theming of browser extensions. You can manually choose your preference above if required.",
+        "message": "并非所有操作系统和浏览器都支持浏览器扩展的自动主题。如有需要，您可以在上方手动选择偏好。",
         "description": "Explains what the Theme preference does and why"
     },
     "pref_Appearance_heading": {
-        "message": "Appearance",
+        "message": "外观",
         "description": "Heading for settings/options that relate to the visual appearance of the extension"
     },
     "pref_hidden_options_present_explanation": {
@@ -712,19 +712,19 @@
         "description": "Notification and explanation to user that one or more hidden settings are present for the configuration of a specific site"
     },
     "preferred_matching_entry": {
-        "message": "Preferred matching entry",
+        "message": "首选匹配条目",
         "description": "Label for toggle between preferred status for the specific matched entry the toggle is displayed upon."
     },
     "show_confirmation_after_save": {
-        "message": "Show confirmation after entry is saved",
+        "message": "保存条目后显示确认",
         "description": "Label for option to display a confirmation message in the main popup after user has created or updated an entry."
     },
     "you_recently_saved": {
-        "message": "You recently saved an entry",
+        "message": "您最近保存了一个条目",
         "description": "A confirmation message after user has created or updated an entry."
     },
     "KB_shortcut_simple_2_desc": {
-        "message": "Sign in to password manager / Select matched login / Show matched logins list",
+        "message": "登录密码管理器 / 选择匹配的登录 / 显示匹配的登录列表",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
     },
     "about_heading": {
@@ -742,5 +742,93 @@
     "modified_fork_notice": {
         "message": "KeeLink 是原版 Kee 浏览器扩展的修改版本。它是一个独立项目，与 Kee Vault Ltd 无关联，也未获得其认可。",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "需要升级您的密码管理器，KeeLink 才能连接到它。请确保您使用的是最新版本的 KeePassRPC 插件。",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "记住最近使用的 KeePass 数据库",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "搜索所有已打开的 KeePass 数据库",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "打开 KeePass 以启用 KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "为什么这里没有自动填写？",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "此处会自动填写",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "自动填写已关闭",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "KeeLink 的设置中已关闭表单自动填写。",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "这次不填写",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink 在本次表单扫描中仅列出匹配项；当前未设置为自动填写。",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 个匹配项 - 请选择一个",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "有 $1 个条目与此页面匹配，因此 KeeLink 会等待您选择，而不是猜测。",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "从不自动填写",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "此条目在您的密码数据库中被设置为从不自动填写。",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "匹配度低",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "此条目与此页面的登录表单匹配度不够高。",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "匹配的字段太少",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "此表单中与此条目字段对应的字段太少。",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "在 KeeLink 正常工作之前，您的浏览器需要额外的一步。请点击“继续”，并允许 KeeLink 访问所有网站，以便它填写您的登录信息。",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink 可与 KeePass Password Safe 2 和 KeePassRPC.plgx 插件配合使用。请先安装这两者，然后在 KeePass 中打开您的密码数据库。",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink 会尝试用匹配的 KeePass 条目填写所有带有密码字段（框）的表单。您可以在下方调整此行为。",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink 现在作为仅支持 KeePass 的 Kee 独立分支进行维护;已移除 Kee Vault 集成及其在线账户功能;内部清理和错误修复",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

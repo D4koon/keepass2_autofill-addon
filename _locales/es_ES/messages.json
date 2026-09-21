@@ -184,7 +184,7 @@
         "description": ""
     },
     "pref_logLevelDebugging_label": {
-        "message": "Debugging",
+        "message": "Depuración",
         "description": "Logging level for the most verbose information about Kee's operation"
     },
     "pref_logLevelInformation_label": {
@@ -208,7 +208,7 @@
         "description": "Option to enable or disable the animation of the Kee icon that displays when an entry is available for saving from the main popup panel"
     },
     "pref_preferToSkipWhere_label": {
-        "message": "Automatically save new entries to the group you most recently saved to",
+        "message": "Guardar automáticamente las entradas nuevas en el grupo en el que guardó por última vez",
         "description": "Whether Kee will save new entries to the group most recently chosen by the user without presenting them with the usual Where group chooser interface"
     },
     "pref_saveFavicons_label": {
@@ -304,7 +304,7 @@
         "description": "Used in place of a field name when the specific field has no name. Will be surrounded by [ square brackets ]"
     },
     "matches_from_other_sites": {
-        "message": "Matches from other sites",
+        "message": "Coincidencias de otros sitios",
         "description": "Search results section header."
     },
     "create_new_entry": {
@@ -336,7 +336,7 @@
         "description": "A placeholder for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "website_options_search_tooltip": {
-        "message": "e.g. www.google.com (Do NOT include https:// or other protocols)",
+        "message": "p. ej., www.google.com (NO incluya https:// ni otros protocolos)",
         "description": "Tooltip/title for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "generatePassword_copied": {
@@ -348,11 +348,11 @@
         "description": ""
     },
     "generatePassword_done_1": {
-        "message": "Password generated.",
+        "message": "Contraseña generada.",
         "description": ""
     },
     "generatePassword_done_2": {
-        "message": "Paste it into a \"new password\" field or wherever else you want.",
+        "message": "Péguela en un campo de «nueva contraseña» o donde prefiera.",
         "description": ""
     },
     "loggedIn_tip": {
@@ -508,7 +508,7 @@
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
     "continue": {
-        "message": "continue",
+        "message": "continuar",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
     },
     "recommend_action_button_should_be_pinned": {
@@ -568,11 +568,11 @@
         "description": "Group of settings that relate to the actions that Kee takes when the user explicitly asks Kee to fill an entry"
     },
     "pref_fill_override_hint": {
-        "message": "Edit individual entries in your password manager to override this behaviour.",
+        "message": "Edite entradas individuales en su gestor de contraseñas para anular este comportamiento.",
         "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
     },
     "pref_fill_override_option": {
-        "message": "Editing the Auto-submit behaviour of an entry also overrides this behaviour",
+        "message": "Editar el comportamiento de envío automático de una entrada también anula este comportamiento",
         "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
     },
     "next": {
@@ -596,7 +596,7 @@
         "description": "Indicates that a boolean option such as a checkbox is in an disabled/off/false state"
     },
     "unsaved_changes": {
-        "message": "You have recent unsaved changes.",
+        "message": "Tiene cambios recientes sin guardar.",
         "description": "Shown to user when the popup is opened and a new or existing entry is part-way through being edited from a recent popup session. Note that very recent popup sessions are automatically 'continued' without the user needing to consider this information."
     },
     "continue_saving": {
@@ -608,7 +608,7 @@
         "description": "Action for user to abandon the changes to the entry that were in progress when the popup recently closed."
     },
     "password_profile_hint": {
-        "message": "Select which set of rules the new password will follow. Rules include password length and the sort of characters that may be used. Create new profiles in your password manager.",
+        "message": "Seleccione el conjunto de reglas que seguirá la nueva contraseña. Las reglas incluyen la longitud de la contraseña y el tipo de caracteres que se pueden usar. Cree nuevos perfiles en su gestor de contraseñas.",
         "description": "Explains what a password profile is and how to create new ones."
     },
     "password_profile": {
@@ -620,19 +620,19 @@
         "description": "1st sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_2": {
-        "message": "Continuing with this update will enable you to fill these credentials into this site too.",
+        "message": "Si continúa con esta actualización, también podrá rellenar estas credenciales en este sitio.",
         "description": "2nd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_3": {
-        "message": "Make sure this is not an attempt to trick you into revealing your password!",
+        "message": "¡Asegúrese de que no se trate de un intento de engañarle para que revele su contraseña!",
         "description": "3rd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_confirm": {
-        "message": "I understand the risk; Share these credentials with $1.",
+        "message": "Entiendo el riesgo; compartir estas credenciales con $1.",
         "description": "Label for a confirmation checkbox for the user to affirm that they want to enable the use of an entry on a new website."
     },
     "make_additional_changes_using_full_editor": {
-        "message": "Additional changes can be made using the full editor.",
+        "message": "Se pueden hacer cambios adicionales con el editor completo.",
         "description": "Note to user that the Kee interface does not allow every possible type of edit to an entry."
     },
     "open_full_editor": {
@@ -644,15 +644,15 @@
         "description": "Brief question to the user to introduce the section in the popup where they can select where their entry will be saved (which database, group, etc.)"
     },
     "will_be_copied_to_clipboard": {
-        "message": "This new password will be copied to your clipboard",
+        "message": "Esta nueva contraseña se copiará al portapapeles",
         "description": ""
     },
     "password_will_be_set_on_field": {
-        "message": "Your password field will be set to this password",
+        "message": "El campo de contraseña se establecerá con esta contraseña",
         "description": ""
     },
     "also_copy_to_clipboard": {
-        "message": "Also copy to clipboard",
+        "message": "Copiar también al portapapeles",
         "description": "Explains that enabling this option will copy the value to the clipboard in addition to the default behaviour"
     },
     "generator_action_copy": {
@@ -664,11 +664,11 @@
         "description": "Action button to apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "generator_action_apply_and_copy": {
-        "message": "Apply and copy",
+        "message": "Aplicar y copiar",
         "description": "Action button to both copy and apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "skip_where_reason_domain_entry_exists": {
-        "message": "You're seeing this question because an entry for this domain already exists",
+        "message": "Ve esta pregunta porque ya existe una entrada para este dominio",
         "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
     },
     "skip_where_reason_group_not_found": {
@@ -676,7 +676,7 @@
         "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
     },
     "skip_where_enable_context": {
-        "message": "Always save new entries here",
+        "message": "Guardar siempre las entradas nuevas aquí",
         "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
     },
     "ignore_case": {
@@ -684,7 +684,7 @@
         "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
     },
     "ignore_case_explanation_finding_forms": {
-        "message": "For example, 'search' in any of the include or exclude lists will match with 'search', 'Search' and 'SEARCH'. Unless you have very unusual and complex requirements, it is best to leave this option enabled.",
+        "message": "Por ejemplo, «search» en cualquiera de las listas de inclusión o exclusión coincidirá con «search», «Search» y «SEARCH». A menos que tenga requisitos muy inusuales y complejos, es mejor dejar esta opción activada.",
         "description": "Describes the ignore case setting when used for configuring the include and exclude lists for finding forms."
     },
     "theme": {
@@ -704,7 +704,7 @@
         "description": "The user's configured preference/setting in their system. System is vague because different browsers will implement it in different ways so it could relate to either the user's operating system, their web browser or both."
     },
     "theme_system_preference_explanation": {
-        "message": "Not all operating systems and browsers support automatic theming of browser extensions. You can manually choose your preference above if required.",
+        "message": "No todos los sistemas operativos y navegadores admiten el tema automático de las extensiones del navegador. Si es necesario, puede elegir su preferencia manualmente arriba.",
         "description": "Explains what the Theme preference does and why"
     },
     "pref_Appearance_heading": {
@@ -746,5 +746,89 @@
     "modified_fork_notice": {
         "message": "KeeLink es una versión modificada del complemento de navegador Kee original. Es un proyecto independiente y no está afiliado a Kee Vault Ltd ni cuenta con su respaldo.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "Es necesario actualizar su gestor de contraseñas para que KeeLink pueda conectarse a él. Asegúrese de usar la última versión del complemento KeePassRPC.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Recordar la última base de datos de KeePass utilizada",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Buscar en todas las bases de datos de KeePass abiertas",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "Abra KeePass para activar KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "¿Por qué no se rellena aquí?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Se rellena automáticamente aquí",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "El autorrelleno está desactivado",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "El relleno automático de formularios está desactivado en la configuración de KeeLink.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "No se rellena esta vez",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "En esta búsqueda de formularios KeeLink solo muestra coincidencias; ahora mismo no está configurado para rellenar automáticamente.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 coincidencias: elija una",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "$1 entradas coinciden con esta página, así que KeeLink espera a que elija una en lugar de adivinar.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Nunca se rellena automáticamente",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Esta entrada está configurada en su base de datos de contraseñas para no rellenarse nunca automáticamente.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Coincidencia débil",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Esta entrada no coincide lo suficiente con el formulario de inicio de sesión de esta página.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Pocos campos coinciden",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Muy pocos campos de este formulario se corresponden con los campos de esta entrada.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Su navegador requiere un paso adicional antes de que KeeLink pueda funcionar. Haga clic en «continuar» y permita que KeeLink acceda a todos los sitios web para que pueda rellenar sus inicios de sesión.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink funciona con KeePass Password Safe 2 y el complemento KeePassRPC.plgx. Instale ambos y luego abra su base de datos de contraseñas en KeePass.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink ahora se mantiene como una bifurcación independiente de Kee que solo admite KeePass;Se han eliminado la integración con Kee Vault y sus funciones de cuenta en línea;Limpieza interna y corrección de errores",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

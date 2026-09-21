@@ -4,7 +4,7 @@
         "description": "List of items that cause behaviour to be disabled if they match. For example, the list of names of form fields that prevent Kee from searching for logins for the form containing that field."
     },
     "conn_display_description": {
-        "message": "A browser addon that securely enables automatic login to most websites.",
+        "message": "ウェブサイトへの自動ログインを安全に実現するブラウザーアドオンです。",
         "description": "A brief description of Kee that gets presented to users to help them decide if they want to allow the connection to KeePass to be permitted."
     },
     "conn_invalid_message": {
@@ -44,7 +44,7 @@
         "description": "A technical error occurred during the attempt to authorise the link between Kee and KeePassRPC so we need to notify the user that they will need to re-authenticate"
     },
     "conn_setup_retype_password": {
-        "message": "Please type in the new password when prompted.",
+        "message": "求められたら、新しいパスワードを入力してください。",
         "description": "The user needs to re-authorise the connection to KeePass by typing in the new KeePassRPC password they're being shown by KeePass."
     },
     "conn_setup_server_sl_low": {
@@ -88,7 +88,7 @@
         "description": "Link text to guide user to the manual to get more information about the security of the link to KeePass."
     },
     "conn_unknown_error": {
-        "message": "An unexpected error occurred when trying to connect to your password manager.",
+        "message": "パスワードマネージャーへの接続中に予期しないエラーが発生しました。",
         "description": "Something went wrong with the KeePassRPC link but we have no idea what."
     },
     "conn_unknown_protocol": {
@@ -160,7 +160,7 @@
         "description": "Heading for section of options panel which contains settings relating to how Kee behaves when saving new entries"
     },
     "pref_autoFillFormsWithMultipleMatches_label": {
-        "message": "Take this automatic action even when multiple matching entries are found",
+        "message": "一致するエントリが複数見つかった場合でも、この自動動作を実行する",
         "description": "In reference to the Automatic form filling option, this checkbox option allows the user to say whether they want their selected action to be taken even when there is more than one matching entry."
     },
     "pref_keePassDBToOpen_label": {
@@ -268,7 +268,7 @@
         "description": "Link to the add-on's settings"
     },
     "Menu_Button_open_keepass_label": {
-        "message": "Open KeePass",
+        "message": "KeePass を開く",
         "description": "Action button to launch, unlock and/or focus KeePass"
     },
     "Search_label": {
@@ -288,19 +288,19 @@
         "description": "Prefixed before a field name and id to indicate to the user that when they click here the value for that field will be copied to the clipboard. Displayed before (left) of the field name with a space between this string and the field name."
     },
     "copy_value_to_clipboard": {
-        "message": "Copy value to clipboard",
+        "message": "値をクリップボードにコピー",
         "description": "Indicates to the user that when they click here the value for that field will be copied to the clipboard."
     },
     "click_to_reveal_hide": {
-        "message": "Click to reveal/hide",
+        "message": "クリックして表示/非表示",
         "description": "Indicates to the user that when they click here the value of the protected field will be displayed or hidden (toggled)."
     },
     "no_name": {
-        "message": "no name",
+        "message": "名前なし",
         "description": "Used in place of a field name when the specific field has no name. Will be surrounded by [ square brackets ]"
     },
     "matches_from_other_sites": {
-        "message": "Matches from other sites",
+        "message": "他のサイトからの一致",
         "description": "Search results section header."
     },
     "create_new_entry": {
@@ -308,7 +308,7 @@
         "description": "Create new entry"
     },
     "showing_options_for": {
-        "message": "Showing options for",
+        "message": "オプションの表示対象:",
         "description": "label for a group of radio buttons that allows the user to change the scope of the settings they are changing - e.g. all websites or just one specific website"
     },
     "all_websites": {
@@ -328,11 +328,11 @@
         "description": ""
     },
     "website_options_search_placeholder": {
-        "message": "e.g. www.google.com",
+        "message": "例: www.google.com",
         "description": "A placeholder for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "website_options_search_tooltip": {
-        "message": "e.g. www.google.com (Do NOT include https:// or other protocols)",
+        "message": "例: www.google.com（https:// などのプロトコルは含めないでください）",
         "description": "Tooltip/title for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "generatePassword_copied": {
@@ -340,15 +340,15 @@
         "description": ""
     },
     "generatePassword_instructions": {
-        "message": "Choose which type of password to create:",
+        "message": "作成するパスワードの種類を選択してください:",
         "description": ""
     },
     "generatePassword_done_1": {
-        "message": "Password generated.",
+        "message": "パスワードを生成しました。",
         "description": ""
     },
     "generatePassword_done_2": {
-        "message": "Paste it into a \"new password\" field or wherever else you want.",
+        "message": "「新しいパスワード」欄など、お好きな場所に貼り付けてください。",
         "description": ""
     },
     "loggedIn_tip": {
@@ -360,7 +360,7 @@
         "description": "Tells the user they have more than one KeePass database open and tells them which one is active/selected"
     },
     "multiplePasswordSourcesEnabled": {
-        "message": "$1 password sources enabled",
+        "message": "$1 個のパスワードソースが有効",
         "description": "Tells the user how many password databases they have open and unlocked"
     },
     "matchedLogin_label": {
@@ -376,7 +376,7 @@
         "description": ""
     },
     "notifyBarLaunchKeePass_label": {
-        "message": "You are not logged in to your password manager.",
+        "message": "パスワードマネージャーにログインしていません。",
         "description": ""
     },
     "notifyBarLoginToKeePassButton_tip": {
@@ -420,7 +420,7 @@
         "description": "Action button for user to delete an item within a collection. E.g. delete an entry within the list of site-specific settings overrides"
     },
     "site_specific_settings_checkbox_explanation": {
-        "message": "Settings from \"All Websites\" will apply to each section below unless you enable the setting using the checkbox next to it.",
+        "message": "「すべてのウェブサイト」の設定は、横のチェックボックスでその設定を有効にしない限り、以下の各セクションに適用されます。",
         "description": "Explains to the user how the site-specific settings can be enabled and what happens in the default situation"
     },
     "site_properties": {
@@ -428,11 +428,11 @@
         "description": "Site properties"
     },
     "enter_valid_regex": {
-        "message": "Enter a valid Regex or select a different type",
+        "message": "有効な正規表現を入力するか、別の種類を選択してください",
         "description": "Validation error message displayed to user when they have configured the properties of a site specific configuration to be a regular expression (Regex) but supplied a website value that is not a valid regex"
     },
     "site_properties_weight_warning": {
-        "message": "You'll need to carefully check the weights of other configurations if you choose to make use of this advanced feature.",
+        "message": "この高度な機能を使用する場合は、他の設定の重みを慎重に確認する必要があります。",
         "description": "Warning to users that the match weighting feature of site-specific config is an advanced feature"
     },
     "target": {
@@ -456,7 +456,7 @@
         "description": "No"
     },
     "site_specific_settings_inherit": {
-        "message": "Use the same setting as all websites",
+        "message": "すべてのウェブサイトと同じ設定を使用",
         "description": "Option for user to say that they want to use whatever the setting is for the top-level settings for all websites, rather than overriding it with a setting for this specific site."
     },
     "password": {
@@ -464,7 +464,7 @@
         "description": "Amazingly, didn't have a need for this translation until v2.0 ;-)"
     },
     "conn_setup_client_sl_low_resolution": {
-        "message": "Connect using high security",
+        "message": "高セキュリティで接続する",
         "description": "Button that will change the security level Kee attempts to use when connecting to the KeePassRPC server."
     },
     "learn_more": {
@@ -488,7 +488,7 @@
         "description": "Instructions for popup dialog displayed when a proxy requires authentication."
     },
     "network_auth_http_auth_description": {
-        "message": "A website requires you to authenticate with it before you can access $1. The website says: $2",
+        "message": "$1 にアクセスするには、ウェブサイトでの認証が必要です。ウェブサイトのメッセージ: $2",
         "description": "Instructions for popup dialog displayed when a site requires authentication using HTTP Auth."
     },
     "network_auth_choose": {
@@ -516,7 +516,7 @@
         "description": "Part of the message within a transient native notification displayed on the user's screen to alert them to a notification in the Kee browser action popup."
     },
     "notification_only_shown_some_times": {
-        "message": "This additional popup notification will only be shown a small number of times.",
+        "message": "この追加のポップアップ通知は、数回だけ表示されます。",
         "description": "Appended to the message of a transient native notification displayed on the user's screen when we show the message only a handful of times before assuming they have learnt the contents of the message."
     },
     "notification_save_password_tip": {
@@ -536,127 +536,127 @@
         "description": "Setting label to adjust how long the search text a user typed will remain cached, essentially persisting the popup search results for a short time."
     },
     "other_technical_improvements": {
-        "message": "Other technical improvements",
+        "message": "その他の技術的な改善",
         "description": "Heading for the list of additional technical changes in a version of Kee. The changes themselves may be too technical to be worth translating but it's useful if the user knows what the section of the page is about."
     },
     "reliability_improvements": {
-        "message": "Reliability improvements",
+        "message": "信頼性の向上",
         "description": "Heading for text that explains we have made improvements to the reliability of some aspect of Kee"
     },
     "new_icon": {
-        "message": "New icon",
+        "message": "新しいアイコン",
         "description": "Heading for text that explains we have a new icon / branding"
     },
     "pref_automatic": {
-        "message": "Automatic",
+        "message": "自動",
         "description": "Group of settings that relate to the actions that Kee can take automatically when filling entries"
     },
     "pref_manual": {
-        "message": "Manual",
+        "message": "手動",
         "description": "Group of settings that relate to the actions that Kee takes when the user explicitly asks Kee to fill an entry"
     },
     "pref_fill_override_hint": {
-        "message": "Edit individual entries in your password manager to override this behaviour.",
+        "message": "この動作を上書きするには、パスワードマネージャーで個々のエントリを編集してください。",
         "description": "Statement to inform the user that they are able to override the associated (automatic) behaviour on a per-entry basis via KeePass."
     },
     "pref_fill_override_option": {
-        "message": "Editing the Auto-submit behaviour of an entry also overrides this behaviour",
+        "message": "エントリの自動送信の動作を編集すると、この動作も上書きされます",
         "description": "Checkbox option to allow the user to override the associated (manual) behaviour on a per-entry basis via KeePass."
     },
     "next": {
-        "message": "Next",
+        "message": "次へ",
         "description": "Action button for user to advance to the next step in a multi-step process. E.g. to confirm username and password for a new entry and load the panel that allows selection of where to save the new entry."
     },
     "title": {
-        "message": "Title",
+        "message": "タイトル",
         "description": "E.g. the title of an entry."
     },
     "username": {
-        "message": "Username",
+        "message": "ユーザー名",
         "description": "Use the most generic and common term available for the primary sign-in identifier for an account. In practice may be an email address, number, surname, username, etc. but in all cases this will refer to the string the user has stored in the entry's primary Username field."
     },
     "enabled": {
-        "message": "Enabled",
+        "message": "有効",
         "description": "Indicates that a boolean option such as a checkbox is in an enabled/on/true state"
     },
     "disabled": {
-        "message": "Disabled",
+        "message": "無効",
         "description": "Indicates that a boolean option such as a checkbox is in an disabled/off/false state"
     },
     "unsaved_changes": {
-        "message": "You have recent unsaved changes.",
+        "message": "最近の変更が保存されていません。",
         "description": "Shown to user when the popup is opened and a new or existing entry is part-way through being edited from a recent popup session. Note that very recent popup sessions are automatically 'continued' without the user needing to consider this information."
     },
     "continue_saving": {
-        "message": "Continue saving",
+        "message": "保存を続ける",
         "description": "Action for user to continue editing the same entry that was being edited when the popup recently closed."
     },
     "discard_changes": {
-        "message": "Discard changes",
+        "message": "変更を破棄",
         "description": "Action for user to abandon the changes to the entry that were in progress when the popup recently closed."
     },
     "password_profile_hint": {
-        "message": "Select which set of rules the new password will follow. Rules include password length and the sort of characters that may be used. Create new profiles in your password manager.",
+        "message": "新しいパスワードが従うルールのセットを選択します。ルールには、パスワードの長さや使用できる文字の種類が含まれます。新しいプロファイルはパスワードマネージャーで作成してください。",
         "description": "Explains what a password profile is and how to create new ones."
     },
     "password_profile": {
-        "message": "Password profile",
+        "message": "パスワードプロファイル",
         "description": "Name of the profiles used by KeePass to construct new random passwords."
     },
     "url_mismatch_1": {
-        "message": "This entry is for a different site.",
+        "message": "このエントリは別のサイト用です。",
         "description": "1st sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_2": {
-        "message": "Continuing with this update will enable you to fill these credentials into this site too.",
+        "message": "この更新を続けると、これらの認証情報をこのサイトにも入力できるようになります。",
         "description": "2nd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_3": {
-        "message": "Make sure this is not an attempt to trick you into revealing your password!",
+        "message": "パスワードを盗み出すための罠ではないことを確認してください！",
         "description": "3rd sentence of a warning message to notify the user that updating the entry will enable its use on a new website."
     },
     "url_mismatch_confirm": {
-        "message": "I understand the risk; Share these credentials with $1.",
+        "message": "リスクを理解しました。これらの認証情報を $1 と共有します。",
         "description": "Label for a confirmation checkbox for the user to affirm that they want to enable the use of an entry on a new website."
     },
     "make_additional_changes_using_full_editor": {
-        "message": "Additional changes can be made using the full editor.",
+        "message": "追加の変更は、完全なエディターで行えます。",
         "description": "Note to user that the Kee interface does not allow every possible type of edit to an entry."
     },
     "open_full_editor": {
-        "message": "Open advanced editor",
+        "message": "詳細エディターを開く",
         "description": "Button action to open the full entry editor in KeePass. Be sure to imply that the need to click the button is 'unusual', as I have done with the word 'advanced'"
     },
     "where": {
-        "message": "Where?",
+        "message": "どこに？",
         "description": "Brief question to the user to introduce the section in the popup where they can select where their entry will be saved (which database, group, etc.)"
     },
     "will_be_copied_to_clipboard": {
-        "message": "This new password will be copied to your clipboard",
+        "message": "この新しいパスワードはクリップボードにコピーされます",
         "description": ""
     },
     "password_will_be_set_on_field": {
-        "message": "Your password field will be set to this password",
+        "message": "パスワード欄にこのパスワードが設定されます",
         "description": ""
     },
     "also_copy_to_clipboard": {
-        "message": "Also copy to clipboard",
+        "message": "クリップボードにもコピーする",
         "description": "Explains that enabling this option will copy the value to the clipboard in addition to the default behaviour"
     },
     "generator_action_copy": {
-        "message": "Copy",
+        "message": "コピー",
         "description": "Action button to copy to the clipboard a value such as a newly generated password"
     },
     "generator_action_apply": {
-        "message": "Apply",
+        "message": "適用",
         "description": "Action button to apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "generator_action_apply_and_copy": {
-        "message": "Apply and copy",
+        "message": "適用してコピー",
         "description": "Action button to both copy and apply a change such as a newly generated password. Resulting alterations are not persisted immediately."
     },
     "KB_shortcut_simple_2_desc": {
-        "message": "Sign in to password manager / Select matched login / Show matched logins list",
+        "message": "パスワードマネージャーにサインイン / 一致したログインを選択 / 一致したログインの一覧を表示",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
     },
     "about_heading": {
@@ -674,5 +674,169 @@
     "modified_fork_notice": {
         "message": "KeeLink は、元の Kee ブラウザーアドオンを改変したバージョンです。独立したプロジェクトであり、Kee Vault Ltd とは提携しておらず、同社の承認も受けていません。",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "KeeLink が接続できるように、パスワードマネージャーを更新する必要があります。KeePassRPC プラグインが最新バージョンであることを確認してください。",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "最後に使用した KeePass データベースを記憶する",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "開いているすべての KeePass データベースを検索する",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "KeeLink を有効にするには KeePass を開いてください",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "ここで入力されないのはなぜですか？",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "ここで自動入力されます",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "自動入力はオフです",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "フォームの自動入力は KeeLink の設定でオフになっています。",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "今回は入力しません",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink は今回のフォームスキャンで一致する項目を一覧表示するだけで、現在は自動入力しない設定になっています。",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 件が一致 - 1 つ選択してください",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "このページに $1 件のエントリが一致するため、KeeLink は推測せずにあなたの選択を待ちます。",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "自動入力しません",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "このエントリは、パスワードデータベースで自動入力しないよう設定されています。",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "一致度が低い",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "このエントリは、このページのログインフォームとの一致度が十分ではありません。",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "一致するフィールドが少ない",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "このフォームのフィールドのうち、このエントリのフィールドと対応するものが少なすぎます。",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "KeeLink を使用するには、ブラウザーで追加の手順が必要です。「続行」をクリックして、KeeLink がログイン情報を入力できるようにすべてのウェブサイトへのアクセスを許可してください。",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink は KeePass Password Safe 2 と KeePassRPC.plgx プラグインで動作します。両方をインストールしてから、KeePass でパスワードデータベースを開いてください。",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink は、パスワード欄（ボックス）のあるすべてのフォームに、一致する KeePass のエントリを入力しようとします。この動作は以下で調整できます。",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink は、KeePass のみに対応する Kee の独立したフォークとして保守されるようになりました;Kee Vault との連携とオンラインアカウント機能を削除しました;内部の整理とバグ修正",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
+    },
+    "pref_autoFillFieldsWithExistingValue_label": {
+        "message": "すでにテキストが入力されているフィールドも自動入力する",
+        "description": "This checkbox option allows the user to say whether they want fields to be auto-filled if they already have a value. It doesn't affect manual fill requests."
+    },
+    "continue": {
+        "message": "続行",
+        "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
+    },
+    "recommend_action_button_should_be_pinned": {
+        "message": "KeeLink はほとんどのサイトで使用されるため、KeeLink ボタンをツールバーにピン留めすることをおすすめします:",
+        "description": "Recommends that the user might want to pin the extension to the main toolbar. A screenshot demonstrating this will be displayed directly below (English in the screenshot so not ideal but it's the icons that matter most)."
+    },
+    "ignore_case": {
+        "message": "大文字と小文字を区別しない",
+        "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
+    },
+    "ignore_case_explanation_finding_forms": {
+        "message": "たとえば、含める/除外するリストのいずれかに「search」を入れると、「search」「Search」「SEARCH」のすべてに一致します。非常に特殊で複雑な要件がない限り、このオプションは有効のままにしておくことをおすすめします。",
+        "description": "Describes the ignore case setting when used for configuring the include and exclude lists for finding forms."
+    },
+    "theme": {
+        "message": "テーマ",
+        "description": "The visual theme applied to the extension's user interface. As per convention, the values refer to the predominant shade - i.e. the background colour"
+    },
+    "dark": {
+        "message": "ダーク",
+        "description": "Black colour or similar; Darkened visual appearance"
+    },
+    "light": {
+        "message": "ライト",
+        "description": "White colour or similar; Bright visual appearance"
+    },
+    "system_preference": {
+        "message": "システムの設定",
+        "description": "The user's configured preference/setting in their system. System is vague because different browsers will implement it in different ways so it could relate to either the user's operating system, their web browser or both."
+    },
+    "theme_system_preference_explanation": {
+        "message": "すべてのオペレーティングシステムやブラウザーが、ブラウザー拡張機能の自動テーマ設定に対応しているわけではありません。必要に応じて、上で手動で設定を選択できます。",
+        "description": "Explains what the Theme preference does and why"
+    },
+    "pref_Appearance_heading": {
+        "message": "外観",
+        "description": "Heading for settings/options that relate to the visual appearance of the extension"
+    },
+    "pref_hidden_options_present_explanation": {
+        "message": "KeeLink はこのサイトの追加オプションを自動的に管理しているため、削除できません。",
+        "description": "Notification and explanation to user that one or more hidden settings are present for the configuration of a specific site"
+    },
+    "preferred_matching_entry": {
+        "message": "優先する一致エントリ",
+        "description": "Label for toggle between preferred status for the specific matched entry the toggle is displayed upon."
+    },
+    "show_confirmation_after_save": {
+        "message": "エントリの保存後に確認を表示する",
+        "description": "Label for option to display a confirmation message in the main popup after user has created or updated an entry."
+    },
+    "you_recently_saved": {
+        "message": "最近エントリを保存しました",
+        "description": "A confirmation message after user has created or updated an entry."
+    },
+    "pref_preferToSkipWhere_label": {
+        "message": "最後に保存したグループに新しいエントリを自動的に保存する",
+        "description": "Whether KeeLink will save new entries to the group most recently chosen by the user without presenting them with the usual Where group chooser interface"
+    },
+    "skip_where_reason_domain_entry_exists": {
+        "message": "このドメインのエントリがすでに存在するため、この質問が表示されています",
+        "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
+    },
+    "skip_where_reason_group_not_found": {
+        "message": "最後に保存したグループが見つからないため、この質問が表示されています。削除されたか KeeLink から非表示にされた可能性があります。または、必要なパスワードソースがロック解除されていないだけかもしれません。",
+        "description": "Explains why user is being asked where to save a new entry despite having previously requested to not be asked."
+    },
+    "skip_where_enable_context": {
+        "message": "新しいエントリを常にここに保存する",
+        "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
     }
 }

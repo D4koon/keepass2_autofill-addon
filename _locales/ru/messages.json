@@ -742,5 +742,93 @@
     "modified_fork_notice": {
         "message": "KeeLink — это модифицированная версия оригинального расширения для браузера Kee. Это независимый проект, не связанный с Kee Vault Ltd и не одобренный этой компанией.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "Ваш менеджер паролей необходимо обновить, чтобы KeeLink мог к нему подключиться. Убедитесь, что вы используете последнюю версию плагина KeePassRPC.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Запоминать последнюю использованную базу данных KeePass",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Искать во всех открытых базах данных KeePass",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "Откройте KeePass, чтобы включить KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Почему здесь ничего не заполняется?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Здесь заполняется автоматически",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Автозаполнение выключено",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Автоматическое заполнение форм отключено в настройках KeeLink.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "В этот раз не заполняется",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink только перечисляет совпадения для этой проверки формы; сейчас он не настроен на автоматическое заполнение.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "Совпадений: $1 — выберите одно",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "Этой странице соответствует записей: $1, поэтому KeeLink ждёт, пока вы выберете одну, а не гадает.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Никогда не заполняется автоматически",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Эта запись настроена в вашей базе паролей так, чтобы никогда не заполняться автоматически.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Слабое совпадение",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Эта запись недостаточно точно соответствует форме входа на этой странице.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Мало совпадающих полей",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Слишком мало полей этой формы соответствуют полям этой записи.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Браузеру требуется дополнительный шаг, прежде чем KeeLink сможет работать. Нажмите «продолжить» и разрешите KeeLink доступ ко всем сайтам, чтобы он мог заполнять ваши учётные данные.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink работает с KeePass Password Safe 2 и плагином KeePassRPC.plgx. Установите оба, а затем откройте свою базу паролей в KeePass.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "site_options_valid_form_intro_desc": {
+        "message": "KeeLink попытается заполнить подходящими записями KeePass все формы, содержащие поле пароля. Это поведение можно изменить ниже.",
+        "description": "Explains how KeeLink chooses which forms to fill in"
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink теперь поддерживается как независимый форк Kee, работающий только с KeePass;Интеграция с Kee Vault и её функции онлайн-аккаунта удалены;Внутренняя очистка и исправления ошибок",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }

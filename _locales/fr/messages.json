@@ -164,7 +164,7 @@
         "description": "In reference to the Automatic form filling option, this checkbox option allows the user to say whether they want their selected action to be taken even when there is more than one matching entry."
     },
     "pref_autoFillFieldsWithExistingValue_label": {
-        "message": "Automatically fill fields that already contain text",
+        "message": "Remplir automatiquement les champs qui contiennent déjà du texte",
         "description": "This checkbox option allows the user to say whether they want fields to be auto-filled if they already have a value. It doesn't affect manual fill requests."
     },
     "pref_keePassDBToOpen_label": {
@@ -332,7 +332,7 @@
         "description": ""
     },
     "website_options_search_placeholder": {
-        "message": "e.g. www.google.com",
+        "message": "p. ex. www.google.com",
         "description": "A placeholder for the search box where the user searches for the settings that apply to a specific website (per-site settings)"
     },
     "website_options_search_tooltip": {
@@ -508,7 +508,7 @@
         "description": "Top-level description of what Kee does. Focuses on the most obvious/desirable features that are specific to Kee, rather than generic to the concept of a password manager."
     },
     "continue": {
-        "message": "continue",
+        "message": "continuer",
         "description": "Call to action to proceed with the next step in a process. E.g. asking the browser UI to prompt the user with a new question."
     },
     "recommend_action_button_should_be_pinned": {
@@ -746,5 +746,89 @@
     "modified_fork_notice": {
         "message": "KeeLink est une version modifiée du module complémentaire de navigateur Kee d’origine. Il s’agit d’un projet indépendant, non affilié à Kee Vault Ltd et non soutenu par celle-ci.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "conn_setup_server_features_missing": {
+        "message": "Votre gestionnaire de mots de passe doit être mis à jour pour que KeeLink puisse s’y connecter. Assurez-vous d’utiliser la dernière version du plugin KeePassRPC.",
+        "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."
+    },
+    "pref_rememberMRUDB_label": {
+        "message": "Mémoriser la dernière base de données KeePass utilisée",
+        "description": ""
+    },
+    "pref_searchAllOpenDBs_label": {
+        "message": "Rechercher dans toutes les bases de données KeePass ouvertes",
+        "description": ""
+    },
+    "notifyBarLaunchKeePassButton_tip": {
+        "message": "Ouvrez KeePass pour activer KeeLink",
+        "description": ""
+    },
+    "diagnose_fill_here": {
+        "message": "Pourquoi ce formulaire n’est-il pas rempli ici ?",
+        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+    },
+    "autofill_status_fills_here": {
+        "message": "Remplissage automatique ici",
+        "description": "Short status line under a matched entry in the popup: KeeLink did / will automatically fill this entry into the current page's login form."
+    },
+    "autofill_blocked_disabled_short": {
+        "message": "Remplissage automatique désactivé",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the global auto-fill setting is off. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_disabled": {
+        "message": "Le remplissage automatique des formulaires est désactivé dans les paramètres de KeeLink.",
+        "description": "Tooltip with the full explanation for autofill_blocked_disabled_short."
+    },
+    "autofill_blocked_notify_only_short": {
+        "message": "Pas de remplissage cette fois",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - this form scan was told to list matches only. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_notify_only": {
+        "message": "KeeLink se contente de lister les correspondances pour cette analyse du formulaire ; il n’est pas configuré pour remplir automatiquement pour le moment.",
+        "description": "Tooltip with the full explanation for autofill_blocked_notify_only_short."
+    },
+    "autofill_blocked_multiple_short": {
+        "message": "$1 correspondances – choisissez-en une",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - more than one entry matches. $1 is the number of matching entries. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_multiple": {
+        "message": "$1 entrées correspondent à cette page ; KeeLink attend donc que vous en choisissiez une plutôt que de deviner.",
+        "description": "Tooltip with the full explanation for autofill_blocked_multiple_short. $1 is the number of matching entries."
+    },
+    "autofill_blocked_entry_never_short": {
+        "message": "Jamais de remplissage automatique",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry has the 'never auto-fill' option set. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_entry_never": {
+        "message": "Cette entrée est configurée dans votre base de données de mots de passe pour ne jamais être remplie automatiquement.",
+        "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
+    },
+    "autofill_blocked_low_relevance_short": {
+        "message": "Correspondance faible",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_relevance": {
+        "message": "Cette entrée ne correspond pas assez au formulaire de connexion de cette page.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    },
+    "autofill_blocked_low_field_match_short": {
+        "message": "Peu de champs correspondent",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_low_field_match": {
+        "message": "Trop peu de champs de ce formulaire correspondent à ceux de cette entrée.",
+        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    },
+    "all_sites_permissions_required": {
+        "message": "Votre navigateur exige une étape supplémentaire avant que KeeLink puisse fonctionner. Cliquez sur « continuer » et autorisez KeeLink à accéder à tous les sites web afin qu’il puisse remplir vos identifiants.",
+        "description": "Explains why the user must grant the all-sites permission on first install."
+    },
+    "install_keepass_instructions": {
+        "message": "KeeLink fonctionne avec KeePass Password Safe 2 et le plugin KeePassRPC.plgx. Installez les deux, puis ouvrez votre base de données de mots de passe dans KeePass.",
+        "description": "Tells new users how to set up KeePass so that KeeLink can connect to it."
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink est désormais maintenu comme un fork indépendant de Kee, compatible uniquement avec KeePass;L’intégration de Kee Vault et ses fonctions de compte en ligne ont été supprimées;Nettoyage interne et corrections de bugs",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     }
 }
