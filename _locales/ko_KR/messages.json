@@ -726,5 +726,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "암호 관리자에 로그인 / 일치하는 로그인 선택 / 일치하는 로그인 목록 표시",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "정보",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "이 소프트웨어는",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": "이 오픈 소스 라이선스로 처음 공개한 소스 코드를 기반으로 합니다.",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink는 원본 Kee 브라우저 추가 기능을 수정한 버전입니다. 독립적인 프로젝트이며 Kee Vault Ltd와 제휴 관계가 없고 Kee Vault Ltd의 보증을 받지 않았습니다.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }

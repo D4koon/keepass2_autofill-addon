@@ -730,5 +730,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "Se connecter au gestionnaire de mots de passe / Sélectionner l'entrée correspondante / Montrer la liste des entrées correspondantes",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "À propos",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "Ce logiciel est basé sur un code source publié à l’origine sous licence open source par",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": ".",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink est une version modifiée du module complémentaire de navigateur Kee d’origine. Il s’agit d’un projet indépendant, non affilié à Kee Vault Ltd et non soutenu par celle-ci.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }

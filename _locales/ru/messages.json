@@ -726,5 +726,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "Авторизоваться в менеджере паролей / Выбрать подходящий логин / Показать список подходящих логинов",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "О программе",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "Это программное обеспечение основано на исходном коде, первоначально опубликованном под лицензией с открытым исходным кодом компанией",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": ".",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink — это модифицированная версия оригинального расширения для браузера Kee. Это независимый проект, не связанный с Kee Vault Ltd и не одобренный этой компанией.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }

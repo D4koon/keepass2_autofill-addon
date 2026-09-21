@@ -670,5 +670,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "Sign in to password manager / Select matched login / Show matched logins list",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "Acerca de",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "Este software se basa en código fuente publicado originalmente bajo una licencia de código abierto por",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": ".",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink es una versión modificada de la extensión de navegador Kee original. Es un proyecto independiente y no está afiliado a Kee Vault Ltd ni cuenta con su respaldo.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }

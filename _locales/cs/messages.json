@@ -726,5 +726,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "Přihlásit se do správce hesel / Vybrat nalezené přihlášení / Zobrazit seznam nalezených přihlášení",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "O projektu",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "Tento software vychází ze zdrojového kódu, který původně vydala pod open source licencí společnost",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": ".",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink je upravená verze původního doplňku prohlížeče Kee. Jde o nezávislý projekt, který není přidružen ke společnosti Kee Vault Ltd ani jí není podporován.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }

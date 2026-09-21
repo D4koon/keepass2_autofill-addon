@@ -726,5 +726,21 @@
     "KB_shortcut_simple_2_desc": {
         "message": "Kirjaudu salasananhallintaan/Valitse sopiva kirjautumistieto/Näytä sopivat kirjautumistiedot",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
+    },
+    "about_heading": {
+        "message": "Tietoja",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "Tämä ohjelmisto perustuu lähdekoodiin, jonka",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": " on alun perin julkaissut avoimen lähdekoodin lisenssillä.",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink on muokattu versio alkuperäisestä Kee-selainlisäosasta. Se on itsenäinen projekti, jolla ei ole yhteyttä Kee Vault Ltd:hen eikä Kee Vault Ltd tue sitä.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     }
 }
