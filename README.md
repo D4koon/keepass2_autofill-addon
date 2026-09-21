@@ -4,6 +4,14 @@
 
 KeeLink is a free Firefox and Chrome add-on for linking browsers to KeePass (requires the [KeePassRPC KeePass plugin](https://github.com/kee-org/keepassrpc)).
 
+## Origin and license
+
+This software is based upon source code originally released under open source license by [Kee Vault Ltd](https://www.kee.pm).
+
+KeeLink is a **modified version** of the original Kee browser add-on. It is an independent project and is not affiliated with or endorsed by Kee Vault Ltd. The Kee Vault integration and online account features of the original have been removed.
+
+It is licensed under the GNU Affero General Public License v3 with the additional terms listed in [LICENSE](LICENSE). See [NOTICE](NOTICE) for copyright and trademark details.
+
 # Build
 
 ## Requirements

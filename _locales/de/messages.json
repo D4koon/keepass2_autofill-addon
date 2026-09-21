@@ -675,10 +675,6 @@
         "message": "Neue Einträge immer hier speichern",
         "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
     },
-    "list_version_upgrade_4_0": {
-        "message": "Unterstützung für die neuesten Webbrowser (MV3);Schnellere Verbindung zu KeePass auf einigen Systemen (erfordert KeePassRPC.plgx v2+);Viele Fehlerbehebungen und wahrscheinlich einige neue Fehler eingeführt",
-        "description": "Changes for the version number in the string key name. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
-    },
     "ignore_case": {
         "message": "Groß-/Kleinschreibung ignorieren",
         "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
@@ -730,5 +726,25 @@
     "KB_shortcut_simple_2_desc": {
         "message": "In KeePass anmelden / Passende Anmeldungen auswählen / Liste der passenden Anmeldungen anzeigen",
         "description": "Description of keyboard shortcut setting for the primary action - exact behaviour depends on state when executed"
-    }
+    },
+        "about_heading": {
+                "message": "Über",
+                "description": "Heading of the settings panel that credits the original project."
+        },
+        "attribution_before_link": {
+                "message": "Diese Software basiert auf Quellcode, der ursprünglich unter einer Open-Source-Lizenz von",
+                "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+        },
+        "attribution_after_link": {
+                "message": " veröffentlicht wurde.",
+                "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+        },
+        "modified_fork_notice": {
+                "message": "KeeLink ist eine veränderte Version des ursprünglichen Kee-Browser-Add-ons. Es ist ein unabhängiges Projekt und steht in keiner Verbindung zu Kee Vault Ltd und wird von dieser nicht unterstützt.",
+                "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+        },
+        "list_version_upgrade_current": {
+                "message": "KeeLink wird jetzt als unabhängiger Fork von Kee gepflegt, der nur KeePass unterstützt;Die Kee-Vault-Anbindung und die zugehörigen Online-Kontofunktionen wurden entfernt;Interne Aufräumarbeiten und Fehlerbehebungen",
+                "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
+        }
 }

@@ -4,7 +4,7 @@
         "description": "List of items that cause behaviour to be disabled if they match. For example, the list of names of form fields that prevent Kee from searching for logins for the form containing that field."
     },
     "conn_display_description": {
-        "message": "Расширение браузера, которое позволяет безопасно автоматически авторизоваться на большинстве веб-сайтов. Ранее назывался KeeFox.",
+        "message": "Расширение браузера, которое позволяет безопасно автоматически авторизоваться на большинстве веб-сайтов.",
         "description": "A brief description of Kee that gets presented to users to help them decide if they want to allow the connection to KeePass to be permitted."
     },
     "conn_invalid_message": {
@@ -674,10 +674,6 @@
     "skip_where_enable_context": {
         "message": "Всегда сохранять новые записи здесь",
         "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
-    },
-    "list_version_upgrade_4_0": {
-        "message": "Поддержка последних веб-браузеров (MV3);Более быстрое подключение к KeePass на некоторых системах (требуется KeePassRPC.plgx v2+);Многочисленные исправления ошибок и, возможно, некоторые новые ошибки, которые были добавлены.",
-        "description": "Changes for the version number in the string key name. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
     },
     "ignore_case": {
         "message": "Игнорировать регистр",

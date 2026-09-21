@@ -4,7 +4,7 @@
         "description": "List of items that cause behaviour to be disabled if they match. For example, the list of names of form fields that prevent Kee from searching for logins for the form containing that field."
     },
     "conn_display_description": {
-        "message": "A browser addon that securely enables automatic login to most websites. Previously known as KeeFox.",
+        "message": "A browser addon that securely enables automatic login to most websites.",
         "description": "A brief description of Kee that gets presented to users to help them decide if they want to allow the connection to KeePass to be permitted."
     },
     "conn_invalid_message": {

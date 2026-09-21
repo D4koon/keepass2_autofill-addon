@@ -1,0 +1,22 @@
+KeeLink
+=======
+
+KeeLink is a modified version of the Kee browser add-on
+(https://github.com/kee-org/browser-addon), originally released under open
+source license by Kee Vault Ltd (https://www.kee.pm).
+
+Copyright (C) Kee Vault Ltd and others (original work).
+Copyright (C) the contributors to this fork, as recorded in the git history
+of this repository (modifications).
+
+This software is licensed under the GNU Affero General Public License v3 with
+the additional terms set out in the LICENSE file. Those terms include a
+requirement to display user-facing attribution to Kee Vault Ltd (implemented
+on the extension's settings page) and restrictions on the use of the Kee Vault
+name and logos, which are trademarks of Kee Vault Ltd.
+
+KeeLink is an independent project. It is not affiliated with, endorsed by or
+supported by Kee Vault Ltd.
+
+KeeLink communicates with KeePass through the KeePassRPC plugin, which is a
+separate project (https://github.com/kee-org/keepassrpc).

@@ -8,7 +8,7 @@
     "description": "List of items that cause behaviour to be disabled if they match. For example, the list of names of form fields that prevent KeeLink from searching for logins for the form containing that field."
   },
   "conn_display_description": {
-    "message": "A browser addon that securely enables automatic login to most websites. Previously known as KeeFox.",
+    "message": "A browser addon that securely enables automatic login to most websites.",
     "description": "A brief description of KeeLink that gets presented to users to help them decide if they want to allow the connection to KeePass to be permitted."
   },
   "conn_invalid_message": {
@@ -763,10 +763,6 @@
       "message": "Always save new entries here",
       "description": "Description of checkbox that when enabled will change a setting such that the user is not prompted where to save future entries they create."
   },
-  "list_version_upgrade_4_0": {
-    "message": "Support for the latest web browsers (MV3);Faster connection to KeePass on some systems (requires KeePassRPC.plgx v2+);Lots of bug fixes and probably some new bugs introduced",
-    "description": "Changes for the version number in the string key name. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
-  },
   "ignore_case": {
     "message": "Ignore case",
     "description": "Enabling this setting will cause a case-insensitive comparison to be made (e.g. when looking for matching names and IDs of forms to fill in)"
@@ -814,5 +810,25 @@
   "you_recently_saved": {
     "message": "You recently saved an entry",
     "description": "A confirmation message after user has created or updated an entry."
-  }
+  },
+    "about_heading": {
+        "message": "About",
+        "description": "Heading of the settings panel that credits the original project."
+    },
+    "attribution_before_link": {
+        "message": "This software is based upon source code originally released under open source license by",
+        "description": "Legal attribution required by the licence. Text shown BEFORE the link 'Kee Vault Ltd' (a company name that must not be translated)."
+    },
+    "attribution_after_link": {
+        "message": ".",
+        "description": "Legal attribution required by the licence. Text shown AFTER the link 'Kee Vault Ltd'."
+    },
+    "modified_fork_notice": {
+        "message": "KeeLink is a modified version of the original Kee browser add-on. It is an independent project and is not affiliated with or endorsed by Kee Vault Ltd.",
+        "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
+    },
+    "list_version_upgrade_current": {
+        "message": "KeeLink is now maintained as an independent, KeePass-only fork of Kee;The Kee Vault integration and its online account features have been removed;Internal clean-up and bug fixes",
+        "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."
+    }
 }
