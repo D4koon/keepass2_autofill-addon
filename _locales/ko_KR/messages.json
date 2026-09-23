@@ -743,6 +743,14 @@
         "message": "KeeLink는 원본 Kee 브라우저 추가 기능을 수정한 버전입니다. 독립적인 프로젝트이며 Kee Vault Ltd와 제휴 관계가 없고 Kee Vault Ltd의 보증을 받지 않았습니다.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink가 툴바 아이콘을 먼저 클릭하지 않고도 로그인 정보를 채우려면 모든 웹사이트에 대한 접근 권한이 필요합니다.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "접근 허용",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "KeeLink가 연결할 수 있도록 비밀번호 관리자를 업그레이드해야 합니다. KeePassRPC 플러그인이 최신 버전인지 확인하세요.",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

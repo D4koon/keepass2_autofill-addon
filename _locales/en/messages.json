@@ -827,6 +827,14 @@
         "message": "KeeLink is a modified version of the original Kee browser add-on. It is an independent project and is not affiliated with or endorsed by Kee Vault Ltd.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink needs permission to access all websites before it can fill in logins without you having to click the toolbar icon first.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "Grant access",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "list_version_upgrade_current": {
         "message": "KeeLink is now maintained as an independent, KeePass-only fork of Kee;The Kee Vault integration and its online account features have been removed;Internal clean-up and bug fixes",
         "description": "Changes for the current version. Multiple items MUST be separated by a semicolon (;). Do not use a semi-colon except as a list-item (new line) separator."

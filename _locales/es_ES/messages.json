@@ -747,6 +747,14 @@
         "message": "KeeLink es una versión modificada del complemento de navegador Kee original. Es un proyecto independiente y no está afiliado a Kee Vault Ltd ni cuenta con su respaldo.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink necesita permiso para acceder a todos los sitios web antes de poder rellenar los inicios de sesión sin que tenga que hacer clic primero en el icono de la barra de herramientas.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "Conceder acceso",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "Es necesario actualizar su gestor de contraseñas para que KeeLink pueda conectarse a él. Asegúrese de usar la última versión del complemento KeePassRPC.",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

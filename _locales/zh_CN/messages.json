@@ -743,6 +743,14 @@
         "message": "KeeLink 是原版 Kee 浏览器扩展的修改版本。它是一个独立项目，与 Kee Vault Ltd 无关联，也未获得其认可。",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink 需要访问所有网站的权限，才能在您无需先点击工具栏图标的情况下自动填写登录信息。",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "授予访问权限",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "需要升级您的密码管理器，KeeLink 才能连接到它。请确保您使用的是最新版本的 KeePassRPC 插件。",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

@@ -135,7 +135,8 @@ export async function getManifest() {
                 "strict_min_version": "142.0",
                 // No update_url: that pointed at kee-org's own update feed, which does
                 // not know about this fork. Add your own hosted update manifest URL
-                // here if you set up self-distribution with auto-updates.
+                // here if you set up self-distribution with auto-updates - see the
+                // "Automatic updates" entry in TODO.md for the full setup.
 
                 // Required by Mozilla since Nov 2025 (https://mzl.la/firefox-builtin-data-consent).
                 // This extension doesn't collect or transmit any data off-device - it only talks

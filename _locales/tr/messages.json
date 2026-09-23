@@ -675,6 +675,14 @@
         "message": "KeeLink, özgün Kee tarayıcı eklentisinin değiştirilmiş bir sürümüdür. Bağımsız bir projedir; Kee Vault Ltd ile bağlantılı değildir ve onun tarafından desteklenmemektedir.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink'in araç çubuğu simgesine önce tıklamanıza gerek kalmadan giriş bilgilerini doldurabilmesi için tüm web sitelerine erişim izni gerekiyor.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "Erişime izin ver",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "KeeLink'in bağlanabilmesi için parola yöneticinizin yükseltilmesi gerekiyor. KeePassRPC eklentisinin en son sürümünü kullandığınızdan emin olun.",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

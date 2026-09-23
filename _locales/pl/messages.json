@@ -743,6 +743,14 @@
         "message": "KeeLink jest zmodyfikowaną wersją oryginalnego dodatku do przeglądarki Kee. Jest to niezależny projekt, niepowiązany z firmą Kee Vault Ltd ani przez nią niewspierany.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink potrzebuje uprawnienia dostępu do wszystkich witryn, aby wypełniać dane logowania bez konieczności klikania najpierw ikony na pasku narzędzi.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "Zezwól na dostęp",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "Menedżer haseł musi zostać zaktualizowany, aby KeeLink mógł się z nim połączyć. Upewnij się, że używasz najnowszej wersji wtyczki KeePassRPC.",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

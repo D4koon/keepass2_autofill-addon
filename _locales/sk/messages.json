@@ -743,6 +743,14 @@
         "message": "KeeLink je upravená verzia pôvodného doplnku prehliadača Kee. Je to nezávislý projekt, ktorý nie je prepojený so spoločnosťou Kee Vault Ltd ani ňou podporovaný.",
         "description": "Explains that this software is a modified fork of the original and does not misrepresent its origin."
     },
+    "grant_all_sites_access_banner": {
+        "message": "KeeLink potrebuje povolenie na prístup ku všetkým webom, aby mohol vypĺňať prihlasovacie údaje bez toho, aby ste museli najprv kliknúť na ikonu na paneli s nástrojmi.",
+        "description": "Shown in the popup when the all-sites permission has not been granted yet (e.g. the user skipped the first-run page). Explains why the banner's button is offered."
+    },
+    "grant_all_sites_access_button": {
+        "message": "Udeliť prístup",
+        "description": "Button in the popup banner that requests the all-sites permission, equivalent to the toggle in the browser's extension settings."
+    },
     "conn_setup_server_features_missing": {
         "message": "Váš správca hesiel je potrebné aktualizovať, aby sa k nemu KeeLink mohol pripojiť. Uistite sa, že používate najnovšiu verziu doplnku KeePassRPC.",
         "description": "The KeePassRPC server does not offer some features that this version of KeeLink requires."

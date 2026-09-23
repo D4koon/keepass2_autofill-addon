@@ -6,6 +6,19 @@
         <v-main>
             <v-container fluid class="overflow-auto app_height" style="padding: 8px 12px">
                 <div>
+                    <v-alert v-show="showGrantAccessBanner" color="secondary" border="top" border-color="primary"
+                        elevation="1" class="mt-2">
+                        <v-row dense>
+                            <v-col>{{ $i18n("grant_all_sites_access_banner") }}</v-col>
+                        </v-row>
+                        <v-row dense class="py-1" align="start">
+                            <v-col>
+                                <v-btn color="primary" size="small" @click="grantAllSitesAccess">
+                                    {{ $i18n("grant_all_sites_access_button") }}
+                                </v-btn>
+                            </v-col>
+                        </v-row>
+                    </v-alert>
                     <v-alert v-show="showSaveRecovery" color="secondary" border="top" border-color="primary"
                         elevation="1" class="mt-2">
                         <v-row dense>
@@ -173,7 +186,8 @@ export default {
             manualRecoveryPromptTimeMs: manualRecoveryPromptTimeMs,
             autoRecoveryTimeMs: autoRecoveryTimeMs,
             showPasswordGenerator: false,
-            lastSaveEntryResult: null
+            lastSaveEntryResult: null,
+            showGrantAccessBanner: false
         };
     },
     computed: {
@@ -240,6 +254,10 @@ export default {
         }
     },
     mounted: async function () {
+        this.showGrantAccessBanner = !(await chrome.permissions.contains({
+            origins: ["<all_urls>"]
+        }));
+
         this.saveLastActiveAt = this.saveState?.lastActiveAt;
 
         const discardRequired = this.handleLastSaveResult();
@@ -267,6 +285,12 @@ export default {
         this.updateSaveState(updatedSaveState);
     },
     methods: {
+        grantAllSitesAccess: async function () {
+            // Must be called from a user gesture (this button click) - the browser
+            // silently ignores/rejects permission requests made without one.
+            const granted = await chrome.permissions.request({ origins: ["<all_urls>"] });
+            if (granted) this.showGrantAccessBanner = false;
+        },
         showOptions: () => {
             chrome.runtime.openOptionsPage();
             window.close();
