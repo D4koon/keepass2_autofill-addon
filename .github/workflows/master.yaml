@@ -77,6 +77,19 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # ./extension holds the last build (Chrome), so rebuild the Firefox production
+      # build and sign that. Unlisted add-ons are signed automatically, usually
+      # within minutes; web-ext waits and downloads the signed .xpi.
+      # Runs before the push so a failed signing does not leave a tag behind.
+      - name: Sign Firefox build with Mozilla
+        run: |
+          npm run build:prod
+          npm run sign:xpi:beta
+          mv dist/signed/*.xpi "dist/signed/keelink-$NEW_KEE_VERSION-firefox-signed.xpi"
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+
       - name: Push version commit and git tag
         run: |
           git push origin HEAD:refs/heads/${{ github.ref_name }}
@@ -89,6 +102,8 @@ jobs:
           tag_name: ${{ env.NEW_KEE_VERSION }}
           fail_on_unmatched_files: true
           prerelease: true
-          body: "This is an automatically generated pre-release. Some releases will be thoroughly tested and their derivatives marked as ready for beta and eventually stable release. If the status of this version changes, this message will be replaced. You may want to install the files in this release if you wish to test a specific change that is included within this version."
+          body: "Firefox: install keelink-${{ env.NEW_KEE_VERSION }}-firefox-signed.xpi (signed by Mozilla) by opening it in Firefox. The other .xpi files are unsigned and only useful for testing. Chrome/Edge: the .zip files can be loaded unpacked in developer mode."
           files: |
-            dist/*
+            dist/*.xpi
+            dist/*.zip
+            dist/signed/*.xpi

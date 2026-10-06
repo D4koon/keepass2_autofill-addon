@@ -81,6 +81,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Signs whatever is in ./extension, i.e. the beta build from above (it is
+      # built last for this reason). Unlisted add-ons are signed automatically,
+      # usually within minutes; web-ext waits and downloads the signed .xpi.
+      # Runs before the push so a failed signing does not leave a tag behind.
+      - name: Sign Firefox build with Mozilla
+        run: |
+          npm run sign:xpi:beta
+          mv dist/signed/*.xpi "dist/signed/keelink-$NEW_KEE_VERSION-firefox-signed.xpi"
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+
       - name: Push version commit and git tag
         run: |
           git push origin HEAD:refs/heads/${{ github.ref_name }}
@@ -93,24 +105,11 @@ jobs:
           tag_name: ${{ env.NEW_KEE_VERSION }}
           fail_on_unmatched_files: true
           prerelease: false
-          body: "This is an automatically generated beta release. The first beta release for this major.minor version has been thoroughly tested; subsequent releases typically contain only new translations and occasional critical fixes with very limited scope. After beta testing this release may be promoted to a stable release. This message will be replaced if that happens. To install this beta version into Firefox, make sure you select the signed .xpi file - not all the listed .xpi files are signed and a typical Firefox configuration will reject the unsigned versions. The exact name may vary but will contain the word beta and the file size will be slightly larger than the other .xpi files. The signed XPI may not be available yet. When Mozilla provide us with the signed XPI, we will add it to this release and enable automatic updates to that version if you already have an earlier beta release installed in your Firefox."
+          body: "Firefox: install keelink-${{ env.NEW_KEE_VERSION }}-firefox-signed.xpi (signed by Mozilla) by opening it in Firefox. The other .xpi files are unsigned and only useful for testing. Chrome/Edge: the .zip files can be loaded unpacked in developer mode."
           files: |
             dist/**/*.xpi
             dist/**/*.zip
 
-      # #TODO: avoid waiting for this to finish since we know it will take hours-days!
-      # #TODO: Upload the current git archive as source code (verify version numbers, firefox variant manifest, etc.) once AMO API supports this
-      # - name: Request Firefox beta signing start
-      #   id: firefoxsign
-      #   run: |
-      #     mkdir dist/signed
-      #     echo "Signing debug build..."
-      #     npm run sign:xpi:beta
-      #   env:
-      #     WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
-      #     WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
-      #     NEW_KEE_VERSION: ${{ env.NEW_KEE_VERSION }}
-      
       # Disabled after forking from upstream Kee: extension-id hlicbbodnlbbflfihnjjffnjeaoglici
       # is the upstream project's own Chrome Web Store listing, and the CHROME_CLIENT_ID /
       # CHROME_CLIENT_SECRET / CHROME_REFRESH_TOKEN secrets belong to their developer account,
@@ -118,7 +117,6 @@ jobs:
       # own listing, add your own client-id/secret/refresh-token as repo secrets, set
       # extension-id to your listing's id below, and uncomment this step.
       # - name: Publish the new release to Chrome beta users
-      #   if: ${{ success() || ( failure() && steps.firefoxsign.conclusion == 'failure' ) }}
       #   uses: mnao305/chrome-extension-upload@v5.0.0
       #   with:
       #     extension-id: hlicbbodnlbbflfihnjjffnjeaoglici
