@@ -1,5 +1,16 @@
 <template>
-    <v-card color="yellow-lighten-3">
+    <v-card v-if="isDiagnosis" variant="outlined" class="ma-1">
+        <v-card-text class="pb-1">
+            <DiagnoseFillReport :lines="notification.messages" />
+        </v-card-text>
+        <v-card-actions class="justify-end pt-0">
+            <v-btn variant="text" class="px-2 text-primary" @click="closeNotification(notification.id)">
+                {{ $i18n("close") }}
+                <mdi-close />
+            </v-btn>
+        </v-card-actions>
+    </v-card>
+    <v-card v-else color="yellow-lighten-3">
         <div style="float: right">
             <v-btn variant="text" class="ml-4 mr-2 px-2 text-primary" @click="closeNotification(notification.id)">
                 {{ $i18n("close") }}
@@ -44,9 +55,11 @@ import { configManager } from "../../common/ConfigManager";
 import { AddonMessage } from "../../common/AddonMessage";
 import { Port } from "../../common/port";
 import { tooltipDelay } from "../../common/Timings";
+import DiagnoseFillReport from "./DiagnoseFillReport.vue";
 //import useStore from "../../store";
 
 export default {
+    components: { DiagnoseFillReport },
     props: ["notification"],
     // setup () {
     //     const { updateSaveState } = useStore();
@@ -55,6 +68,11 @@ export default {
     data: () => ({
         tooltipDelay
     }),
+    computed: {
+        isDiagnosis() {
+            return this.notification?.name === "kee-diagnose-fill";
+        }
+    },
     methods: {
         dispatchActionResponse(id: string, action: ButtonAction, data: { [id: string]: string }) {
             // Bind so `this` inside ContentPortManager.postMessage is not lost - an

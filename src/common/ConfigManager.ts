@@ -618,6 +618,13 @@ export class ConfigManager {
 
         if (included) return true;
 
+        // A field the site explicitly marks as a username is the first step of a
+        // multi-step login (username page, then password page) even without a
+        // whitelisted name/id.
+        if (otherFields.some(f => f.locators[0]?.autocompleteValues?.includes("username"))) {
+            return true;
+        }
+
         return null;
     }
 

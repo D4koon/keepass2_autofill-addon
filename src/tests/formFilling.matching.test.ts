@@ -206,7 +206,7 @@ describe("fill diagnosis", () => {
                 { URLs: ["https://some-other-site.example/"] }
             )
         );
-        expect(report(h).some(l => l.startsWith("WARNING: none of this entry's URLs"))).toBe(
+        expect(report(h).some(l => l.startsWith("[warn] None of this entry's URLs"))).toBe(
             true
         );
     });
@@ -223,7 +223,7 @@ describe("fill diagnosis", () => {
                 { URLs: [window.location.origin + "/login"] }
             )
         );
-        expect(report(h).some(l => l.startsWith("WARNING: none of this entry's URLs"))).toBe(
+        expect(report(h).some(l => l.startsWith("[warn] None of this entry's URLs"))).toBe(
             false
         );
     });
@@ -242,9 +242,9 @@ describe("fill diagnosis", () => {
             ])
         );
         const lines = report(h);
-        expect(lines.some(l => l.startsWith("Diagnosis stopped with an error"))).toBe(false);
+        expect(lines.some(l => l.includes("Diagnosis stopped with an error"))).toBe(false);
         // force-fill path reached and the fields were populated
-        expect(lines.some(l => l.startsWith("Filled "))).toBe(true);
+        expect(lines.some(l => l.startsWith("[ok] Filled "))).toBe(true);
         expect(h.fieldValue("u")).toBe("alice");
         expect(h.fieldValue("p")).toBe("s3cret");
     });

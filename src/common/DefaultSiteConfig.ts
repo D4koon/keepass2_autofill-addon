@@ -72,6 +72,7 @@ defaultSiteConfig.pageRegex["^.*$"] = {
                 ],
                 ids: [
                     "username",
+                    "input-username",
                     "j_username",
                     "user_name",
                     "user",

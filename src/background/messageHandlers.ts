@@ -6,6 +6,7 @@ import { configManager } from "../common/ConfigManager";
 import { Entry } from "../common/model/Entry";
 import { copyStringToClipboard } from "../common/copyStringToClipboard";
 import { utils } from "../common/utils";
+import { diag } from "../common/diagnosisReport";
 import { kee } from "./KF";
 
 
@@ -50,30 +51,35 @@ function flushDiagnoseFillReports() {
     diagnoseFillCollection = null;
     if (!collection || collection.frames.size === 0) return;
 
-    const isInteresting = (lines: string[]) =>
-        lines.some(
-            l =>
-                l.startsWith("Filled ") ||
-                l.startsWith("Best form:") ||
-                l.startsWith("  Form #")
-        );
+    // A frame that found any form at all is worth showing.
+    const isInteresting = (lines: string[]) => lines.includes(diag.heading("Forms"));
 
     const frames = [...collection.frames.entries()].sort((a, b) => a[0] - b[0]);
     const interesting = frames.filter(([, r]) => isInteresting(r.lines));
     const shown = interesting.length > 0 ? interesting : frames.slice(0, 1);
 
-    const out: string[] = ["Fill diagnosis:"];
+    const out: string[] = [];
     for (const [frameId, r] of shown) {
         if (shown.length > 1 || frameId !== 0) {
-            out.push("", `--- frame ${frameId}${r.url ? " (" + r.url + ")" : ""} ---`);
+            out.push(diag.frame(`${frameId === 0 ? "Main page" : "Frame " + frameId}${r.url ? ": " + r.url : ""}`));
         }
         out.push(...r.lines);
     }
     const others = frames.length - shown.length;
-    if (others > 0) out.push("", `(${others} other frame(s) had no login form)`);
+    if (others > 0) out.push(diag.info(`${others} other frame(s) had no forms and are not shown.`));
 
+    notifyDiagnoseFill(out);
+}
+
+function notifyDiagnoseFill(lines: string[]) {
     kee.notifyUser(
-        new KeeNotification("kee-diagnose-fill", [], utils.newGUID(), out, "Medium")
+        new KeeNotification(
+            "kee-diagnose-fill",
+            [],
+            utils.newGUID(),
+            [diag.title("Fill diagnosis"), ...lines],
+            "Medium"
+        )
     );
 }
 
@@ -203,15 +209,11 @@ export async function browserPopupMessageHandler(this: chrome.runtime.Port, msg:
         const entry = result && result[0];
         const framePorts = kee.tabStates.get(kee.foregroundTabId)?.framePorts;
         if (!entry) {
-            kee.browserPopupPort.postMessage({
-                diagnoseFillReport: ["Could not load the full entry from KeePass to diagnose."]
-            } as AddonMessage);
+            notifyDiagnoseFill([diag.error("Could not load the full entry from KeePass to diagnose.")]);
         } else if (!framePorts || framePorts.size === 0) {
-            kee.browserPopupPort.postMessage({
-                diagnoseFillReport: [
-                    "No connected page in the active tab to run the diagnosis against."
-                ]
-            } as AddonMessage);
+            notifyDiagnoseFill([
+                diag.error("No connected page in the active tab to run the diagnosis against.")
+            ]);
         } else {
             // Run the diagnosis in every frame of the tab (the login form may be
             // in an iframe) and collect the per-frame reports in flushDiagnoseFillReports.
