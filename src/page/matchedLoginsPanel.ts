@@ -1,5 +1,6 @@
 import { PanelStub, PanelStubOptions } from "./PanelStub";
 import { KeeLog } from "../common/Logger";
+import { type IconSide } from "./keeFieldIcon";
 
 // Owns the in-page "matched logins" panel iframe (its PanelStub and the
 // requestAnimationFrame loop that keeps it positioned). Extracted verbatim from
@@ -22,9 +23,14 @@ export class MatchedLoginsPanel {
         this.stub.createPanel();
     }
 
-    public createNearNode(target: HTMLElement) {
+    public createNearNode(target: HTMLElement, side: IconSide = "right") {
         this.close();
-        this.stub = new PanelStub(PanelStubOptions.MatchedLogins, target, this.parentFrameId);
+        this.stub = new PanelStub(
+            PanelStubOptions.MatchedLogins,
+            target,
+            this.parentFrameId,
+            side
+        );
         KeeLog.debug("Creating panel...");
         this.stub.createPanel();
         this.raf = requestAnimationFrame(() => this.updatePosition());

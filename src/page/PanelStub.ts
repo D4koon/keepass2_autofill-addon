@@ -1,4 +1,5 @@
 import { configManager } from "../common/ConfigManager";
+import { type IconSide } from "./keeFieldIcon";
 
 export class PanelStubOptions {
     id: string;
@@ -43,11 +44,18 @@ export class PanelStub {
     private options: PanelStubOptions;
     private parentFrameId: number;
     private elementToRefocus: Element;
+    private anchorSide: IconSide;
 
-    constructor(options: PanelStubOptions, target: HTMLElement, parentFrameId: number) {
+    constructor(
+        options: PanelStubOptions,
+        target: HTMLElement,
+        parentFrameId: number,
+        anchorSide: IconSide = "right"
+    ) {
         this.target = target;
         this.options = options;
         this.parentFrameId = parentFrameId;
+        this.anchorSide = anchorSide;
     }
 
     public createPanel() {
@@ -169,7 +177,13 @@ export class PanelStub {
         // be an edge case that users can work around until we have more time to extend support to those scenarios.
         const targetWidth = preferredArrowXCoord - this.targetRelativeRect.left;
         let relativeLeft: number;
-        if (targetWidth < containerWidth) {
+        if (this.anchorSide === "left") {
+            // Kee icon is at the left edge of the target, so line the panel up with that edge
+            relativeLeft = Math.max(
+                0,
+                Math.min(this.targetRelativeRect.left, window.innerWidth - containerWidth)
+            );
+        } else if (targetWidth < containerWidth) {
             relativeLeft = Math.min(
                 this.targetRelativeRect.left,
                 window.innerWidth - containerWidth

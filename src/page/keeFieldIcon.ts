@@ -4,33 +4,68 @@ import { type AddonMessage } from "../common/AddonMessage";
 import { MatchedField } from "./MatchedField";
 import { Entry } from "../common/model/Entry";
 
+export type IconSide = "left" | "right";
+
+const ICON_SIZE = 16;
+const ICON_INSET = 4;
+// Room made for the icon in front of the field's text when it sits on the left
+const TEXT_OFFSET = ICON_SIZE + ICON_INSET;
+// Fallback re-check for layout shifts no event tells us about (e.g. a banner
+// inserted above the form)
+const FALLBACK_INTERVAL_MS = 500;
+
+type SavedStyle = { value: string; priority: string };
+
+// One overlay icon attached to one input
+class FieldIcon {
+    host: HTMLDivElement;
+    side: IconSide = null;
+    lastRect = "";
+    lastSize = "";
+    savedStyles: Map<string, SavedStyle> = new Map();
+
+    constructor(public element: HTMLInputElement) {}
+}
+
+// Shows the Kee icon over matched login fields. The icon is a separate element
+// (closed shadow root, max z-index) rather than a background image on the input
+// so site elements layered over the input (eye toggles, wrappers, other password
+// managers) can't hide it. It prefers the left edge of the field and falls back
+// to the right edge when the site already has something on the left.
 export class KeeFieldIcon {
     constructor(
         private myPort: chrome.runtime.Port,
         private parentFrameId: number,
         private formUtils: FormUtils,
-        private createMatchedLoginsPanelNearNode: (e: HTMLElement) => void
+        private createMatchedLoginsPanelNearNode: (e: HTMLElement, side: IconSide) => void
     ) {}
 
-    private fieldsWithIcons: MatchedField[] = [];
+    private icons: FieldIcon[] = [];
     private passwordFields: MatchedField[];
     private otherFields: MatchedField[];
+    private raf: number = null;
+    private fallbackTimer: number = null;
+    private resizeObserver: ResizeObserver = null;
+    private readonly scheduleUpdate = () => {
+        if (this.raf !== null) return;
+        this.raf = requestAnimationFrame(() => {
+            this.raf = null;
+            this.updatePositions();
+        });
+    };
+    // Bumped on every add/remove so a slow labelled-icon render can't attach stale icons
+    private generation = 0;
 
     public removeKeeIconFromAllFields() {
-        for (const field of this.fieldsWithIcons) {
-            const element: HTMLElement = field.DOMelement;
-            if (!element) continue;
-            element.removeEventListener("click", this);
-            element.removeEventListener("mousemove", this);
-            element.style.setProperty("background-image", "");
-            element.style.setProperty("background-repeat", "");
-            element.style.setProperty("background-attachment", "");
-            element.style.setProperty("background-size", "");
-            element.style.setProperty("background-position", "");
+        this.generation++;
+        for (const icon of this.icons) {
+            icon.host.remove();
+            this.restoreStyles(icon);
         }
-        this.fieldsWithIcons = [];
+        this.icons = [];
         this.passwordFields = null;
         this.otherFields = null;
+        this.stopTracking();
     }
 
     public addKeeIconToFields(
@@ -38,6 +73,7 @@ export class KeeFieldIcon {
         otherFields: MatchedField[],
         entries: Entry[]
     ) {
+        this.removeKeeIconFromAllFields();
         this.passwordFields = passwordFields;
         this.otherFields = otherFields;
 
@@ -68,32 +104,59 @@ export class KeeFieldIcon {
     }
 
     private addIcon(field: MatchedField, image: string) {
-        this.fieldsWithIcons.push(field);
+        const icon = new FieldIcon(field.DOMelement as HTMLInputElement);
 
-        const element: HTMLElement = field.DOMelement;
-        element.addEventListener("click", this);
-        element.addEventListener("mousemove", this);
+        const host = document.createElement("div");
+        const shadow = host.attachShadow({ mode: "closed" });
+        const style = document.createElement("style");
+        style.textContent = `:host(div) {
+            all: initial !important;
+            display: none !important;
+            position: absolute !important;
+            z-index: 2147483647 !important;
+            width: ${ICON_SIZE}px !important;
+            height: ${ICON_SIZE}px !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+        :host(div.visible) {
+            display: block !important;
+        }
+        img {
+            display: block;
+            width: ${ICON_SIZE}px;
+            height: ${ICON_SIZE}px;
+        }`;
+        shadow.appendChild(style);
+        const img = document.createElement("img");
+        img.src = image;
+        img.alt = "";
+        shadow.appendChild(img);
+        host.title = $STR("matched_logins_label");
 
-        element.style.setProperty("background-image", "url('" + image + "')", "important");
-        element.style.setProperty("background-repeat", "no-repeat", "important");
-        element.style.setProperty("background-attachment", "scroll", "important");
-        element.style.setProperty("background-size", "16px 16px", "important");
-        element.style.setProperty("background-position", "calc(100% - 4px) 50%", "important");
-        element.style.setProperty("cursor", "auto");
+        // Keep focus (and the caret) in the input while clicking the icon
+        host.addEventListener("mousedown", e => e.preventDefault());
+        host.addEventListener("click", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showMatchedLoginsPanel(icon);
+        });
 
-        const transitionConfig = window
-            .getComputedStyle(field.DOMelement)
-            .getPropertyValue("transition-property");
-        if (["all", "background"].some(val => transitionConfig.includes(val))) {
-            field.DOMelement.style.setProperty("transition", "none", "important");
+        icon.host = host;
+        const bodyElements = document.getElementsByTagName("body");
+        if (bodyElements && bodyElements.length > 0) {
+            bodyElements[0].appendChild(host);
+        } else {
+            const framesetElements = document.getElementsByTagName("frameset");
+            if (framesetElements && framesetElements.length > 0) {
+                framesetElements[0].insertAdjacentElement("afterend", host);
+            } else {
+                return;
+            }
         }
 
-        this.overrideBoxShadows(element);
-    }
-
-    public handleEvent(e: Event) {
-        if (e.type === "click") this.showMatchedLoginsPanel(e);
-        if (e.type === "mousemove") this.hoverOverInput(e);
+        this.icons.push(icon);
+        this.updateIcon(icon);
     }
 
     private limitFields(fields: MatchedField[]) {
@@ -107,60 +170,159 @@ export class KeeFieldIcon {
     }
 
     private afterImageLoaded(image: string) {
+        if (!this.passwordFields || !this.otherFields) return;
         // Put icons in only the top 2 matching password and text fields
         const fieldSet1 = this.limitFields(this.passwordFields);
         const fieldSet2 = this.limitFields(this.otherFields);
         for (const field of fieldSet1.concat(fieldSet2)) {
             this.addIcon(field, image);
         }
+        if (this.icons.length > 0) this.startTracking();
     }
 
-    private overrideBoxShadows(element: HTMLElement) {
-        const currentStyle = window.getComputedStyle(element);
-        if (currentStyle) {
-            const shadows = [];
-            shadows.push(currentStyle.getPropertyValue("box-shadow"));
-            shadows.push(currentStyle.getPropertyValue("-webkit-box-shadow"));
-            shadows.push(currentStyle.getPropertyValue("-moz-box-shadow"));
-            if (shadows.some(s => s.indexOf("inset"))) {
-                element.style.setProperty("box-shadow", "initial", "important");
-                element.style.setProperty("-webkit-box-shadow", "initial", "important");
-                element.style.setProperty("-moz-box-shadow", "initial", "important");
-            }
+    // Follow the inputs as the page scrolls, resizes or re-lays itself out.
+    // Event driven (plus a slow fallback timer) so an idle page costs nothing.
+    private startTracking() {
+        if (this.fallbackTimer !== null) return;
+        // Capture so scrolling inside any scrollable container is seen too
+        window.addEventListener("scroll", this.scheduleUpdate, { capture: true, passive: true });
+        window.addEventListener("resize", this.scheduleUpdate, { passive: true });
+        if (typeof ResizeObserver !== "undefined") {
+            this.resizeObserver = new ResizeObserver(this.scheduleUpdate);
+            if (document.body) this.resizeObserver.observe(document.body);
+            for (const icon of this.icons) this.resizeObserver.observe(icon.element);
         }
+        this.fallbackTimer = window.setInterval(
+            () => this.updatePositions(),
+            FALLBACK_INTERVAL_MS
+        );
     }
 
-    private showMatchedLoginsPanel(e) {
-        const bcrect = e.target.getBoundingClientRect();
-        const leftLimit = bcrect.left + bcrect.width - 22;
-        if (e.clientX > leftLimit && bcrect.top <= e.clientY && e.clientY <= bcrect.bottom) {
-            if (this.parentFrameId !== 0) {
-                this.myPort.postMessage({
-                    action: Action.ShowMatchedLoginsPanel
-                } as AddonMessage);
-            } else {
-                this.createMatchedLoginsPanelNearNode(e.target);
+    private stopTracking() {
+        window.removeEventListener("scroll", this.scheduleUpdate, { capture: true });
+        window.removeEventListener("resize", this.scheduleUpdate);
+        this.resizeObserver?.disconnect();
+        this.resizeObserver = null;
+        if (this.fallbackTimer !== null) clearInterval(this.fallbackTimer);
+        this.fallbackTimer = null;
+        if (this.raf !== null) cancelAnimationFrame(this.raf);
+        this.raf = null;
+    }
+
+    private updatePositions() {
+        for (const icon of this.icons) this.updateIcon(icon);
+    }
+
+    private updateIcon(icon: FieldIcon) {
+        const element = icon.element;
+        const rect = element.isConnected ? element.getBoundingClientRect() : null;
+        if (!rect || rect.width === 0 || rect.height === 0) {
+            if (icon.lastRect !== "") {
+                icon.host.classList.remove("visible");
+                icon.lastRect = "";
             }
-        }
-    }
-
-    private hoverOverInput(e) {
-        if (e.target.disabled) return;
-        const bcrect = e.target.getBoundingClientRect();
-        const leftLimit = bcrect.left + bcrect.width - 22;
-        if (e.clientX > leftLimit) {
-            e.target.style.setProperty("cursor", "pointer", "important");
             return;
         }
-        e.target.style.setProperty("cursor", "auto");
+
+        const rectKey = `${rect.left},${rect.top},${rect.width},${rect.height},${window.scrollX},${window.scrollY}`;
+        if (rectKey === icon.lastRect) return;
+
+        // Only re-check which side is free when the field changes size, not on every scroll
+        const sizeKey = `${rect.width},${rect.height}`;
+        if (sizeKey !== icon.lastSize || icon.side === null) {
+            this.applySide(icon, this.chooseSide(icon, rect));
+            icon.lastSize = sizeKey;
+        }
+
+        // Applying the side may have changed the field's padding, so measure again
+        const r = element.getBoundingClientRect();
+        icon.lastRect = `${r.left},${r.top},${r.width},${r.height},${window.scrollX},${window.scrollY}`;
+        const x = icon.side === "left" ? r.left + ICON_INSET : r.right - ICON_INSET - ICON_SIZE;
+        const y = r.top + (r.height - ICON_SIZE) / 2;
+        icon.host.style.setProperty("left", x + window.scrollX + "px", "important");
+        icon.host.style.setProperty("top", y + window.scrollY + "px", "important");
+        icon.host.classList.add("visible");
+    }
+
+    // Prefer the left edge unless the site already shows something there
+    private chooseSide(icon: FieldIcon, rect: DOMRect): IconSide {
+        // Once we've made room on the left the spot is ours; keep it
+        if (icon.side === "left") return "left";
+        const y = rect.top + rect.height / 2;
+        const leftX = rect.left + ICON_INSET + ICON_SIZE / 2;
+        const rightX = rect.right - ICON_INSET - ICON_SIZE / 2;
+        if (this.isSpotFree(icon, leftX, y) !== false) return "left";
+        if (this.isSpotFree(icon, rightX, y)) return "right";
+        return "left";
+    }
+
+    // true/false when we could tell, undefined when the spot can't be tested
+    // (e.g. off-screen)
+    private isSpotFree(icon: FieldIcon, x: number, y: number): boolean | undefined {
+        const root = icon.element.getRootNode() as Document | ShadowRoot;
+        if (typeof root.elementsFromPoint !== "function") return undefined;
+        const ours = new Set<Element>(this.icons.map(i => i.host));
+        const top = root.elementsFromPoint(x, y).find(e => !ours.has(e));
+        if (!top) return undefined;
+        return top === icon.element;
+    }
+
+    private applySide(icon: FieldIcon, side: IconSide) {
+        if (icon.side === side) return;
+        icon.side = side;
+        this.restoreStyles(icon);
+        if (side !== "left") return;
+
+        // Move the field's text out from under the icon
+        const style = window.getComputedStyle(icon.element);
+        const paddingLeft = parseFloat(style.paddingLeft) || 0;
+        if (paddingLeft >= TEXT_OFFSET + ICON_INSET) return;
+        if (style.boxSizing === "border-box") {
+            this.setStyle(icon, "padding-left", `${paddingLeft + TEXT_OFFSET}px`);
+        } else {
+            // Extra padding would make a content-box field wider and could break
+            // the site's layout, so indent the text instead
+            const indent = parseFloat(style.textIndent) || 0;
+            this.setStyle(icon, "text-indent", `${indent + TEXT_OFFSET}px`);
+        }
+    }
+
+    private setStyle(icon: FieldIcon, property: string, value: string) {
+        const s = icon.element.style;
+        if (!icon.savedStyles.has(property)) {
+            icon.savedStyles.set(property, {
+                value: s.getPropertyValue(property),
+                priority: s.getPropertyPriority(property)
+            });
+        }
+        s.setProperty(property, value, "important");
+    }
+
+    private restoreStyles(icon: FieldIcon) {
+        for (const [property, saved] of icon.savedStyles) {
+            icon.element.style.setProperty(property, saved.value, saved.priority);
+        }
+        icon.savedStyles.clear();
+    }
+
+    private showMatchedLoginsPanel(icon: FieldIcon) {
+        if (this.parentFrameId !== 0) {
+            this.myPort.postMessage({
+                action: Action.ShowMatchedLoginsPanel
+            } as AddonMessage);
+        } else {
+            this.createMatchedLoginsPanelNearNode(icon.element, icon.side ?? "left");
+        }
     }
 
     private getLabelledIcon(text: string) {
+        const generation = this.generation;
         const canvas = document.createElement("canvas");
         canvas.height = 16;
         canvas.width = 16;
         const img = document.createElement("img");
         img.addEventListener("load", () => {
+            if (generation !== this.generation) return;
             const context = canvas.getContext("2d");
             context.drawImage(img, 0, 0);
             context.fillStyle = "white";

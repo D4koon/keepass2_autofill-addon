@@ -2,7 +2,7 @@ import { PanelStub } from "./PanelStub";
 import { MatchedLoginsPanel } from "./matchedLoginsPanel";
 import { FormUtils } from "./formsUtils";
 import { FormSaving } from "./formSaving";
-import { KeeFieldIcon } from "./keeFieldIcon";
+import { KeeFieldIcon, type IconSide } from "./keeFieldIcon";
 import { FieldMatchScoreConfig, ScoringDeps } from "./relevanceScoring";
 import {
     EntryRankingDeps,
@@ -108,8 +108,8 @@ export class FormFilling {
         this.panel.createInCenter(specificFrameId);
     }
 
-    public createMatchedLoginsPanelNearNode(target: HTMLElement) {
-        this.panel.createNearNode(target);
+    public createMatchedLoginsPanelNearNode(target: HTMLElement, side?: IconSide) {
+        this.panel.createNearNode(target, side);
     }
 
     public closeMatchedLoginsPanel() {
