@@ -20,10 +20,13 @@ npm run pack:prod        # zip ./extension into dist/*.xpi (Chrome: pack-chrome:
 
 npm run tsc              # vue-tsc --noEmit; needs a prior build/dev run because Vite generates d.ts files
 npm run lint             # eslint (lint:fix to auto-fix)
-npm test                 # vitest run (all tests)
+npm test                 # vitest run (all tests: unit + browser)
+npm run test:unit        # jsdom/node unit tests only (fast, no browsers needed)
+npm run test:browser     # real-browser tests in Chromium + Firefox
+npx playwright install chromium firefox      # one-time, before the first browser test run
 npx vitest run src/tests/keeUrl.test.ts      # single file
 npx vitest run -t "name of test"             # single test by name
-npm run test:coverage
+npm run test:coverage    # unit tests only
 ```
 
 Before a release or PR, run `tsc`, `lint` and `test`. The VS Code task **Kee: Dev (watch + Firefox)** in `.vscode/tasks.json` combines the watch build and the Firefox launch.
@@ -84,6 +87,10 @@ The built-in per-site defaults are in `common/DefaultSiteConfig.ts`.
 ## Tests
 
 Vitest runs with `root: src`, `environment: node` and `globals: true`. `src/tests/setup.ts` installs a minimal in-memory `chrome` stub covering storage, runtime and similar APIs. Extend it when the code under test needs more of the API. Coverage includes `common`, `page`, `store` and `background`; there are no `.vue` component tests.
+
+There are two vitest projects (see `test.projects` in `vite.config.ts`):
+- `unit`: everything in `src/tests/` except `src/tests/browser/`. jsdom tests opt in with `// @vitest-environment jsdom`.
+- `browser`: `src/tests/browser/**`, run in real headless Chromium and Firefox via `@vitest/browser` + Playwright. Use it for code that depends on layout, the CSS cascade or hit-testing (`getBoundingClientRect`, `elementsFromPoint`, shadow DOM styling), which jsdom does not do — e.g. the field icon overlay. Each test builds a small fixture page reproducing a real-site layout. Known unfixed gaps are written as `it.fails`; flip them to `it` when fixed.
 
 ## Conventions
 

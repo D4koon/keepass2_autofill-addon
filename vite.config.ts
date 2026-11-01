@@ -137,6 +137,32 @@ export default defineConfig(({ command }) => ({
                 "background/**/*.ts"
             ],
             exclude: ["**/*.d.ts", "**/PublicSuffixListData.ts", "**/DefaultSiteConfig.ts"]
-        }
+        },
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: "unit",
+                    include: ["tests/**/*.test.ts"],
+                    exclude: ["tests/browser/**"]
+                }
+            },
+            // Real-browser tests for code that depends on layout and the CSS
+            // cascade, which jsdom doesn't do. Browsers: `npx playwright install`
+            {
+                extends: true,
+                test: {
+                    name: "browser",
+                    include: ["tests/browser/**/*.test.ts"],
+                    browser: {
+                        enabled: true,
+                        provider: "playwright",
+                        headless: true,
+                        viewport: { width: 1024, height: 768 },
+                        instances: [{ browser: "chromium" }, { browser: "firefox" }]
+                    }
+                }
+            }
+        ]
     }
 }));

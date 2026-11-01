@@ -29,3 +29,4 @@ src/node_modules/
 tx
 .testing-web-ext-*
 coverage
+src/tests/browser/__screenshots__
