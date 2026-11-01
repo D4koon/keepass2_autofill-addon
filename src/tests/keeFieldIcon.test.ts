@@ -89,7 +89,7 @@ describe("KeeFieldIcon", () => {
 
         const hosts = overlays();
         expect(hosts).toHaveLength(1);
-        expect(hosts[0].style.left).toBe(RECT.left + 4 + "px");
+        expect(hosts[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.left + 4 + "px");
         expect(user.style.paddingLeft).toBe("22px");
         expect(user.style.getPropertyPriority("padding-left")).toBe("important");
     });
@@ -100,7 +100,7 @@ describe("KeeFieldIcon", () => {
         coveredAt.set(LEFT_SPOT, document.createElement("span"));
         icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
 
-        expect(overlays()[0].style.left).toBe(RECT.right - 4 - 16 + "px");
+        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.right - 4 - 16 + "px");
         expect(user.style.paddingLeft).toBe("2px");
     });
 
@@ -143,7 +143,7 @@ describe("KeeFieldIcon", () => {
         rect = { ...RECT, top: 10, bottom: 40 };
         window.dispatchEvent(new Event("scroll"));
 
-        expect(overlays()[0].style.top).toBe(10 + (30 - 16) / 2 + "px");
+        expect(overlays()[0].style.getPropertyValue("--keelink-icon-top")).toBe(10 + (30 - 16) / 2 + "px");
     });
 
     it("catches layout shifts via the fallback timer", () => {
@@ -155,7 +155,7 @@ describe("KeeFieldIcon", () => {
         rect = { ...RECT, left: 150, right: 350 };
         vi.advanceTimersByTime(500);
 
-        expect(overlays()[0].style.left).toBe(150 + 4 + "px");
+        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(150 + 4 + "px");
     });
 
     it("stops tracking once the icons are removed", () => {

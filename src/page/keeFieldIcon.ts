@@ -13,6 +13,8 @@ const TEXT_OFFSET = ICON_SIZE + ICON_INSET;
 // Fallback re-check for layout shifts no event tells us about (e.g. a banner
 // inserted above the form)
 const FALLBACK_INTERVAL_MS = 500;
+const LEFT_VAR = "--keelink-icon-left";
+const TOP_VAR = "--keelink-icon-top";
 
 type SavedStyle = { value: string; priority: string };
 
@@ -109,10 +111,15 @@ export class KeeFieldIcon {
         const host = document.createElement("div");
         const shadow = host.attachShadow({ mode: "closed" });
         const style = document.createElement("style");
+        // `all: initial !important` here beats the host's inline styles (important
+        // shadow-tree rules win over the style attribute), so the position comes in
+        // through custom properties, which `all` doesn't reset
         style.textContent = `:host(div) {
             all: initial !important;
             display: none !important;
             position: absolute !important;
+            left: var(${LEFT_VAR}) !important;
+            top: var(${TOP_VAR}) !important;
             z-index: 2147483647 !important;
             width: ${ICON_SIZE}px !important;
             height: ${ICON_SIZE}px !important;
@@ -239,8 +246,8 @@ export class KeeFieldIcon {
         icon.lastRect = `${r.left},${r.top},${r.width},${r.height},${window.scrollX},${window.scrollY}`;
         const x = icon.side === "left" ? r.left + ICON_INSET : r.right - ICON_INSET - ICON_SIZE;
         const y = r.top + (r.height - ICON_SIZE) / 2;
-        icon.host.style.setProperty("left", x + window.scrollX + "px", "important");
-        icon.host.style.setProperty("top", y + window.scrollY + "px", "important");
+        icon.host.style.setProperty(LEFT_VAR, x + window.scrollX + "px", "important");
+        icon.host.style.setProperty(TOP_VAR, y + window.scrollY + "px", "important");
         icon.host.classList.add("visible");
     }
 
