@@ -7,7 +7,7 @@
     "type": "git",
     "url": "git+https://github.com/D4koon/keepass2_autofill-addon.git"
   },
-  "version": "1.0.10",
+  "version": "1.0.11",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
