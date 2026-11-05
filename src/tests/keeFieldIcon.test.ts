@@ -78,7 +78,7 @@ afterEach(() => {
     vi.unstubAllGlobals();
 });
 
-const LEFT_SPOT = RECT.left + 4 + 8;
+const LEFT_SPOT = RECT.left + 0 + 8;
 const ONE_ENTRY = [{}] as Entry[];
 
 describe("KeeFieldIcon", () => {
@@ -89,8 +89,8 @@ describe("KeeFieldIcon", () => {
 
         const hosts = overlays();
         expect(hosts).toHaveLength(1);
-        expect(hosts[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.left + 4 + "px");
-        expect(user.style.paddingLeft).toBe("22px");
+        expect(hosts[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.left + 0 + "px");
+        expect(user.style.paddingLeft).toBe("20px");
         expect(user.style.getPropertyPriority("padding-left")).toBe("important");
     });
 
@@ -100,7 +100,7 @@ describe("KeeFieldIcon", () => {
         coveredAt.set(LEFT_SPOT, document.createElement("span"));
         icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
 
-        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.right - 4 - 16 + "px");
+        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(RECT.right - 0 - 16 + "px");
         expect(user.style.paddingLeft).toBe("2px");
     });
 
@@ -111,7 +111,7 @@ describe("KeeFieldIcon", () => {
         icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
 
         expect(user.style.paddingLeft).toBe("2px");
-        expect(user.style.textIndent).toBe("20px");
+        expect(user.style.textIndent).toBe("18px");
     });
 
     it("restores the field and removes the overlay", () => {
@@ -125,6 +125,28 @@ describe("KeeFieldIcon", () => {
         expect(user.style.getPropertyPriority("padding-left")).toBe("");
     });
 
+    it("tells its own style changes apart from the site's", async () => {
+        const { icon } = setup();
+        const user = makeInput("user");
+        const records: MutationRecord[] = [];
+        const observer = new MutationObserver(m => records.push(...m));
+        observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["style"] });
+        const flush = () => new Promise(r => setTimeout(r, 0));
+
+        icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
+        icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
+        icon.removeKeeIconFromAllFields();
+        await flush();
+        const ours = records.splice(0).filter(r => r.target === user);
+        expect(ours.length).toBeGreaterThan(0);
+        expect(ours.every(r => icon.isOwnMutation(r))).toBe(true);
+
+        user.style.setProperty("display", "none");
+        await flush();
+        observer.disconnect();
+        expect(records.filter(r => r.target === user).some(r => icon.isOwnMutation(r))).toBe(false);
+    });
+
     it("does not stack icons when called again", () => {
         const { icon } = setup();
         const user = makeInput("user");
@@ -132,7 +154,7 @@ describe("KeeFieldIcon", () => {
         icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
 
         expect(overlays()).toHaveLength(1);
-        expect(user.style.paddingLeft).toBe("22px");
+        expect(user.style.paddingLeft).toBe("20px");
     });
 
     it("follows the field when the page scrolls", () => {
@@ -155,7 +177,7 @@ describe("KeeFieldIcon", () => {
         rect = { ...RECT, left: 150, right: 350 };
         vi.advanceTimersByTime(500);
 
-        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(150 + 4 + "px");
+        expect(overlays()[0].style.getPropertyValue("--keelink-icon-left")).toBe(150 + 0 + "px");
     });
 
     it("stops tracking once the icons are removed", () => {

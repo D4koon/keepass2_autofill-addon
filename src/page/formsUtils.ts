@@ -6,6 +6,9 @@ import { Field } from "../common/model/Field";
   This contains code related to the management and manipulation of forms and form fields.
 */
 
+// A form control as the field scan reads it (input, select, textarea, ...)
+type FormControl = HTMLInputElement & { keeInitialDetectedValue?: string };
+
 export class FormUtils {
     Logger: KeeLogger;
 
@@ -116,23 +119,24 @@ export class FormUtils {
         let usernameIndex = -1;
 
         // search the DOM for any form fields we might be interested in
-        const totalElements = form.elements.length;
+        const elements = this.getFormElements(form);
+        const totalElements = elements.length;
         const elementLimit = totalElements < 2000 ? totalElements : 2000;
         for (let i = 0; i < elementLimit; i++) {
             if (allFields.length > maximumFieldCount) {
                 throw new Error("Too many fields");
             }
             if (
-                form.elements[i].localName.toLowerCase() == "object" ||
-                form.elements[i].localName.toLowerCase() == "keygen" ||
-                form.elements[i].localName.toLowerCase() == "output" ||
-                (form.elements[i].localName.toLowerCase() != "input" &&
-                    (form.elements[i].type == undefined || form.elements[i].type == null))
+                elements[i].localName.toLowerCase() == "object" ||
+                elements[i].localName.toLowerCase() == "keygen" ||
+                elements[i].localName.toLowerCase() == "output" ||
+                (elements[i].localName.toLowerCase() != "input" &&
+                    (elements[i].type == undefined || elements[i].type == null))
             ) {
                 continue; // maybe it's something un-interesting
             }
 
-            const domType: string = form.elements[i].type.toLowerCase();
+            const domType: string = elements[i].type.toLowerCase();
 
             if (domType == "fieldset") continue; // not interested in fieldsets
 
@@ -146,9 +150,9 @@ export class FormUtils {
                 continue; // ignoring other form types
             }
 
-            if (domType == "radio" && isSubmission && form.elements[i].checked == false) continue;
-            if (domType == "password" && isSubmission && !form.elements[i].value) continue;
-            if (domType == "select-one" && isSubmission && !form.elements[i].value) continue;
+            if (domType == "radio" && isSubmission && elements[i].checked == false) continue;
+            if (domType == "password" && isSubmission && !elements[i].value) continue;
+            if (domType == "select-one" && isSubmission && !elements[i].value) continue;
 
             this.Logger.debug(`processing field with domtype ${domType}...`);
             allFields[allFields.length] = {
@@ -156,14 +160,14 @@ export class FormUtils {
                 element: new MatchedField(),
                 type: domType
             };
-            let fieldValue = form.elements[i].value;
+            let fieldValue = elements[i].value;
             if (domType == "checkbox") {
-                if (form.elements[i].checked) fieldValue = "KEEFOX_CHECKED_FLAG_TRUE";
+                if (elements[i].checked) fieldValue = "KEEFOX_CHECKED_FLAG_TRUE";
                 else fieldValue = "KEEFOX_CHECKED_FLAG_FALSE";
             }
-            const field = Field.fromDOM(form.elements[i], domType, fieldValue);
+            const field = Field.fromDOM(elements[i], domType, fieldValue);
             allFields[allFields.length - 1].element.field = field;
-            allFields[allFields.length - 1].element.DOMelement = form.elements[i];
+            allFields[allFields.length - 1].element.DOMelement = elements[i];
 
             if (domType == "password" && firstPasswordIndex == -1) {
                 firstPasswordIndex = allFields.length - 1;
@@ -172,14 +176,14 @@ export class FormUtils {
             if (
                 this.isATextFormFieldType(domType) &&
                 firstPossibleUsernameIndex == -1 &&
-                (this.isAKnownUsernameString(form.elements[i].name) ||
+                (this.isAKnownUsernameString(elements[i].name) ||
                     field.locators[0].labels?.some(label => this.isAKnownUsernameString(label)))
             ) {
                 firstPossibleUsernameIndex = allFields.length - 1;
             }
 
-            if (form.elements[i].keeInitialDetectedValue == null) {
-                form.elements[i].keeInitialDetectedValue = fieldValue;
+            if (elements[i].keeInitialDetectedValue == null) {
+                elements[i].keeInitialDetectedValue = fieldValue;
             }
         }
 
@@ -247,10 +251,16 @@ export class FormUtils {
         this.shadowGeneration++;
     }
 
-    // Collect every open shadow root at or below `root`. The result is cached
-    // until invalidateShadowCache() is called (the mutation observer does this on
-    // relevant DOM changes), so repeated scans on a settled page do no work.
+    // Collect every open shadow root at or below `root`. For the whole page (the
+    // document or its body) the result is cached until invalidateShadowCache() is
+    // called (each scan starts with that, and the mutation observer does it on
+    // relevant DOM changes), so the several lookups of one scan walk the page once.
+    // Any other root, such as the element the mutation observer is checking, is
+    // walked fresh and leaves the page's cached list alone.
     public getOpenShadowRoots(root: ParentNode): ShadowRoot[] {
+        const doc = (root as Node).ownerDocument ?? (root as Document);
+        if (root === doc.body) root = doc;
+        if (root !== doc) return this.walkOpenShadowRoots(root);
         if (
             this.shadowRootCache &&
             this.shadowRootCache.root === root &&
@@ -331,6 +341,70 @@ export class FormUtils {
             }
         }
         return false;
+    }
+
+    // A form's fields, including inputs inside open shadow roots of elements in
+    // the form (e.g. <lux-password> on auth.gmx.net). Such inputs aren't in
+    // form.elements and have no .form, but to the user they're part of the form.
+    // Kept in document order, by shadow host, so username-before-password
+    // detection still works.
+    public getFormElements(form): FormControl[] {
+        const light = Array.from(form.elements ?? []) as FormControl[];
+        // The orphaned-fields pseudo-form already lists shadow inputs itself
+        if (!(form instanceof HTMLFormElement)) return light;
+        const formRoot = form.getRootNode();
+        // The page's shadow roots whose host is (via any outer hosts) in the form
+        const inForm = (sr: ShadowRoot) => {
+            let host: Element = sr.host;
+            while (host.getRootNode() !== formRoot) {
+                const r = host.getRootNode();
+                if (!(r instanceof ShadowRoot)) return false;
+                host = r.host;
+            }
+            return form.contains(host);
+        };
+        const roots = this.getOpenShadowRoots(form.ownerDocument).filter(inForm);
+        if (roots.length === 0) return light;
+
+        const shadowInputs: FormControl[] = [];
+        for (const sr of roots) {
+            for (const input of Array.from(sr.querySelectorAll("input"))) {
+                // Inputs of a <form> inside the shadow root belong to that form
+                if (!input.form) shadowInputs.push(input);
+            }
+        }
+        if (shadowInputs.length === 0) return light;
+
+        // Position in the light DOM: the outermost shadow host
+        const anchor = (el: Element) => {
+            let node: Element = el;
+            let root = node.getRootNode();
+            while (root instanceof ShadowRoot) {
+                node = root.host;
+                root = node.getRootNode();
+            }
+            return node;
+        };
+        // Array.prototype.sort is stable, so inputs sharing a host keep their order
+        return light.concat(shadowInputs).sort((a, b) => {
+            const x = anchor(a);
+            const y = anchor(b);
+            if (x === y) return 0;
+            return x.compareDocumentPosition(y) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        });
+    }
+
+    // The light-DOM <form> an input inside a shadow root sits in, via its shadow
+    // host(s); null if none. Such inputs belong to that form, not the orphans.
+    public getShadowHostForm(el: Element): HTMLFormElement | null {
+        let root = el.getRootNode();
+        while (root instanceof ShadowRoot) {
+            const host = root.host;
+            const form = host.closest("form");
+            if (form) return form;
+            root = host.getRootNode();
+        }
+        return null;
     }
 
     // Attach `observer` to every open shadow root under `root` that it is not

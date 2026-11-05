@@ -1,5 +1,6 @@
 import { configManager } from "../common/ConfigManager";
 import { type IconSide } from "./keeFieldIcon";
+import { showInTopLayer, topLayerAncestor } from "./topLayer";
 
 export class PanelStubOptions {
     id: string;
@@ -38,6 +39,20 @@ export class PanelStubOptions {
 }
 
 export class PanelStub {
+    // Remove any panel still on the page from before we (re)connected to the
+    // background: one an earlier copy of the content script opened, or one whose
+    // connection died with the background. Its contents can't be trusted anyway.
+    public static removeLeftovers() {
+        const ids = new Set(
+            [
+                PanelStubOptions.MatchedLogins,
+                PanelStubOptions.GeneratePassword,
+                PanelStubOptions.GeneratePasswordLegacy
+            ].map(o => o.id)
+        );
+        for (const id of ids) document.getElementById(id)?.remove();
+    }
+
     private target: HTMLElement;
     private container: HTMLElement;
     private targetRelativeRect: ClientRect;
@@ -45,6 +60,8 @@ export class PanelStub {
     private parentFrameId: number;
     private elementToRefocus: Element;
     private anchorSide: IconSide;
+    // Ends our listener on the modal dialog or popover the panel is shown in
+    private layerListener: AbortController;
 
     constructor(
         options: PanelStubOptions,
@@ -66,10 +83,19 @@ export class PanelStub {
         const shadow = this.container.attachShadow({ mode: "closed" });
         this.container.id = this.options.id;
         const style = document.createElement("style");
+        // The rest undoes the browser's popover styles (inset: 0 with margin:
+        // auto centres it), for when the panel is shown as one; see topLayer.ts
         style.textContent = `:host(div) {
             display: block !important;
             position: absolute !important;
             z-index: 2147483647 !important;
+            right: auto !important;
+            bottom: auto !important;
+            margin: 0 !important;
+            border: none !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
         }`;
         shadow.appendChild(style);
 
@@ -118,8 +144,24 @@ export class PanelStub {
         );
         iframe.src = `${template}?parentFrameId=${this.parentFrameId}&autoCloseTime=${this.options.autoCloseTime}&panel=${this.options.name}&theme=${configManager.activeTheme}`;
 
+        // A field in an open modal dialog or popover gets its panel in there too
+        // (see topLayer.ts); without a field, wherever the focus is
+        const layer = topLayerAncestor(this.target ?? document.activeElement);
         const bodyElements = document.getElementsByTagName("body");
-        if (bodyElements && bodyElements.length > 0) {
+        if (layer) {
+            layer.appendChild(this.container);
+            showInTopLayer(this.container);
+            // Goes when the dialog or popover does
+            this.layerListener = new AbortController();
+            const close = () => this.closePanel();
+            const { signal } = this.layerListener;
+            layer.addEventListener("close", close, { signal });
+            layer.addEventListener(
+                "toggle",
+                e => (e as ToggleEvent).newState === "closed" && close(),
+                { signal }
+            );
+        } else if (bodyElements && bodyElements.length > 0) {
             bodyElements[0].appendChild(this.container);
         } else {
             const framesetElements = document.getElementsByTagName("frameset");
@@ -201,8 +243,13 @@ export class PanelStub {
     }
 
     public closePanel() {
+        this.layerListener?.abort();
+        this.layerListener = null;
+        // By id also catches one an earlier stub left; ours may be in a shadow
+        // root, where the id lookup doesn't reach
         const panel = document.getElementById(this.options.id);
         if (panel) panel.parentNode.removeChild(panel);
+        this.container?.remove();
         if (this.elementToRefocus) {
             try {
                 (this.elementToRefocus as HTMLElement).focus();

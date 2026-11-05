@@ -182,6 +182,8 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
     }
 });
 
+chrome.tabs.onRemoved.addListener(tabId => kee.manualPicks.forget(tabId));
+
 chrome.tabs.onActivated.addListener(event => {
     if (KeeLog && KeeLog.debug) KeeLog.debug("Tab activated with id: " + event.tabId);
     onTabActivated(event.tabId);

@@ -14,6 +14,9 @@ export class FrameMatchState {
 
     public loginOp: any = {};
 
+    // What the last scan found; see scanSignature in formScanner
+    public lastScanSignature: unknown[] = null;
+
     // Was FormFilling.initMatchResult. Resets `current` in place for a new scan.
     //
     // TODO: this deliberately does NOT clear `loginOp` - initMatchResult never

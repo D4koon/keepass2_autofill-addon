@@ -252,6 +252,13 @@ export async function pageMessageHandler(this: chrome.runtime.Port, msg: AddonMe
         kee.store.onRemoteMessage(this, msg.mutation);
     }
 
+    if (msg.manualPick) {
+        kee.manualPicks.remember(this.sender.tab.id, msg.manualPick.uuid, this.sender.url);
+    }
+    if (msg.manualPickUsed) {
+        kee.manualPicks.forget(this.sender.tab.id);
+    }
+
     if (msg.findMatches) {
         kee.tabStates.get(this.sender.tab.id).frames.get(this.sender.frameId).entries = [];
         const result = await kee.findLogins(

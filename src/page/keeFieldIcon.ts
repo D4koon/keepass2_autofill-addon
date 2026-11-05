@@ -3,30 +3,93 @@ import { Action } from "../common/Action";
 import { type AddonMessage } from "../common/AddonMessage";
 import { MatchedField } from "./MatchedField";
 import { Entry } from "../common/model/Entry";
+import { leaveTopLayer, showInTopLayer, topLayerAncestor } from "./topLayer";
 
 export type IconSide = "left" | "right";
 
 const ICON_SIZE = 16;
-const ICON_INSET = 4;
-// Room made for the icon in front of the field's text when it sits on the left
-const TEXT_OFFSET = ICON_SIZE + ICON_INSET;
+const ICON_INSET = 0;
+// Where the field's text starts when the icon sits on the left: just past the
+// icon plus a small gap. The site's own padding counts towards it.
+const TEXT_START = ICON_INSET + ICON_SIZE + 4;
 // Fallback re-check for layout shifts no event tells us about (e.g. a banner
 // inserted above the form)
 const FALLBACK_INTERVAL_MS = 500;
 const LEFT_VAR = "--keelink-icon-left";
 const TOP_VAR = "--keelink-icon-top";
+// Marks our icon hosts, so a fresh copy of the content script (after the add-on
+// is reloaded or updated) can clear away the icons an earlier copy left behind
+const HOST_ATTR = "data-keelink-icon";
+// How often an icon is put back after the site removed it, before we accept
+// the site wants it gone
+const MAX_REATTACH = 3;
 
-type SavedStyle = { value: string; priority: string };
+type SavedStyle = { element: HTMLElement; property: string; value: string; priority: string };
+
+// The element that draws the field. Usually the input itself, but a
+// form-associated web component (e.g. <lux-password> on auth.gmx.net) is the
+// form control as far as the page is concerned and draws the visible box, with
+// the real input inset somewhere inside its shadow root.
+function fieldBox(input: HTMLElement): HTMLElement {
+    let root = input.getRootNode();
+    while (root instanceof ShadowRoot) {
+        const host = root.host as HTMLElement;
+        const form = host.closest("form");
+        if (form && Array.prototype.includes.call(form.elements, host)) return host;
+        root = host.getRootNode();
+    }
+    return input;
+}
+
+// Labels the site lays over the field itself, e.g. a floating label that sits
+// where the text goes until the field is focused or filled (auth.gmx.net)
+function overlaidLabels(box: HTMLElement, input: HTMLElement): HTMLElement[] {
+    const labels = new Set<HTMLLabelElement>();
+    for (const el of new Set([box, input])) {
+        for (const label of Array.from((el as HTMLInputElement).labels ?? [])) labels.add(label);
+        // A form-associated custom element has no .labels of its own
+        if (!el.id) continue;
+        const root = el.getRootNode() as Document | ShadowRoot;
+        for (const label of Array.from(root.querySelectorAll("label"))) {
+            if (label.htmlFor === el.id) labels.add(label);
+        }
+    }
+    // A label next to the field in the same wrapper, whatever its for= says
+    // (auth.gmx.net has <label for="username"> on #input-username)
+    for (const sibling of Array.from(box.parentElement?.children ?? [])) {
+        if (sibling instanceof HTMLLabelElement) labels.add(sibling);
+    }
+    const field = box.getBoundingClientRect();
+    return Array.from(labels).filter(label => {
+        const position = window.getComputedStyle(label).position;
+        if (position !== "absolute" && position !== "fixed") return false;
+        const r = label.getBoundingClientRect();
+        return (
+            r.width > 0 &&
+            r.left < field.right &&
+            r.right > field.left &&
+            r.top < field.bottom &&
+            r.bottom > field.top
+        );
+    });
+}
 
 // One overlay icon attached to one input
 class FieldIcon {
     host: HTMLDivElement;
+    // What the icon is positioned on and makes room in; see fieldBox
+    box: HTMLElement;
     side: IconSide = null;
     lastRect = "";
     lastSize = "";
-    savedStyles: Map<string, SavedStyle> = new Map();
+    savedStyles: SavedStyle[] = [];
+    reattached = 0;
+    // The open modal dialog or popover the icon is shown in; see topLayer.ts
+    layer: HTMLElement = null;
 
-    constructor(public element: HTMLInputElement) {}
+    constructor(public element: HTMLInputElement) {
+        this.box = fieldBox(element);
+    }
 }
 
 // Shows the Kee icon over matched login fields. The icon is a separate element
@@ -57,6 +120,20 @@ export class KeeFieldIcon {
     };
     // Bumped on every add/remove so a slow labelled-icon render can't attach stale icons
     private generation = 0;
+    // The style attribute each field had right after we last changed it
+    private ownStyles = new WeakMap<Element, string>();
+
+    // Is this mutation just our own style change on a field? The page's mutation
+    // observer must not rescan for it: a rescan redraws the icons, which changes
+    // the style again, and the icons and field text flicker in a loop
+    public isOwnMutation(mutation: MutationRecord): boolean {
+        const target = mutation.target as Element;
+        return (
+            mutation.type === "attributes" &&
+            mutation.attributeName === "style" &&
+            this.ownStyles.get(target) === target.getAttribute("style")
+        );
+    }
 
     public removeKeeIconFromAllFields() {
         this.generation++;
@@ -76,6 +153,9 @@ export class KeeFieldIcon {
         entries: Entry[]
     ) {
         this.removeKeeIconFromAllFields();
+        for (const leftover of Array.from(document.querySelectorAll(`[${HOST_ATTR}]`))) {
+            leftover.remove();
+        }
         this.passwordFields = passwordFields;
         this.otherFields = otherFields;
 
@@ -109,6 +189,7 @@ export class KeeFieldIcon {
         const icon = new FieldIcon(field.DOMelement as HTMLInputElement);
 
         const host = document.createElement("div");
+        host.setAttribute(HOST_ATTR, "");
         const shadow = host.attachShadow({ mode: "closed" });
         const style = document.createElement("style");
         // `all: initial !important` here beats the host's inline styles (important
@@ -150,17 +231,7 @@ export class KeeFieldIcon {
         });
 
         icon.host = host;
-        const bodyElements = document.getElementsByTagName("body");
-        if (bodyElements && bodyElements.length > 0) {
-            bodyElements[0].appendChild(host);
-        } else {
-            const framesetElements = document.getElementsByTagName("frameset");
-            if (framesetElements && framesetElements.length > 0) {
-                framesetElements[0].insertAdjacentElement("afterend", host);
-            } else {
-                return;
-            }
-        }
+        if (!this.placeHost(icon, true)) return;
 
         this.icons.push(icon);
         this.updateIcon(icon);
@@ -197,7 +268,7 @@ export class KeeFieldIcon {
         if (typeof ResizeObserver !== "undefined") {
             this.resizeObserver = new ResizeObserver(this.scheduleUpdate);
             if (document.body) this.resizeObserver.observe(document.body);
-            for (const icon of this.icons) this.resizeObserver.observe(icon.element);
+            for (const icon of this.icons) this.resizeObserver.observe(icon.box);
         }
         this.fallbackTimer = window.setInterval(
             () => this.updatePositions(),
@@ -220,8 +291,52 @@ export class KeeFieldIcon {
         for (const icon of this.icons) this.updateIcon(icon);
     }
 
+    private attach(host: HTMLDivElement): boolean {
+        const bodyElements = document.getElementsByTagName("body");
+        if (bodyElements && bodyElements.length > 0) {
+            bodyElements[0].appendChild(host);
+            return true;
+        }
+        const framesetElements = document.getElementsByTagName("frameset");
+        if (framesetElements && framesetElements.length > 0) {
+            framesetElements[0].insertAdjacentElement("afterend", host);
+            return true;
+        }
+        return false;
+    }
+
+    // Put the icon where it can be seen and clicked: in the open modal dialog or
+    // popover the field is in, else in <body>. False if it can't be shown.
+    private placeHost(icon: FieldIcon, initial = false): boolean {
+        if (!icon.host.isConnected && !initial) {
+            // Some sites clear out whatever they didn't render themselves
+            if (icon.reattached >= MAX_REATTACH) return false;
+            icon.reattached++;
+        }
+        const layer = topLayerAncestor(icon.box);
+        if (layer) {
+            if (icon.host.parentNode !== layer) {
+                layer.appendChild(icon.host);
+                icon.lastRect = "";
+            }
+            showInTopLayer(icon.host);
+            icon.layer = layer;
+            return true;
+        }
+        if (icon.layer || !icon.host.isConnected) {
+            // The dialog or popover closed, or we're new or were removed
+            leaveTopLayer(icon.host);
+            icon.layer = null;
+            if (!this.attach(icon.host)) return false;
+            icon.lastRect = "";
+        }
+        return true;
+    }
+
     private updateIcon(icon: FieldIcon) {
-        const element = icon.element;
+        if (!this.placeHost(icon)) return;
+
+        const element = icon.box;
         const rect = element.isConnected ? element.getBoundingClientRect() : null;
         if (!rect || rect.width === 0 || rect.height === 0) {
             if (icon.lastRect !== "") {
@@ -246,9 +361,26 @@ export class KeeFieldIcon {
         icon.lastRect = `${r.left},${r.top},${r.width},${r.height},${window.scrollX},${window.scrollY}`;
         const x = icon.side === "left" ? r.left + ICON_INSET : r.right - ICON_INSET - ICON_SIZE;
         const y = r.top + (r.height - ICON_SIZE) / 2;
-        icon.host.style.setProperty(LEFT_VAR, x + window.scrollX + "px", "important");
-        icon.host.style.setProperty(TOP_VAR, y + window.scrollY + "px", "important");
+        const left = x + window.scrollX;
+        const top = y + window.scrollY;
+        this.place(icon, left, top);
         icon.host.classList.add("visible");
+
+        // left/top count from the page's corner only while nothing positions
+        // the icon's containing block; a site's `body { position: relative;
+        // margin: 40px }` moves that corner, so correct by however far off we
+        // landed. (No layout, as in jsdom, means nothing to correct.)
+        const h = icon.host.getBoundingClientRect();
+        const dx = h.left - x;
+        const dy = h.top - y;
+        if (h.width > 0 && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)) {
+            this.place(icon, left - dx, top - dy);
+        }
+    }
+
+    private place(icon: FieldIcon, left: number, top: number) {
+        icon.host.style.setProperty(LEFT_VAR, left + "px", "important");
+        icon.host.style.setProperty(TOP_VAR, top + "px", "important");
     }
 
     // Prefer the left edge unless the site already shows something there
@@ -266,12 +398,12 @@ export class KeeFieldIcon {
     // true/false when we could tell, undefined when the spot can't be tested
     // (e.g. off-screen)
     private isSpotFree(icon: FieldIcon, x: number, y: number): boolean | undefined {
-        const root = icon.element.getRootNode() as Document | ShadowRoot;
+        const root = icon.box.getRootNode() as Document | ShadowRoot;
         if (typeof root.elementsFromPoint !== "function") return undefined;
         const ours = new Set<Element>(this.icons.map(i => i.host));
         const top = root.elementsFromPoint(x, y).find(e => !ours.has(e));
         if (!top) return undefined;
-        return top === icon.element;
+        return top === icon.box || top === icon.element;
     }
 
     private applySide(icon: FieldIcon, side: IconSide) {
@@ -281,35 +413,60 @@ export class KeeFieldIcon {
         if (side !== "left") return;
 
         // Move the field's text out from under the icon
-        const style = window.getComputedStyle(icon.element);
+        const style = window.getComputedStyle(icon.box);
         const paddingLeft = parseFloat(style.paddingLeft) || 0;
-        if (paddingLeft >= TEXT_OFFSET + ICON_INSET) return;
-        if (style.boxSizing === "border-box") {
-            this.setStyle(icon, "padding-left", `${paddingLeft + TEXT_OFFSET}px`);
+        if (paddingLeft >= TEXT_START) {
+            // Already enough room
+        } else if (style.boxSizing === "border-box") {
+            this.setStyle(icon, icon.box, "padding-left", `${TEXT_START}px`);
         } else {
             // Extra padding would make a content-box field wider and could break
             // the site's layout, so indent the text instead
             const indent = parseFloat(style.textIndent) || 0;
-            this.setStyle(icon, "text-indent", `${indent + TEXT_OFFSET}px`);
+            this.setStyle(icon, icon.box, "text-indent", `${indent + TEXT_START - paddingLeft}px`);
+        }
+
+        // and any label laid over it. The margin shrinks a label that is pinned
+        // on both sides instead of pushing it out past the field's right edge.
+        const textStart = icon.box.getBoundingClientRect().left + TEXT_START;
+        for (const label of overlaidLabels(icon.box, icon.element)) {
+            // With its transition running (GMX animates "all") a label still
+            // reports where it was, e.g. shifted by us just before the icons were
+            // redrawn, so measure and move it with the transition switched off
+            const s = label.style;
+            const transition = s.getPropertyValue("transition");
+            const priority = s.getPropertyPriority("transition");
+            s.setProperty("transition", "none", "important");
+            const shift = textStart - label.getBoundingClientRect().left;
+            if (shift > 0) {
+                const margin = parseFloat(window.getComputedStyle(label).marginLeft) || 0;
+                this.setStyle(icon, label, "margin-left", `${margin + shift}px`);
+                // Settle the new position before the transition is back
+                label.getBoundingClientRect();
+            }
+            s.setProperty("transition", transition, priority);
+            this.ownStyles.set(label, label.getAttribute("style"));
         }
     }
 
-    private setStyle(icon: FieldIcon, property: string, value: string) {
-        const s = icon.element.style;
-        if (!icon.savedStyles.has(property)) {
-            icon.savedStyles.set(property, {
-                value: s.getPropertyValue(property),
-                priority: s.getPropertyPriority(property)
-            });
-        }
+    private setStyle(icon: FieldIcon, element: HTMLElement, property: string, value: string) {
+        const s = element.style;
+        icon.savedStyles.push({
+            element,
+            property,
+            value: s.getPropertyValue(property),
+            priority: s.getPropertyPriority(property)
+        });
         s.setProperty(property, value, "important");
+        this.ownStyles.set(element, element.getAttribute("style"));
     }
 
     private restoreStyles(icon: FieldIcon) {
-        for (const [property, saved] of icon.savedStyles) {
-            icon.element.style.setProperty(property, saved.value, saved.priority);
+        for (const { element, property, value, priority } of icon.savedStyles.reverse()) {
+            element.style.setProperty(property, value, priority);
+            this.ownStyles.set(element, element.getAttribute("style"));
         }
-        icon.savedStyles.clear();
+        icon.savedStyles = [];
     }
 
     private showMatchedLoginsPanel(icon: FieldIcon) {
@@ -318,7 +475,7 @@ export class KeeFieldIcon {
                 action: Action.ShowMatchedLoginsPanel
             } as AddonMessage);
         } else {
-            this.createMatchedLoginsPanelNearNode(icon.element, icon.side ?? "left");
+            this.createMatchedLoginsPanelNearNode(icon.box, icon.side ?? "left");
         }
     }
 

@@ -22,8 +22,56 @@ export interface FormScannerDeps {
     formSaving: Pick<FormSaving, "addSubmitHandler">;
 }
 
-export function scanFrameForForms(behaviour: FindMatchesBehaviour, deps: FormScannerDeps) {
+type LoginForm = {
+    index: number;
+    usernameIndex: number;
+    passwordFields: MatchedField[];
+    otherFields: MatchedField[];
+    submitTargetNeighbour: HTMLElement;
+};
+
+// What a scan found that matters for filling: each login form and its fields,
+// and whether each field is visible. The orphaned-fields pseudo form is a new
+// object on every scan, so it counts by its fields only.
+function scanSignature(
+    forms: HTMLFormElement[],
+    pseudoForm: unknown,
+    loginForms: LoginForm[],
+    formUtils: FormUtils
+): unknown[] {
+    const signature: unknown[] = [];
+    for (const found of loginForms) {
+        const form = forms[found.index];
+        signature.push(
+            form === pseudoForm ? "pseudo-form" : form,
+            found.usernameIndex,
+            // Tells a password field from the same element as a text field
+            found.passwordFields?.length ?? 0
+        );
+        for (const f of [...(found.passwordFields ?? []), ...(found.otherFields ?? [])]) {
+            const element = f?.DOMelement;
+            signature.push(element, !!element && formUtils.isDOMElementVisible(element));
+        }
+    }
+    return signature;
+}
+
+function sameSignature(a: unknown[], b: unknown[] | null) {
+    return !!b && a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+// onlyIfChanged: for the rescans the page's DOM mutation observer asks for. If
+// the login fields found are the same as last time, leave everything as it is
+// (icons, state, no new KeePass search) instead of going round again.
+export function scanFrameForForms(
+    behaviour: FindMatchesBehaviour,
+    deps: FormScannerDeps,
+    onlyIfChanged = false
+) {
     const { logger, formUtils, state } = deps;
+    // A web component can attach its shadow root without any DOM change the
+    // mutation observer would see, so look for shadow roots afresh once per scan
+    formUtils.invalidateShadowCache();
 
     if (window.document.forms.length > 50) {
         logger.debug(
@@ -63,6 +111,7 @@ export function scanFrameForForms(behaviour: FindMatchesBehaviour, deps: FormSca
 
     if (!forms || forms.length == 0) {
         logger.info("No forms found on this page.");
+        state.lastScanSignature = null;
         return;
     }
 
@@ -71,23 +120,15 @@ export function scanFrameForForms(behaviour: FindMatchesBehaviour, deps: FormSca
 
     logger.info("Finding matches in a document. readyState: " + window.document.readyState);
 
-    state.reset(behaviour);
-    state.current.forms = forms;
-
     const conf = configManager.siteConfigFor(url.href);
 
     logger.debug("findMatches processing " + forms.length + " forms");
 
-    let searchSentToKeePass = false;
-
-    // For every form, including any pseudo forms we created earlier
+    // First find the login forms, without touching the state yet: a rescan that
+    // finds just what the last scan found stops here
+    const loginForms: LoginForm[] = [];
     for (let i = 0; i < forms.length; i++) {
         const form = forms[i];
-        state.current.entries[i] = [];
-
-        // the overall relevance of this form is the maximum of it's
-        // matching entries (so we fill the most relevant form)
-        state.current.formRelevanceScores[i] = 0;
 
         logger.debug("about to get form fields");
         let scanResult: {
@@ -143,12 +184,44 @@ export function scanFrameForForms(behaviour: FindMatchesBehaviour, deps: FormSca
             submitTargetNeighbour = passwordFields[0].DOMelement;
         }
 
-        attachSubmitHandlers(form, submitTargetNeighbour, i, deps);
+        loginForms.push({
+            index: i,
+            usernameIndex,
+            passwordFields,
+            otherFields,
+            submitTargetNeighbour
+        });
+    }
 
-        state.current.usernameIndexArray[i] = usernameIndex;
-        state.current.passwordFieldsArray[i] = passwordFields;
-        state.current.otherFieldsArray[i] = otherFields;
-        state.current.submitTargets[i] = submitTargetNeighbour;
+    const signature = scanSignature(forms, pseudoForm, loginForms, formUtils);
+    if (onlyIfChanged && sameSignature(signature, state.lastScanSignature)) {
+        logger.debug("Rescan found the same login fields as before; nothing to do");
+        return;
+    }
+    state.lastScanSignature = signature;
+
+    state.reset(behaviour);
+    state.current.forms = forms;
+    for (let i = 0; i < forms.length; i++) {
+        state.current.entries[i] = [];
+
+        // the overall relevance of this form is the maximum of it's
+        // matching entries (so we fill the most relevant form)
+        state.current.formRelevanceScores[i] = 0;
+    }
+
+    let searchSentToKeePass = false;
+
+    for (const found of loginForms) {
+        const i = found.index;
+        const form = forms[i];
+
+        attachSubmitHandlers(form, found.submitTargetNeighbour, i, deps);
+
+        state.current.usernameIndexArray[i] = found.usernameIndex;
+        state.current.passwordFieldsArray[i] = found.passwordFields;
+        state.current.otherFieldsArray[i] = found.otherFields;
+        state.current.submitTargets[i] = found.submitTargetNeighbour;
 
         // The entries returned from KeePass for every form will be identical (based on tab/frame URL)
         if (!searchSentToKeePass) {
@@ -222,6 +295,8 @@ function scanForOrphanedFields(doc, deps: FormScannerDeps) {
         for (const tag of shadowInputs) {
             if (
                 !tag.form &&
+                // Inside a shadow host that is in a <form>: getFormFields lists it there
+                !deps.formUtils.getShadowHostForm(tag) &&
                 loginInputTypes.has((tag.getAttribute("type") || "").toLowerCase()) &&
                 orphanedFields.indexOf(tag) === -1
             ) {

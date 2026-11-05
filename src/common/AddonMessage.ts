@@ -44,4 +44,10 @@ export interface AddonMessage {
     mutation?: Mutation;
     url?: string;
     copyToClipboard?: string;
+    // page -> background: the user filled this entry by hand (uuid only);
+    // background -> page on connect: the tab's recent pick for this site.
+    // See background/ManualPicks.
+    manualPick?: { uuid: string; at?: number };
+    // page -> background: the pick was used for a fill, so it ends
+    manualPickUsed?: boolean;
 }

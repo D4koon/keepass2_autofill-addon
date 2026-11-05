@@ -3,6 +3,7 @@ import { FormFilling } from "./formFilling";
 import { FormUtils } from "./formsUtils";
 import { FormSaving } from "./formSaving";
 import { PasswordGenerator } from "./PasswordGenerator";
+import { PanelStub } from "./PanelStub";
 import { KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
 import type { AddonMessage } from "../common/AddonMessage";
@@ -41,6 +42,9 @@ let passwordGenerator: PasswordGenerator;
 let frameId: number;
 let connected = false;
 let messagingPortConnectionRetryTimer: number;
+// Reconnects in a row since the background last answered; see onPortDisconnected
+let reconnectAttempt = 0;
+let reconnectTimer: number;
 let pageShowFired = false;
 let configReady = false;
 let missingPageShowTimer: number;
@@ -123,6 +127,8 @@ if (document.body) {
         ];
         mutations.forEach(mutation => {
             if (rescan) return;
+            // Our own field icon making room for itself
+            if (formFilling.isOwnMutation(mutation)) return;
             if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                 for (const node of mutation.addedNodes) {
                     if (rescan) break;
@@ -215,6 +221,7 @@ if (document.body) {
             matchFinder
         );
         passwordGenerator = new PasswordGenerator(frameId);
+        PanelStub.removeLeftovers();
 
         inputsObserver.observe(document.body, MUTATION_OBSERVER_OPTIONS);
         // Also watch existing open shadow roots (web-component pages render their
@@ -241,6 +248,8 @@ if (document.body) {
             );
         }
 
+        // A second startup (e.g. reconnecting) must not leave the first timer running
+        clearInterval(messagingPortConnectionRetryTimer);
         messagingPortConnectionRetryTimer = window.setInterval(() => {
             if (Port.raw == null) {
                 KeeLog.info("Messaging port was not established at page startup. Retrying now...");
@@ -273,6 +282,8 @@ if (document.body) {
             return;
         }
         Port.startup("page");
+        const port = Port.raw;
+        port.onDisconnect.addListener(() => onPortDisconnected(port));
 
         store = new NonReactiveStore((mutationPayload: Mutation, _excludedPort) => {
             KeeLog.debug("New page mutation/action being distributed.");
@@ -290,7 +301,9 @@ if (document.body) {
             }
 
             if (!connected) {
+                reconnectAttempt = 0;
                 onFirstConnect(m.frameId);
+                if (m.manualPick) formFilling.restoreManualPick(m.manualPick);
                 formFilling.findMatchesInThisFrame();
                 connected = true;
             } else if (m.action == Action.DetectForms) {
@@ -361,11 +374,16 @@ if (document.body) {
             startup();
         }
     });
-    window.addEventListener("pagehide", () => {
+    // Undo what connecting set up (onFirstConnect); the page's own listeners stay
+    function disconnectFromBackground() {
         inputsObserver.disconnect();
-        if (Port.raw) Port.postMessage({ action: Action.PageHide });
+        clearTimeout(reconnectTimer);
+        clearInterval(messagingPortConnectionRetryTimer);
         //TODO:f: work out why this can be null. Was never connected for some reason? E.g. background script bug or injected into a page type we can't support?
         formFilling?.removeKeeIconFromAllFields();
+        // Panels talk to the background too, so they can't work on from here
+        formFilling?.closeMatchedLoginsPanel();
+        passwordGenerator?.closeGeneratePasswordPanel();
         Port.shutdown();
         connected = false;
         frameId = undefined;
@@ -373,6 +391,35 @@ if (document.body) {
         formSaving = undefined;
         formFilling = undefined;
         passwordGenerator = undefined;
+    }
+
+    // The background went away: restarted (crash, standby, the browser stopping
+    // it) or the add-on was reloaded, updated or removed. Until we connect again
+    // nothing reaches this page: no search results, no fill from the popup, no
+    // rescan when a database is opened.
+    function onPortDisconnected(port: chrome.runtime.Port) {
+        // Read it, or the browser logs it as unchecked
+        void chrome.runtime.lastError;
+        // A port we already let go of ourselves (pagehide)
+        if (Port.raw !== port) return;
+
+        disconnectFromBackground();
+        if (!chrome.runtime?.id) {
+            // The add-on is gone (an old copy of us after a reload or update).
+            // The new copy, if any, takes over the page.
+            KeeLog.info("KeeLink was unloaded; this copy of the page script stops here.");
+            return;
+        }
+        // Back off if the background keeps dropping us
+        const delay = Math.min(1000 * 2 ** reconnectAttempt, 60000);
+        reconnectAttempt++;
+        KeeLog.info("Lost the connection to the background; reconnecting in " + delay + "ms");
+        reconnectTimer = window.setTimeout(startup, delay);
+    }
+
+    window.addEventListener("pagehide", () => {
+        if (Port.raw) Port.postMessage({ action: Action.PageHide });
+        disconnectFromBackground();
     });
 
 

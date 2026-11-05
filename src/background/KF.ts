@@ -24,10 +24,12 @@ import { SaveEntryResult } from "../common/SaveEntryResult";
 import BackgroundStore from "~/store/BackgroundStore";
 import { Mutation } from "~/store/Mutation";
 import { KeeBrowserActionIconConfiguration } from "../common/KeeBrowserActionIconConfiguration";
+import { ManualPicks } from "./ManualPicks";
 
 class Kee {
     tabStates: Map<number, TabState>;
     persistentTabStates: Map<number, PersistentTabState>;
+    manualPicks = new ManualPicks();
     utils: Utils;
     search: SearcherAll;
     foregroundTabId: number;
@@ -192,7 +194,8 @@ class Kee {
                         initialState: this.store.state,
                         frameId,
                         tabId,
-                        isForegroundTab: tabId === this.foregroundTabId
+                        isForegroundTab: tabId === this.foregroundTabId,
+                        manualPick: this.manualPicks.forPage(tabId, p.sender.url)
                     } as AddonMessage;
 
                     //TODO:f: This may be a potential performance improvement but, at least

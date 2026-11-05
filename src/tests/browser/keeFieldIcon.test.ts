@@ -7,9 +7,11 @@ import { KeeFieldIcon } from "../../page/keeFieldIcon";
 import { FormUtils } from "../../page/formsUtils";
 import { MatchedField } from "../../page/MatchedField";
 import { Entry } from "../../common/model/Entry";
+import { PanelStub, PanelStubOptions } from "../../page/PanelStub";
 
 const ICON_SIZE = 16;
-const ICON_INSET = 4;
+const ICON_INSET = 0;
+const TEXT_START = ICON_INSET + ICON_SIZE + 4;
 const ONE_ENTRY = [{}] as Entry[];
 
 const created: KeeFieldIcon[] = [];
@@ -61,7 +63,7 @@ const frames = (n = 2) =>
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-function expectIconAt(host: HTMLElement, input: HTMLInputElement, side: "left" | "right") {
+function expectIconAt(host: HTMLElement, input: HTMLElement, side: "left" | "right") {
     const r = input.getBoundingClientRect();
     const h = host.getBoundingClientRect();
     expect(h.width).toBe(ICON_SIZE);
@@ -97,7 +99,7 @@ describe("KeeFieldIcon in a real browser", () => {
 
         expectIconAt(host, input, "left");
         expectIconOnTop(host);
-        expect(parseFloat(getComputedStyle(input).paddingLeft)).toBe(8 + ICON_SIZE + ICON_INSET);
+        expect(parseFloat(getComputedStyle(input).paddingLeft)).toBe(TEXT_START);
     });
 
     it("indents the text of content-box fields instead of widening them", () => {
@@ -109,7 +111,7 @@ describe("KeeFieldIcon in a real browser", () => {
 
         expectIconAt(host, input, "left");
         expect(input.getBoundingClientRect().width).toBe(width);
-        expect(parseFloat(getComputedStyle(input).textIndent)).toBe(ICON_SIZE + ICON_INSET);
+        expect(parseFloat(getComputedStyle(input).textIndent)).toBe(TEXT_START - 4);
     });
 
     it("puts the field back as it was when the icon is removed", () => {
@@ -161,6 +163,130 @@ describe("KeeFieldIcon in a real browser", () => {
 
         expectIconAt(host, input, "left");
         expectIconOnTop(host);
+    });
+
+    // Like <lux-password> on auth.gmx.net: the custom element draws the field
+    // (border, padding, room for a floating label) and the real input sits inset
+    // inside its shadow root
+    function defineFieldComponent(name: string, formAssociated: boolean) {
+        if (customElements.get(name)) return;
+        customElements.define(
+            name,
+            class extends HTMLElement {
+                static formAssociated = formAssociated;
+                constructor() {
+                    super();
+                    if (formAssociated) this.attachInternals();
+                    this.attachShadow({ mode: "open", delegatesFocus: true }).innerHTML =
+                        "<style>:host { display: inline-flex; box-sizing: border-box; width: 300px;" +
+                        " height: 48px; padding: 20px 16px 4px; border: 1px solid }" +
+                        " input { flex-grow: 1; min-width: 0; height: 22px; border: 0; padding: 0 }</style>" +
+                        "<input class=\"input\" part=\"input\" type=\"password\">";
+                }
+            }
+        );
+    }
+
+    it("sits on the box of a form-associated web component field (auth.gmx.net)", () => {
+        defineFieldComponent("test-password", true);
+        page("<form style=\"margin: 100px\"><test-password></test-password></form>");
+        const box = document.querySelector<HTMLElement>("test-password");
+        const input = box.shadowRoot.querySelector("input");
+        const { host } = show(input);
+
+        expectIconAt(host, box, "left");
+        expectIconOnTop(host);
+        // The room for the icon is made in the box, so the typed text moves too
+        expect(parseFloat(getComputedStyle(box).paddingLeft)).toBe(TEXT_START);
+        expect(input.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+            host.getBoundingClientRect().right
+        );
+    });
+
+    it("moves a floating label laid over the field out from under the icon (auth.gmx.net)", () => {
+        defineFieldComponent("test-password", true);
+        page(
+            "<form style=\"margin: 100px\"><span class=\"floating\">" +
+                "<test-password id=\"input-password\"></test-password>" +
+                "<label for=\"input-password\">Passwort</label></span></form>",
+            ".floating { display: inline-flex; position: relative }" +
+                " .floating label { position: absolute; top: 4px; left: 16px; right: 16px;" +
+                " line-height: 40px; pointer-events: none; overflow: hidden; white-space: nowrap }"
+        );
+        const box = document.querySelector<HTMLElement>("test-password");
+        const label = document.querySelector("label");
+        const { icon, host } = show(box.shadowRoot.querySelector("input"));
+
+        expectIconAt(host, box, "left");
+        expect(label.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+            host.getBoundingClientRect().right
+        );
+        // Still ends where it did, so it doesn't stick out past the field
+        expect(label.getBoundingClientRect().right).toBe(box.getBoundingClientRect().right - 16);
+
+        icon.removeKeeIconFromAllFields();
+        expect(label.getBoundingClientRect().left).toBe(box.getBoundingClientRect().left + 16);
+    });
+
+    it("moves a floating label whose for= doesn't match the field (auth.gmx.net email)", () => {
+        page(
+            "<form style=\"margin: 100px\"><span class=\"floating\">" +
+                "<label for=\"username\">E-Mail</label>" +
+                "<input id=\"field\" type=\"email\" readonly value=\"b@example.com\"" +
+                " style=\"width: 300px; height: 48px; box-sizing: border-box; padding: 20px 16px 4px\">" +
+                "</span></form>",
+            ".floating { display: inline-flex; position: relative }" +
+                " .floating label { position: absolute; top: 4px; left: 16px; right: 16px; pointer-events: none }"
+        );
+        const input = document.getElementById("field") as HTMLInputElement;
+        const label = document.querySelector("label");
+        const { host } = show(input);
+
+        expect(label.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+            host.getBoundingClientRect().right
+        );
+        expect(label.getBoundingClientRect().left - input.getBoundingClientRect().left).toBe(TEXT_START);
+    });
+
+    it("keeps an animated floating label clear of the icon when the icons are redrawn", async () => {
+        page(
+            "<form style=\"margin: 100px\"><span class=\"floating\">" +
+                "<label for=\"field\">Passwort</label>" +
+                "<input id=\"field\" type=\"text\" style=\"width: 300px; height: 48px; box-sizing: border-box; padding: 20px 16px 4px\">" +
+                "</span></form>",
+            ".floating { display: inline-flex; position: relative }" +
+                " .floating label { position: absolute; top: 4px; left: 16px; right: 16px; line-height: 40px;" +
+                " pointer-events: none; transition: all .1s ease-in-out }"
+        );
+        const input = document.getElementById("field") as HTMLInputElement;
+        const label = document.querySelector("label");
+        const { icon } = show(input);
+        await wait(300);
+
+        // What every rescan does: take the icons down and put them straight back
+        icon.addKeeIconToFields([], [matched(input)], ONE_ENTRY);
+        await wait(300);
+        expect(label.getBoundingClientRect().left - input.getBoundingClientRect().left).toBe(TEXT_START);
+    });
+
+    it("leaves a label above the field alone", () => {
+        const input = page(
+            `<form style="margin: 100px"><label for="field" style="display: block">User</label>${FIELD}</form>`
+        );
+        const label = document.querySelector("label");
+        const before = label.getBoundingClientRect().left;
+        show(input);
+        expect(label.getBoundingClientRect().left).toBe(before);
+        expect(label.style.marginLeft).toBe("");
+    });
+
+    it("sits on the input itself inside a web component that is no form control", () => {
+        defineFieldComponent("test-wrapper", false);
+        page("<form style=\"margin: 100px\"><test-wrapper></test-wrapper></form>");
+        const input = document.querySelector("test-wrapper").shadowRoot.querySelector("input");
+        const { host } = show(input);
+
+        expectIconAt(host, input, "left");
     });
 
     it("follows the field when the window scrolls", async () => {
@@ -288,10 +414,17 @@ describe("KeeFieldIcon in a real browser", () => {
         expect(document.activeElement).toBe(input);
     });
 
-    // Known gaps: `it.fails` passes while the bug exists. Change to `it` once fixed.
+    it("clears away the icons an earlier copy of the content script left behind", () => {
+        // e.g. the add-on was reloaded: the old copy is gone, its icons are not
+        const input = page(`<form style="margin: 100px">${FIELD}</form>`);
+        show(input);
+        const { host } = show(input);
 
-    // The icon is position: absolute in <body>, so a positioned body shifts it
-    it.fails("lines up when the body is positioned and has a margin", () => {
+        expect(hosts()).toEqual([host]);
+        expectIconAt(host, input, "left");
+    });
+
+    it("lines up when the body is positioned and has a margin", () => {
         const input = page(`<form style="margin: 100px">${FIELD}</form>`);
         document.body.style.cssText = "position: relative; margin: 40px";
         const { host } = show(input);
@@ -299,21 +432,7 @@ describe("KeeFieldIcon in a real browser", () => {
         expectIconAt(host, input, "left");
     });
 
-    // A modal dialog is in the top layer, above any z-index
-    it.fails("shows above a modal dialog that contains the field", () => {
-        page(`<dialog id="dlg">${FIELD}</dialog>`);
-        const dialog = document.getElementById("dlg") as HTMLDialogElement;
-        dialog.showModal();
-        const input = document.getElementById("field") as HTMLInputElement;
-        const { host } = show(input);
-
-        expectIconAt(host, input, "left");
-        expectIconOnTop(host);
-        dialog.close();
-    });
-
-    // Nothing re-attaches a removed host
-    it.fails("comes back when the site removes it from the page", async () => {
+    it("comes back when the site removes it from the page", async () => {
         const input = page(`<form style="margin: 100px">${FIELD}</form>`);
         const { host } = show(input);
 
@@ -323,5 +442,127 @@ describe("KeeFieldIcon in a real browser", () => {
         const now = hosts();
         expect(now).toHaveLength(1);
         expectIconAt(now[0], input, "left");
+    });
+
+    it("gives up after the site removed it a few times", async () => {
+        const input = page(`<form style="margin: 100px">${FIELD}</form>`);
+        show(input);
+
+        for (let i = 0; i < 4; i++) {
+            hosts()[0].remove();
+            await wait(600);
+        }
+
+        expect(hosts()).toHaveLength(0);
+    });
+});
+
+// A modal <dialog> or an open popover is in the browser's top layer: above any
+// z-index, and a modal dialog makes the rest of the page inert
+describe("KeeFieldIcon and the top layer", () => {
+    function modal(html: string, css = "") {
+        page(`<dialog id="dlg">${html}</dialog>`, css);
+        const dialog = document.getElementById("dlg") as HTMLDialogElement;
+        dialog.showModal();
+        return dialog;
+    }
+
+    afterEach(() => {
+        for (const d of Array.from(document.querySelectorAll("dialog"))) d.close();
+    });
+
+    it("shows above a modal dialog that contains the field, and can be clicked", () => {
+        modal(FIELD);
+        const input = document.getElementById("field") as HTMLInputElement;
+        const { host, openPanel } = show(input);
+
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+        const h = host.getBoundingClientRect();
+        document.elementFromPoint(h.left + 8, h.top + 8)!.dispatchEvent(
+            new MouseEvent("click", { bubbles: true, cancelable: true })
+        );
+        expect(openPanel).toHaveBeenCalled();
+    });
+
+    it("isn't cut off by a small dialog that clips its contents", () => {
+        // The field reaches past the dialog's edge, which hides what overflows
+        modal(
+            "<div style=\"margin-left: -20px\">" + FIELD + "</div>",
+            "#dlg { width: 200px; overflow: hidden; padding: 0 }"
+        );
+        const input = document.getElementById("field") as HTMLInputElement;
+        const { host } = show(input);
+
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+    });
+
+    it("goes back into the page when the dialog closes, and returns with it", async () => {
+        const dialog = modal(FIELD);
+        const input = document.getElementById("field") as HTMLInputElement;
+        const { host } = show(input);
+
+        dialog.close();
+        await wait(600);
+        expect(host.parentElement).toBe(document.body);
+        expect(host.hasAttribute("popover")).toBe(false);
+
+        dialog.showModal();
+        await wait(600);
+        expect(hosts()).toEqual([host]);
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+    });
+
+    it("follows the field when the dialog's content scrolls", async () => {
+        const dialog = modal(
+            `<div style="height: 300px"></div>${FIELD}<div style="height: 600px"></div>`,
+            "#dlg { height: 300px; overflow: auto }"
+        );
+        const input = document.getElementById("field") as HTMLInputElement;
+        const { host } = show(input);
+
+        dialog.scrollTop = 200;
+        await frames();
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+    });
+
+    it("shows above an open popover that contains the field", () => {
+        page(`<div id="pop" popover>${FIELD}</div>`);
+        document.getElementById("pop")!.showPopover();
+        const input = document.getElementById("field") as HTMLInputElement;
+        const { host } = show(input);
+
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+        document.getElementById("pop")!.hidePopover();
+    });
+
+    it("stays a plain element in <body> when there is no dialog", () => {
+        const input = page(`<form style="margin: 100px">${FIELD}</form>`);
+        const { host } = show(input);
+
+        expect(host.parentElement).toBe(document.body);
+        expect(host.hasAttribute("popover")).toBe(false);
+    });
+
+    it("opens the panel above the dialog, under the field, and closes it with the dialog", async () => {
+        const dialog = modal(FIELD);
+        const input = document.getElementById("field") as HTMLInputElement;
+        const stub = new PanelStub(PanelStubOptions.MatchedLogins, input, 0, "left");
+        stub.createPanel();
+
+        const panel = document.getElementById(PanelStubOptions.MatchedLogins.id)!;
+        const p = panel.getBoundingClientRect();
+        const r = input.getBoundingClientRect();
+        expect(p.top).toBeCloseTo(r.bottom, 0);
+        expect(p.left).toBeCloseTo(r.left, 0);
+        expect(document.elementFromPoint(p.left + p.width / 2, p.top + p.height / 2)).toBe(panel);
+
+        dialog.close();
+        await wait(50); // "close" fires after close() returns
+        expect(panel.isConnected).toBe(false);
     });
 });

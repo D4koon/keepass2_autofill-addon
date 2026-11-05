@@ -17,11 +17,15 @@ import { decideFill, resolveFillTarget, shouldAnnounceEntries } from "./fillDeci
 import { FrameMatchState } from "./frameMatchState";
 import { runFillDiagnosis } from "./fillDiagnostics";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
+import type { AddonMessage } from "../common/AddonMessage";
 import { KeeLogger } from "../common/Logger";
 import { Config } from "../common/config";
 import { Entry } from "../common/model/Entry";
 import { explainAutoFill } from "../common/model/AutoFillExplanation";
 import NonReactiveStore from "../store/NonReactiveStore";
+
+// How long a manually picked entry is carried over to the next step of a login
+const MANUAL_PICK_TTL_MS = 60 * 1000;
 
 export class FormFilling {
     private state = new FrameMatchState();
@@ -37,6 +41,13 @@ export class FormFilling {
     // scheduleRescan(); read through isRescanPending(). findMatchesInThisFrame
     // cancels it on entry.
     private formFinderTimer: number = null;
+
+    // Entry the user last picked by hand. Two-step logins (username first, the
+    // password on the next view, e.g. auth.gmx.net) fill the same entry on the
+    // next step even when several entries match. Used once, so a wrong password
+    // can't make us auto-submit in a loop. The background keeps a copy for the
+    // tab, for logins whose next step is a new page (background/ManualPicks).
+    private manualPick: { uuid: string; at: number } = null;
 
     private scoringDeps: ScoringDeps;
     private submitButtonDeps: SubmitButtonDeps;
@@ -123,7 +134,31 @@ export class FormFilling {
 
     // Queue a debounced rescan of this frame (called by the page's mutation observer).
     public scheduleRescan(delayMs: number) {
-        this.formFinderTimer = window.setTimeout(() => this.findMatchesInThisFrame(), delayMs);
+        this.formFinderTimer = window.setTimeout(
+            () => this.findMatchesInThisFrame({}, true),
+            delayMs
+        );
+    }
+
+    // The recent manual pick's uuid for an automatic fill, if that entry matches
+    // here too; it is then used up
+    private takeManualPick(automated: boolean, entries: Entry[]): string | undefined {
+        const pick = this.manualPick;
+        if (!automated || !pick) return undefined;
+        if (Date.now() - pick.at > MANUAL_PICK_TTL_MS) {
+            this.manualPick = null;
+            return undefined;
+        }
+        if (!entries.some(e => e.uuid === pick.uuid)) return undefined;
+        this.manualPick = null;
+        this.myPort.postMessage({ manualPickUsed: true } as AddonMessage);
+        return pick.uuid;
+    }
+
+    // The tab's recent pick, handed over by the background when this page connected
+    public restoreManualPick(pick: { uuid: string; at?: number }) {
+        if (!pick?.uuid || this.manualPick) return;
+        this.manualPick = { uuid: pick.uuid, at: pick.at ?? Date.now() };
     }
 
     private cancelScheduledRescan() {
@@ -174,10 +209,11 @@ export class FormFilling {
         ... others
     }
     */
-    public findMatchesInThisFrame(behaviour: FindMatchesBehaviour = {}) {
+    // onlyIfChanged: see scanFrameForForms
+    public findMatchesInThisFrame(behaviour: FindMatchesBehaviour = {}, onlyIfChanged = false) {
         // Whether or not this was invoked as a result of a DOM mutation, we won't need the timer to fire anymore
         this.cancelScheduledRescan();
-        scanFrameForForms(behaviour, this.formScannerDeps);
+        scanFrameForForms(behaviour, this.formScannerDeps, onlyIfChanged);
     }
 
     public findLoginsResultHandler(entries: Entry[]) {
@@ -350,7 +386,7 @@ export class FormFilling {
             entryIndex,
             entriesForForm: matchResult.entries[matchResult.mostRelevantFormIndex],
             orderedEntriesWithPreference,
-            uuidHint: matchResult.UUID,
+            uuidHint: matchResult.UUID || this.takeManualPick(automated, orderedEntries),
             autofillOnSuccess: matchResult.autofillOnSuccess,
             autosubmitOnSuccess: matchResult.autosubmitOnSuccess,
             config: this.config
@@ -373,6 +409,11 @@ export class FormFilling {
         // this records the entry that we eventually choose as the one to fill the chosen form with
         const matchingLogin = decision.matchingLogin;
         const action = decision.action;
+
+        if (!automated && matchingLogin) {
+            this.manualPick = { uuid: matchingLogin.uuid, at: Date.now() };
+            this.myPort.postMessage({ manualPick: { uuid: matchingLogin.uuid } } as AddonMessage);
+        }
 
         //TODO:5: #6 multi-page
         // // record / update the info attached to this tab regarding
@@ -527,5 +568,9 @@ export class FormFilling {
 
     public removeKeeIconFromAllFields() {
         this.keeFieldIcon.removeKeeIconFromAllFields();
+    }
+
+    public isOwnMutation(mutation: MutationRecord): boolean {
+        return this.keeFieldIcon.isOwnMutation(mutation);
     }
 }

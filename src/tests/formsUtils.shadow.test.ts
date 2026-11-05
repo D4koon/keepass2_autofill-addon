@@ -84,6 +84,33 @@ describe("FormUtils shadow-DOM traversal", () => {
         expect(u.getOpenShadowRoots(document).length).toBe(2);
     });
 
+    it("keeps the page's cached list while the mutation observer checks other elements", () => {
+        document.body.innerHTML = "<div id=\"changed\"><x-a></x-a></div><x-b></x-b>";
+        shadow(document.querySelector("x-a")!, "<input type=\"text\">");
+        shadow(document.querySelector("x-b")!, "<div></div>");
+        const u = fu();
+        const page = u.getOpenShadowRoots(document);
+
+        expect(u.deepContains(document.getElementById("changed")!, ["input"])).toBe(true);
+
+        expect(u.getOpenShadowRoots(document)).toBe(page);
+        expect(u.getOpenShadowRoots(document.body)).toBe(page);
+    });
+
+    it("finds shadow inputs of a form, also in nested shadow roots, via the page's list", () => {
+        document.body.innerHTML =
+            "<form id=\"f\"><input id=\"user\"><x-outer></x-outer></form><x-other></x-other>";
+        const outer = shadow(document.querySelector("x-outer")!, "<x-inner></x-inner>");
+        shadow(outer.querySelector("x-inner")!, "<input id=\"pass\" type=\"password\">");
+        shadow(document.querySelector("x-other")!, "<input id=\"elsewhere\">");
+
+        const ids = fu()
+            .getFormElements(document.getElementById("f"))
+            .map(e => e.id);
+
+        expect(ids).toEqual(["user", "pass"]);
+    });
+
     it("observeOpenShadowRoots attaches the observer to each open root once", () => {
         document.body.innerHTML = "<x-a></x-a><x-b></x-b>";
         shadow(document.querySelector("x-a")!, "<div></div>");
