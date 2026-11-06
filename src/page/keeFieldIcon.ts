@@ -80,6 +80,18 @@ function overlaidLabels(box: HTMLElement, input: HTMLElement): HTMLElement[] {
     });
 }
 
+// The field and what is laid out around it: up to two wrappers up, short of
+// <body>. Things in there that cover the field are the field's own.
+function fieldSurroundings(box: HTMLElement): Element {
+    let near: Element = box;
+    for (let i = 0; i < 2; i++) {
+        const parent = near.parentElement;
+        if (!parent || parent === document.body || parent === document.documentElement) break;
+        near = parent;
+    }
+    return near;
+}
+
 // One overlay icon attached to one input
 class FieldIcon {
     host: HTMLDivElement;
@@ -324,8 +336,19 @@ export class KeeFieldIcon {
 
         // Where the field is on the page: scrolling the page doesn't change that,
         // and so costs nothing; the icon scrolls along by itself
-        if (pageRectKey(rect) === icon.lastRect) return;
+        if (pageRectKey(rect) !== icon.lastRect) this.position(icon, rect);
 
+        // The icon sits above everything, so it would show through whatever the
+        // site lays over the field: a menu, a dialog, a sticky header. It hides
+        // while something like that is in the way, and on a field that can't be
+        // filled anyway. Checked every time, as these change without the field
+        // moving.
+        const blocked = icon.element.disabled || this.isCoveredBySite(icon, rect);
+        icon.host.classList.toggle("visible", !blocked);
+    }
+
+    private position(icon: FieldIcon, rect: DOMRect) {
+        const element = icon.box;
         // Only re-check which side is free when the field changes size, not on every scroll
         const sizeKey = `${rect.width},${rect.height}`;
         if (sizeKey !== icon.lastSize || icon.side === null) {
@@ -375,12 +398,32 @@ export class KeeFieldIcon {
     // true/false when we could tell, undefined when the spot can't be tested
     // (e.g. off-screen)
     private isSpotFree(icon: FieldIcon, x: number, y: number): boolean | undefined {
-        const root = icon.box.getRootNode() as Document | ShadowRoot;
-        if (typeof root.elementsFromPoint !== "function") return undefined;
-        const ours = new Set<Element>(this.icons.map(i => i.host));
-        const top = root.elementsFromPoint(x, y).find(e => !ours.has(e));
+        const top = this.siteElementAt(icon, x, y);
         if (!top) return undefined;
         return top === icon.box || top === icon.element;
+    }
+
+    // The topmost element at x/y that isn't one of our icons; null if it can't
+    // be told (off-screen, or no hit-testing as in jsdom)
+    private siteElementAt(icon: FieldIcon, x: number, y: number): Element | null {
+        if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return null;
+        const root = icon.box.getRootNode() as Document | ShadowRoot;
+        if (typeof root.elementsFromPoint !== "function") return null;
+        const ours = new Set<Element>(this.icons.map(i => i.host));
+        return root.elementsFromPoint(x, y).find(e => !ours.has(e)) ?? null;
+    }
+
+    // Is something from elsewhere on the page over the icon's spot? What the
+    // field's own wrappers lay over it (an eye toggle, a label, a decoration)
+    // doesn't count: the icon was placed with those in mind.
+    private isCoveredBySite(icon: FieldIcon, rect: DOMRect): boolean {
+        const x =
+            icon.side === "right"
+                ? rect.right - ICON_INSET - ICON_SIZE / 2
+                : rect.left + ICON_INSET + ICON_SIZE / 2;
+        const top = this.siteElementAt(icon, x, rect.top + rect.height / 2);
+        if (!top || top === icon.box || top === icon.element) return false;
+        return !fieldSurroundings(icon.box).contains(top);
     }
 
     private applySide(icon: FieldIcon, side: IconSide) {

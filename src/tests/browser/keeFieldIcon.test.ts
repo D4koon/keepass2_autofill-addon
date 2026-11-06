@@ -351,6 +351,53 @@ describe("KeeFieldIcon in a real browser", () => {
         expectIconAt(host, input, "left");
     });
 
+    // Like the notification menu of Synology DSM, opened over a settings form
+    it("hides under a site menu opened over the field, and comes back when it closes", async () => {
+        const input = page(`<form style="margin: 100px">${FIELD}</form>`);
+        const { host } = show(input);
+        expectIconAt(host, input, "left");
+
+        const menu = document.createElement("div");
+        menu.style.cssText =
+            "position: fixed; left: 0; top: 0; width: 600px; height: 400px; background: white; z-index: 10";
+        document.body.appendChild(menu);
+        await wait(600);
+        expect(host.getBoundingClientRect().width).toBe(0);
+
+        menu.remove();
+        await wait(600);
+        expectIconAt(host, input, "left");
+        expectIconOnTop(host);
+    });
+
+    it("hides under a sticky header the field scrolls beneath", async () => {
+        const input = page(
+            `<header style="position: fixed; top: 0; left: 0; right: 0; height: 120px; background: white; z-index: 5"></header>
+             <form style="margin: 200px 100px 2000px">${FIELD}</form>`
+        );
+        const { host } = show(input);
+        expectIconAt(host, input, "left");
+
+        window.scrollTo(0, 150);
+        await frames();
+        expect(host.getBoundingClientRect().width).toBe(0);
+
+        window.scrollTo(0, 0);
+        await frames();
+        expectIconAt(host, input, "left");
+    });
+
+    it("hides on a disabled field until it is enabled", async () => {
+        const input = page(`<form style="margin: 100px">${FIELD}</form>`);
+        input.disabled = true;
+        const { host } = show(input);
+        expect(host.getBoundingClientRect().width).toBe(0);
+
+        input.disabled = false;
+        await wait(600);
+        expectIconAt(host, input, "left");
+    });
+
     it("lines up with fields inside transformed containers", () => {
         const input = page(
             `<div style="margin: 100px; transform: translate(40px, 30px) scale(1.1)">${FIELD}</div>`
