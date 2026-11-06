@@ -93,6 +93,43 @@ afterEach(() => {
 });
 
 describe("KeeFieldIcon in a real browser", () => {
+    // Proxmox VE: the app's search box is under the login window's mask, and the
+    // login window has read-only dropdowns. All fields suit the entry equally.
+    it("puts the text field icon on the guessed username field, not on a search box or read-only field", () => {
+        page(
+            `<div class="header"><input id="search" type="text"></div>
+            <div class="mask"></div>
+            <div class="window">
+                <input id="view" type="text" readonly>
+                <input id="user" type="text">
+                <input id="realm" type="text" readonly>
+            </div>`,
+            `input { display: block; width: 200px; height: 24px; margin: 8px; }
+            .header { position: absolute; top: 0; left: 0; }
+            .mask { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.3); }
+            .window { position: absolute; top: 100px; left: 100px; z-index: 20; background: #fff; }`
+        );
+        const field = (id: string) => document.getElementById(id) as HTMLInputElement;
+        const { icon } = setup();
+        icon.addKeeIconToFields(
+            [],
+            ["search", "view", "user", "realm"].map(id => matched(field(id))),
+            ONE_ENTRY,
+            2
+        );
+
+        const on = (id: string) => {
+            const r = field(id).getBoundingClientRect();
+            return hosts().some(h => {
+                const b = h.getBoundingClientRect();
+                return b.top >= r.top && b.bottom <= r.bottom && b.left >= r.left && b.right <= r.right;
+            });
+        };
+        expect(on("user")).toBe(true);
+        expect(on("view")).toBe(false);
+        expect(on("realm")).toBe(false);
+    });
+
     it("sits on the left edge of a plain field and moves the text out of its way", () => {
         const input = page(`<form style="margin: 100px">${FIELD}</form>`);
         const { host } = show(input);

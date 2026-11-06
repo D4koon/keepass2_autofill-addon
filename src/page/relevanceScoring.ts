@@ -159,17 +159,21 @@ export function calculateRelevanceScore(
     // Fields that can never take a login value (read-only, disabled, switched
     // off, search boxes, one-time code fields) don't count: on an app's login
     // page they would otherwise outnumber the login fields, as on Proxmox VE with
-    // its search box and read-only realm and language fields.
-    const counts = (f: MatchedField) =>
-        !f?.DOMelement || !cannotTakeLoginValue(f.DOMelement, f.field.locators[0]?.labels);
-    const formFieldCountForAutofill = passwordFields
+    // its search box and read-only realm and language fields. Unless that leaves
+    // nothing: some sites make all their login fields read-only until clicked,
+    // to keep browsers from filling them.
+    const namedLoginFields = passwordFields
         .concat(otherFields)
         .filter(
             f =>
                 (f.field.type === "password" || f.field.type === "text") &&
-                (f.field.locators[0].id || f.field.locators[0].name) &&
-                counts(f)
-        ).length;
+                (f.field.locators[0].id || f.field.locators[0].name)
+        );
+    const usable = (f: MatchedField) =>
+        !f?.DOMelement || !cannotTakeLoginValue(f.DOMelement, f.field.locators[0]?.labels);
+    const skipUnusable = namedLoginFields.some(usable);
+    const counts = (f: MatchedField) => !skipUnusable || usable(f);
+    const formFieldCountForAutofill = namedLoginFields.filter(counts).length;
     const loginFieldCountForAutofill = entry.fields.filter(
         f =>
             (f.type === "password" || f.type === "text") &&

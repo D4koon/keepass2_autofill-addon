@@ -402,6 +402,25 @@ describe("field filling", () => {
         expect(h.fieldValue("search")).toBe("");
     });
 
+    it("still fills on load a login whose fields are read-only until clicked", () => {
+        // A trick to keep browsers from filling: readonly, removed on focus
+        const h = createHarness(`
+            <form>
+                <input type="text" id="user" name="username" readonly>
+                <input type="password" id="pass" name="password" readonly>
+            </form>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+
+        expect(h.fieldValue("user")).toBe("alice");
+        expect(h.fieldValue("pass")).toBe("s3cret");
+    });
+
     it("still doesn't fill on load a form with many more fields than the entry", () => {
         const h = createHarness(`
             <form>

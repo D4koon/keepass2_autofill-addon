@@ -378,7 +378,8 @@ export class FormFilling {
             this.keeFieldIcon.addKeeIconToFields(
                 passwordFields,
                 otherFields,
-                orderedEntriesWithPreference
+                orderedEntriesWithPreference,
+                matchResult.usernameIndexArray?.[matchResult.mostRelevantFormIndex]
             );
         }
 

@@ -39,7 +39,9 @@ interface Rule {
 }
 
 const yes = (v: boolean) => (v ? 1 : 0);
-const REACH_ORDER: Reach[] = ["locked", "in the way", "reachable"];
+
+// Worst first, so a higher index is better
+export const REACH_ORDER_BEST_LAST: readonly Reach[] = ["locked", "in the way", "reachable"];
 
 export const RULES: Rule[] = [
     {
@@ -58,7 +60,7 @@ export const RULES: Rule[] = [
     },
     {
         says: "can be reached (not read-only or disabled, nothing in the way, not a search box or one-time code field)",
-        compare: (a, b) => REACH_ORDER.indexOf(a.reach) - REACH_ORDER.indexOf(b.reach)
+        compare: (a, b) => REACH_ORDER_BEST_LAST.indexOf(a.reach) - REACH_ORDER_BEST_LAST.indexOf(b.reach)
     },
     {
         says: "is the guessed username field",
@@ -132,7 +134,10 @@ export function findCandidates(
     return candidates;
 }
 
-function reachOf(formField: MatchedField, deps: CandidateDeps): Reach {
+export function reachOf(
+    formField: MatchedField,
+    deps: Pick<CandidateDeps, "isCoveredBySite">
+): Reach {
     const el = formField.DOMelement as HTMLInputElement;
     if (!el) return "reachable";
     if (el.readOnly || el.disabled) return "locked";
@@ -143,7 +148,7 @@ function reachOf(formField: MatchedField, deps: CandidateDeps): Reach {
     return "reachable";
 }
 
-export interface Pick {
+export interface FieldPick {
     winner: Candidate;
     // The best other page field this entry field could have gone to, if any
     runnerUp?: Candidate;
@@ -159,8 +164,8 @@ function best(candidates: Candidate[]): Candidate | undefined {
 }
 
 // Pairs fields up: the best candidate first, then the best of what is left
-export function pairFields(candidates: Candidate[]): Pick[] {
-    const picks: Pick[] = [];
+export function pairFields(candidates: Candidate[]): FieldPick[] {
+    const picks: FieldPick[] = [];
     let left = candidates;
     while (left.length > 0) {
         const winner = best(left);

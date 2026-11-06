@@ -5,7 +5,15 @@ import { MatchedField } from "./MatchedField";
 import { Entry } from "../common/model/Entry";
 import { leaveTopLayer, showInTopLayer, topLayerAncestor } from "./topLayer";
 import { PositionTracker } from "./positionTracker";
-import { ICON_HOST_ATTR, fieldBox, fieldSurroundings, isIconHost, siteElementAt } from "./fieldCover";
+import {
+    ICON_HOST_ATTR,
+    fieldBox,
+    fieldSurroundings,
+    isFieldCoveredBySite,
+    isIconHost,
+    siteElementAt
+} from "./fieldCover";
+import { REACH_ORDER_BEST_LAST, reachOf } from "./fieldRanking";
 
 export type IconSide = "left" | "right";
 
@@ -93,6 +101,7 @@ export class KeeFieldIcon {
     private icons: FieldIcon[] = [];
     private passwordFields: MatchedField[];
     private otherFields: MatchedField[];
+    private usernameField: MatchedField | undefined;
     // Follows the inputs as the page scrolls, resizes or re-lays itself out
     private tracker = new PositionTracker(() => this.updatePositions());
     // Bumped on every add/remove so a slow labelled-icon render can't attach stale icons
@@ -134,7 +143,9 @@ export class KeeFieldIcon {
     public addKeeIconToFields(
         passwordFields: MatchedField[],
         otherFields: MatchedField[],
-        entries: Entry[]
+        entries: Entry[],
+        // The text field guessed to take the username (FormUtils.pickUsernameIndex)
+        usernameIndex?: number
     ) {
         this.removeKeeIconFromAllFields();
         for (const leftover of Array.from(document.querySelectorAll(`[${ICON_HOST_ATTR}]`))) {
@@ -142,6 +153,7 @@ export class KeeFieldIcon {
         }
         this.passwordFields = passwordFields;
         this.otherFields = otherFields;
+        this.usernameField = otherFields?.[usernameIndex];
 
         if (entries.length > 1) {
             this.getLabelledIcon(entries.length.toString());
@@ -221,13 +233,30 @@ export class KeeFieldIcon {
         this.updateIcon(icon);
     }
 
+    // The two fields of a kind most likely to be the login's, in the order the
+    // fill picks them (fieldRanking.ts): how well an entry suits them, then
+    // reachable before in the way before locked, then the guessed username
+    // field, then page order. Fields aren't left out for being locked: some
+    // sites make their login fields read-only until clicked.
     private limitFields(fields: MatchedField[]) {
+        const reach = new Map<MatchedField, number>();
+        const reachRank = (f: MatchedField) => {
+            if (!reach.has(f)) {
+                reach.set(
+                    f,
+                    REACH_ORDER_BEST_LAST.indexOf(reachOf(f, { isCoveredBySite: isFieldCoveredBySite }))
+                );
+            }
+            return reach.get(f);
+        };
         const orderedFields = fields
             .filter(f => !this.skipField(f))
-            .sort((a, b) => {
-                if (a.highestScore === b.highestScore) return 0;
-                return a.highestScore < b.highestScore ? 1 : -1;
-            });
+            .sort(
+                (a, b) =>
+                    (b.highestScore ?? 0) - (a.highestScore ?? 0) ||
+                    reachRank(b) - reachRank(a) ||
+                    Number(b === this.usernameField) - Number(a === this.usernameField)
+            );
         return orderedFields.slice(0, 2);
     }
 

@@ -153,6 +153,10 @@ Proxmox VE login the entry's 2 fields cover the user name and password field,
 2 of 2; without this rule the search box and the read-only realm and language
 fields made it 2 of 6, and the login only filled on click.
 
+If that would leave no field to count, all of them count. Some sites make their
+login fields read-only until clicked, to keep browsers from filling them; such
+a login would otherwise never fill on page load.
+
 === Fill or only offer
 
 `decideFill` in `fillDecision.ts`. For an automatic fill on page load:
@@ -281,6 +285,11 @@ store none, and then rules 6 to 8 decide.
 
 Each page field's visibility and reach are looked up once per fill, because
 the hit-test forces a layout.
+
+The field icons follow the same order (`limitFields` in `keeFieldIcon.ts`): of
+each kind, the two fields an entry suits best get an icon, and among equals the
+reachable ones, then the guessed username field, then page order. Locked fields
+aren't left out, because they may become editable on a click.
 
 === Example: Proxmox VE
 
