@@ -1,4 +1,5 @@
 import { KeeLogger } from "../common/Logger";
+import { isSwitchedOff, looksLikeSearchField, stepsToMeet } from "./fieldSignals";
 import { MatchedField } from "./MatchedField";
 import { Field } from "../common/model/Field";
 
@@ -8,6 +9,14 @@ import { Field } from "../common/model/Field";
 
 // A form control as the field scan reads it (input, select, textarea, ...)
 type FormControl = HTMLInputElement & { keeInitialDetectedValue?: string };
+
+// Compares two equally long lists of numbers, first number first
+function isGreater(a: number[], b: number[]): boolean {
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return a[i] > b[i];
+    }
+    return false;
+}
 
 export class FormUtils {
     Logger: KeeLogger;
@@ -55,7 +64,10 @@ export class FormUtils {
     }
 
     private isAKnownUsernameString(fieldNameIn) {
-        const fieldName = fieldNameIn.toLowerCase();
+        const fieldName = String(fieldNameIn || "")
+            .toLowerCase()
+            .replace(/[\s:*]+$/, "")
+            .trim();
         if (
             fieldName == "username" ||
             fieldName == "j_username" ||
@@ -87,12 +99,63 @@ export class FormUtils {
             fieldName == "authentication_id" ||
             fieldName == "customer_number" ||
             fieldName == "customernumber" ||
-            fieldName == "onlineid"
+            fieldName == "onlineid" ||
+            fieldName == "email address" ||
+            fieldName == "e-mail address" ||
+            fieldName == "benutzername" ||
+            fieldName == "benutzer" ||
+            fieldName == "anmeldename" ||
+            fieldName == "e-mail-adresse"
         ) {
             // etc. etc.
             return true;
         }
         return false;
+    }
+
+    // The text field most likely to take the username, as an index into
+    // `fields`; -1 if there is none. Compared in this order, each only
+    // deciding when the ones before are equal:
+    //  1. usable: not read-only or disabled, not switched off by the site, not
+    //     a search box
+    //  2. autocomplete="username"
+    //  3. a name or label known for usernames, or autocomplete="email"
+    //  4. close to a password field: meets it after fewer steps up the DOM
+    //  5. before the first password field
+    //  6. nearest to the first password field (with none: the first one)
+    private pickUsernameIndex(
+        fields: { element: MatchedField; type: string }[],
+        firstPasswordIndex: number
+    ): number {
+        const passwords = fields.filter(f => f.type === "password").map(f => f.element.DOMelement);
+        let best = -1;
+        let bestKey: number[] = null;
+        fields.forEach((f, i) => {
+            if (!this.isATextFormFieldType(f.type)) return;
+            const el = f.element.DOMelement as HTMLInputElement;
+            const locator = f.element.field?.locators?.[0];
+            const labels = locator?.labels ?? [];
+            const autocomplete = locator?.autocompleteValues ?? [];
+            const usable =
+                !el.readOnly && !el.disabled && !isSwitchedOff(el) && !looksLikeSearchField(el, labels);
+            const known =
+                this.isAKnownUsernameString(el.name) ||
+                labels.some(label => this.isAKnownUsernameString(label)) ||
+                autocomplete.includes("email");
+            const key = [
+                usable ? 1 : 0,
+                autocomplete.includes("username") ? 1 : 0,
+                known ? 1 : 0,
+                passwords.length ? -Math.min(...passwords.map(p => stepsToMeet(el, p))) : 0,
+                firstPasswordIndex < 0 || i < firstPasswordIndex ? 1 : 0,
+                firstPasswordIndex < 0 ? -i : -Math.abs(firstPasswordIndex - i)
+            ];
+            if (!bestKey || isGreater(key, bestKey)) {
+                best = i;
+                bestKey = key;
+            }
+        });
+        return best;
     }
 
     /*
@@ -115,8 +178,6 @@ export class FormUtils {
             type: string;
         }[] = [];
         let firstPasswordIndex = -1;
-        let firstPossibleUsernameIndex = -1;
-        let usernameIndex = -1;
 
         // search the DOM for any form fields we might be interested in
         const elements = this.getFormElements(form);
@@ -173,15 +234,6 @@ export class FormUtils {
                 firstPasswordIndex = allFields.length - 1;
             }
 
-            if (
-                this.isATextFormFieldType(domType) &&
-                firstPossibleUsernameIndex == -1 &&
-                (this.isAKnownUsernameString(elements[i].name) ||
-                    field.locators[0].labels?.some(label => this.isAKnownUsernameString(label)))
-            ) {
-                firstPossibleUsernameIndex = allFields.length - 1;
-            }
-
             if (elements[i].keeInitialDetectedValue == null) {
                 elements[i].keeInitialDetectedValue = fieldValue;
             }
@@ -191,10 +243,7 @@ export class FormUtils {
         // This is used to display the username to the user, and when filling it decides
         // between fields that suit the entry's username equally well, so an inaccurate
         // choice doesn't change the form detection but can put the username in the wrong place.
-        //TODO:5: Extend this to inspect more than just the name of the field. E.g. max length?
-        //TODO:5: For form filling (not submitting) we might want to select based upon found data in KeePass?
-        if (firstPossibleUsernameIndex != -1) usernameIndex = firstPossibleUsernameIndex;
-        else if (firstPasswordIndex > 0) usernameIndex = firstPasswordIndex - 1;
+        const usernameIndex = this.pickUsernameIndex(allFields, firstPasswordIndex);
         this.Logger.debug("usernameIndex: " + usernameIndex);
 
         let otherCount = 0;

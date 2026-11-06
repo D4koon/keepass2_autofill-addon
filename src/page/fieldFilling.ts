@@ -4,6 +4,7 @@ import { Field } from "../common/model/Field";
 import { configManager } from "../common/ConfigManager";
 import { KeeLogger } from "../common/Logger";
 import { FieldMatchScoreConfig, ScoringDeps, calculateFieldMatchScore } from "./relevanceScoring";
+import { isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 
 // Form-field population, extracted verbatim from FormFilling. The logger and the
 // scoring deps are passed in; configManager is still imported directly (see the
@@ -24,7 +25,8 @@ export interface FieldFillingDeps {
 
 // Highest score first. Ties - common when the entry has no field names or ids,
 // so every visible text field scores the same - go to editable fields, then to
-// ones nothing else on the page lies over, then to the field the scanner took
+// ones nothing lies over that aren't switched off or search boxes, then to the
+// field the scanner took
 // as the username, then to the one that comes first on the page (the sort is
 // stable). Otherwise a site's search box gets the username, as on Proxmox,
 // where it sits behind the mask of the login window.
@@ -33,14 +35,21 @@ function byScore(
     preferredFormFieldIndex: number | undefined,
     deps: FieldFillingDeps
 ) {
-    // 0 usable, 1 covered, 2 read-only or disabled. Hit-testing forces a layout,
-    // so each field is looked at once.
+    // 0 usable; 1 covered, switched off by the site or a search box; 2 read-only
+    // or disabled. Hit-testing forces a layout, so each field is looked at once.
     const reach = new Map<number, number>();
     const locked = (i: number) => {
         let r = reach.get(i);
         if (r === undefined) {
             const el = formFields[i]?.DOMelement as HTMLInputElement | undefined;
-            r = !el ? 0 : el.readOnly || el.disabled ? 2 : deps.isCoveredBySite(el) ? 1 : 0;
+            const labels = formFields[i]?.field?.locators?.[0]?.labels;
+            r = !el
+                ? 0
+                : el.readOnly || el.disabled
+                  ? 2
+                  : isSwitchedOff(el) || looksLikeSearchField(el, labels) || deps.isCoveredBySite(el)
+                    ? 1
+                    : 0;
             reach.set(i, r);
         }
         return r;

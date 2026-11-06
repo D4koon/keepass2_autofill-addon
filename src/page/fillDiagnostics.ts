@@ -7,6 +7,7 @@ import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { diag } from "../common/diagnosisReport";
 import { MatchedField } from "./MatchedField";
 import { isFieldCoveredBySite } from "./fieldCover";
+import { isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 import { Field } from "../common/model/Field";
 
 // The "why won't this entry fill here?" diagnosis, extracted verbatim from
@@ -392,7 +393,9 @@ function describeFilledForm(
                 "Scores: 1 to start, +50 if the id matches the entry field's, +40 if the name " +
                     "does, +35 if the field is visible; 0 if the types don't fit. Each entry " +
                     "field goes to its best-scoring page field; a tie goes to editable " +
-                    "fields, then to uncovered ones, then to the detected username field, " +
+                    "fields, then to uncovered ones that aren't search boxes, then to the " +
+                    "detected username field (by autocomplete, name or label, then nearness " +
+                    "to the password field), " +
                     "then to the one that comes first on the page."
             )
         );
@@ -426,6 +429,8 @@ function describeField(mf: MatchedField, host: FillDiagnosisHost): string {
     if (el.readOnly) parts.push("read-only");
     if (el.disabled) parts.push("disabled");
     if (isFieldCoveredBySite(el)) parts.push("covered by something else on the page");
+    if (isSwitchedOff(el)) parts.push("switched off by the site (inert/aria-hidden)");
+    if (looksLikeSearchField(el, locator?.labels)) parts.push("looks like a search box");
     if (el.getRootNode() instanceof ShadowRoot) parts.push("in shadow DOM");
     return parts.join(" ");
 }

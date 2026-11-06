@@ -575,6 +575,17 @@ export class ConfigManager {
         return ic ? input.toLowerCase() : input;
     }
 
+    // Whether the site config's blacklist names this field (by name or id)
+    public isFieldExcluded(field: Field, conf: SiteConfig) {
+        const ic = conf?.listMatchingCaseSensitive !== true;
+        const norm = (v: string) => (ic ? v?.toLowerCase() : v);
+        const id = norm(field.locators[0]?.id);
+        const name = norm(field.locators[0]?.name);
+        const ids = (conf?.blackList?.fields?.ids || []).map(norm);
+        const names = (conf?.blackList?.fields?.names || []).map(norm);
+        return (!!id && ids.includes(id)) || (!!name && names.includes(name));
+    }
+
     public isFormInteresting(form: HTMLFormElement, conf: SiteConfig, otherFields: Field[]) {
 
         function caseAwareMatch(values: string[]) {

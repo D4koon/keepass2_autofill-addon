@@ -142,9 +142,25 @@ export function scanFrameForForms(
             logger.debug("Lost interest in this form after finding too many fields" + e);
             continue;
         }
-        const usernameIndex = scanResult.actualUsernameIndex;
+        let usernameIndex = scanResult.actualUsernameIndex;
         const passwordFields = scanResult.pwFields;
-        const otherFields = scanResult.otherFields;
+        let otherFields = scanResult.otherFields;
+
+        // The stand-in form gathers the loose fields of the whole page, so a
+        // blacklisted field among them (the app's search box) mustn't rule out the
+        // login fields too, as it rightly does for a real search <form>. Leave out
+        // just that field.
+        if (form === pseudoForm) {
+            const username = otherFields[usernameIndex];
+            const kept = otherFields.filter(f => !configManager.isFieldExcluded(f.field, conf));
+            if (kept.length < otherFields.length) {
+                logger.debug(
+                    `Left ${otherFields.length - kept.length} blacklisted field(s) out of the stand-in form`
+                );
+                otherFields = kept;
+                usernameIndex = Math.max(0, kept.indexOf(username));
+            }
+        }
 
         // We want to fill in this form if we find a password field but first
         // we check whether any whitelist or blacklist entries must override that behaviour

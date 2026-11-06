@@ -688,3 +688,96 @@ describe("rescans after DOM changes", () => {
         expect(h.matchFinder).toHaveBeenCalledTimes(2);
     });
 });
+
+// Which field gets the username of an entry that doesn't say (no stored field
+// names or ids, as with entries made in KeePass). Each page is one where the
+// old guess - first known name, else the field just before the password -
+// picked the wrong field.
+describe("username field guess", () => {
+    const fillUnnamed = (html: string) => {
+        const h = createHarness(html);
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+        // As a click on the entry, in case the page is too loose to fill by itself
+        h.manualFill(0);
+        expect(h.fieldValue("pass")).toBe("s3cret");
+        return Array.from(document.querySelectorAll<HTMLInputElement>("input[type=text]"))
+            .filter(i => i.value === "alice")
+            .map(i => i.id);
+    };
+
+    it.each([
+        [
+            "autocomplete=username over a known name",
+            `<form><input type="text" id="other" name="email">
+            <input type="text" id="want" name="acct" autocomplete="username">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "a label with a colon",
+            `<form><input type="text" id="want" name="f1" aria-label="User name:">
+            <input type="text" id="other" name="f2">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "a German label",
+            `<form><input type="text" id="want" name="f1" aria-label="Benutzername">
+            <input type="text" id="other" name="f2">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "not a search box, even one with a known name",
+            `<form><input type="text" id="other" name="name" placeholder="Search people">
+            <input type="text" id="want" name="acct">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "not a field the site switched off",
+            `<form><div inert><input type="text" id="other" name="username"></div>
+            <input type="text" id="want" name="login">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "the field that shares the password's wrapper",
+            `<div class="header"><input type="text" id="other" name="f1"></div>
+            <div class="login"><div><input type="password" id="pass"></div>
+            <div><input type="text" id="want" name="f2"></div></div>`
+        ]
+    ])("prefers %s", (_, html) => {
+        expect(fillUnnamed(html)).toEqual(["want"]);
+    });
+
+    it("leaves a blacklisted search field out of a page without forms instead of skipping the page", () => {
+        // name="q" is on the default blacklist, which rightly skips real search forms
+        const h = createHarness(`
+            <div class="header"><input type="text" id="q" name="q"></div>
+            <div class="login">
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
+            </div>`);
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice", name: "username" },
+                { type: "password", value: "s3cret", name: "password" }
+            ])
+        ]);
+        h.manualFill(0);
+
+        expect(h.fieldValue("user")).toBe("alice");
+        expect(h.fieldValue("pass")).toBe("s3cret");
+        expect(h.fieldValue("q")).toBe("");
+    });
+
+    it("still skips a real search form", () => {
+        const h = createHarness(`
+            <form id="search"><input type="text" id="q" name="q"><input type="password" id="pass"></form>`);
+        h.scan();
+
+        // Not a login form, so KeePass isn't even asked
+        expect(h.matchFinder).not.toHaveBeenCalled();
+    });
+});
