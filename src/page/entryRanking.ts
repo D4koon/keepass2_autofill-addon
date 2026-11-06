@@ -34,6 +34,16 @@ export function rankLoginMatchesAgainstAllForms(
         matchResult.entries[i] = JSON.parse(crString);
         if (matchResult.entries[i].length == 0) continue;
 
+        const siteVouches = () => {
+            const url = new URL(window.document.URL);
+            url.hostname = punycode.toUnicode(url.hostname);
+            return configManager.siteVouchesForForm(
+                findLoginOp.forms[i],
+                url.href,
+                matchResult.otherFieldsArray[i].map(f => f.field)
+            );
+        };
+
         const form = new FormFacts(
             matchResult.passwordFieldsArray[i],
             matchResult.otherFieldsArray[i],
@@ -41,7 +51,9 @@ export function rankLoginMatchesAgainstAllForms(
             {
                 isVisible: el => deps.formUtils.isDOMElementVisible(el),
                 isCoveredBySite: el => deps.isCoveredBySite(el)
-            }
+            },
+            // Only a form without a password field needs to know
+            !matchResult.passwordFieldsArray[i]?.length && siteVouches()
         );
 
         matchResult.entries[i].forEach((entry, v) => {

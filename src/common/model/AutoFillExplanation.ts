@@ -13,7 +13,8 @@ export type AutoFillExplanationCode =
     | "entry-never" // the entry is flagged "never auto-fill" in the database
     | "no-login-field" // no visible password field, nor a username field on a first step
     | "sign-up-form" // looks like a sign-up or change-password form
-    | "extra-fields"; // more text fields the entry has nothing for than a login has
+    | "extra-fields" // more text fields the entry has nothing for than a login has
+    | "unsure-first-step"; // no password field, only a generic name like "email"
 
 export interface AutoFillExplanation {
     code: AutoFillExplanationCode;

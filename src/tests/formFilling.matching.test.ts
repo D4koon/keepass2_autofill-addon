@@ -47,6 +47,162 @@ describe("form detection", () => {
         h.scan();
         expect(h.matchFinder).toHaveBeenCalledTimes(1);
     });
+
+    describe("forms without a password field", () => {
+        // Synology DSM's edit user dialog
+        const PROFILE = `
+            <form id="profile">
+                <input id="name" name="name" type="text">
+                <input id="description" name="description" type="text">
+                <input id="email" name="email" type="text">
+            </form>`;
+
+        it("ignores a form with just a field called name", () => {
+            const h = createHarness("<form><input id=\"name\" name=\"name\" type=\"text\"></form>");
+            h.scan();
+            expect(h.matchFinder).not.toHaveBeenCalled();
+        });
+
+        it("ignores a profile form with too many text fields for a first step", () => {
+            const h = createHarness(PROFILE);
+            h.scan();
+            expect(h.matchFinder).not.toHaveBeenCalled();
+        });
+
+        it("doesn't limit the loose fields of a page without a form", () => {
+            const h = createHarness(`
+                <input name="email" type="text">
+                <input name="newsletter" type="text">
+                <input name="store" type="text">`);
+            h.scan();
+            expect(h.matchFinder).toHaveBeenCalledTimes(1);
+        });
+
+        describe("with only a generic field name to go on", () => {
+            const UNNAMED = () =>
+                makeEntry([
+                    { type: "text", value: "alice", name: "" },
+                    { type: "password", value: "s3cret", name: "" }
+                ]);
+            const fit = (h: ReturnType<typeof createHarness>) =>
+                h.matchResult().entries[0][0].formFit;
+
+            it.each(["email", "e-mail", "mail", "id"])(
+                "offers but doesn't fill a lone field called %s by itself",
+                name => {
+                    const h = createHarness(`<form><input id="f" name="${name}" type="text"></form>`);
+                    h.run([UNNAMED()]);
+                    expect(fit(h).blocker).toEqual({ code: "unsure-first-step" });
+                    expect(h.fieldValue("f")).toBe("");
+                }
+            );
+
+            it("still fills it when the user picks the entry", () => {
+                const h = createHarness("<form><input id=\"f\" name=\"email\" type=\"text\"></form>");
+                h.run([UNNAMED()]);
+                h.manualFill(0);
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+
+            it("fills it by itself when the entry stores the field's name", () => {
+                const h = createHarness("<form><input id=\"f\" name=\"email\" type=\"text\"></form>");
+                h.run([
+                    makeEntry([
+                        { type: "text", value: "alice", name: "email" },
+                        { type: "password", value: "s3cret", name: "" }
+                    ])
+                ]);
+                expect(fit(h).blocker).toBeNull();
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+
+            it("fills it by itself when the site marks it as a username", () => {
+                const h = createHarness(
+                    "<form><input id=\"f\" name=\"email\" type=\"text\" autocomplete=\"username\"></form>"
+                );
+                h.run([UNNAMED()]);
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+
+            it("fills it by itself when this site's own Include List names the form", () => {
+                const h = createHarness("<form id=\"mine\"><input id=\"f\" name=\"email\" type=\"text\"></form>");
+                const host = new URL(document.URL).host;
+                h.cfg().siteConfig.hostExact = {
+                    [host]: {
+                        config: { whiteList: { form: { ids: ["mine"] } } },
+                        matchWeight: 100,
+                        source: "User"
+                    }
+                };
+                h.run([UNNAMED()]);
+                delete h.cfg().siteConfig.hostExact[host];
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+
+            it("fills a field with a clear username name by itself", () => {
+                const h = createHarness("<form><input id=\"f\" name=\"username\" type=\"text\"></form>");
+                h.run([UNNAMED()]);
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+
+            it("doesn't apply when the form has a password field, even a hidden one", () => {
+                const h = createHarness(`
+                    <form>
+                        <input id="f" name="email" type="text">
+                        <input id="p" name="password" type="password" style="display:none">
+                    </form>`);
+                h.run([UNNAMED()]);
+                expect(h.fieldValue("f")).toBe("alice");
+            });
+        });
+
+        it("takes a username field and one more for a first step", () => {
+            const h = createHarness(`
+                <form>
+                    <input name="email" type="text">
+                    <input name="captcha" type="text">
+                </form>`);
+            h.scan();
+            expect(h.matchFinder).toHaveBeenCalledTimes(1);
+        });
+
+        it("doesn't count hidden or read-only fields against a first step", () => {
+            const h = createHarness(`
+                <form>
+                    <input name="email" type="text">
+                    <input name="trap" type="text" style="display:none">
+                    <input name="tenant" type="text" readonly>
+                    <input name="captcha" type="text">
+                </form>`);
+            h.scan();
+            expect(h.matchFinder).toHaveBeenCalledTimes(1);
+        });
+
+        it("believes a field marked autocomplete=username, however many others there are", () => {
+            const h = createHarness(`
+                <form>
+                    <input name="account" type="text" autocomplete="username">
+                    <input name="a" type="text">
+                    <input name="b" type="text">
+                </form>`);
+            h.scan();
+            expect(h.matchFinder).toHaveBeenCalledTimes(1);
+        });
+
+        it("believes this site's own Include List", () => {
+            const h = createHarness(PROFILE);
+            h.cfg().siteConfig.hostExact = {
+                [new URL(document.URL).host]: {
+                    config: { whiteList: { form: { ids: ["profile"] } } },
+                    matchWeight: 100,
+                    source: "User"
+                }
+            };
+            h.scan();
+            expect(h.matchFinder).toHaveBeenCalledTimes(1);
+            delete h.cfg().siteConfig.hostExact[new URL(document.URL).host];
+        });
+    });
 });
 
 describe("how an entry fits a form", () => {
@@ -392,6 +548,54 @@ describe("fill diagnosis", () => {
         expect(lines.some(l => l.startsWith("[ok] Filled "))).toBe(true);
         expect(h.fieldValue("u")).toBe("alice");
         expect(h.fieldValue("p")).toBe("s3cret");
+    });
+
+    const UNNAMED_FOR_REPORT = () =>
+        makeEntry([
+            { type: "text", value: "alice", name: "" },
+            { type: "password", value: "s3cret", name: "" }
+        ]);
+
+    it("says a form with a password field is a login because of that", () => {
+        const h = createHarness(`
+            <form id="f"><input name="u" type="text"><input name="p" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        expect(report(h)).toContain("[ok] Form #0 (f): treated as a login form: it has a password field.");
+    });
+
+    it("names the Include List entry that made a form a login", () => {
+        const h = createHarness("<form id=\"f\"><input id=\"e\" name=\"email\" type=\"text\"></form>");
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        expect(report(h)).toContain(
+            "[ok] Form #0 (f): treated as a login form: the Include List for all websites names its field name \"email\"."
+        );
+    });
+
+    it("says when autocomplete=username made a form a login", () => {
+        const h = createHarness("<form id=\"f\"><input name=\"acct\" type=\"text\" autocomplete=\"username\"></form>");
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        expect(report(h)).toContain(
+            "[ok] Form #0 (f): treated as a login form: a field has autocomplete=\"username\"."
+        );
+    });
+
+    it("explains a form turned down for asking too much of a first step", () => {
+        const h = createHarness(`
+            <form id="profile">
+                <input name="name" type="text"><input name="description" type="text"><input name="email" type="text">
+            </form>
+            <form id="login"><input name="u" type="text"><input name="p" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        expect(report(h).some(l => l.includes("too many for the first step of a login"))).toBe(true);
+    });
+
+    it("doesn't type into a form without a password field", () => {
+        const h = createHarness("<form id=\"f\"><input id=\"e\" name=\"email\" type=\"text\"></form>");
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        const lines = report(h);
+        expect(h.fieldValue("e")).toBe("");
+        expect(lines.some(l => l.includes("Not filled: the best form has no password field"))).toBe(true);
+        expect(lines.some(l => l.includes("No fields were filled"))).toBe(false);
     });
 
     // Like the Proxmox VE login (ExtJS): no <form>, generated ids, read-only

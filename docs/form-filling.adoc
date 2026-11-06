@@ -112,8 +112,10 @@ if (has a password field?) then (yes)
 endif
 if (whitelisted by the site config,\nor a field has autocomplete="username"?) then (yes)
   if (has a text field?) then (yes)
-    :Login form\n(first step of a two-step login);
-    stop
+    if (stand-in form,\nor at most 2 visible, editable text fields,\nor whitelisted for this site specifically,\nor a field has autocomplete="username"?) then (yes)
+      :Login form\n(first step of a two-step login);
+      stop
+    endif
   endif
 endif
 :Not a login form;
@@ -129,6 +131,14 @@ id or name `search` and fields named `search`, `q` or `query` (or with the id
 as logins. For the stand-in form only the blacklisted *field* is left out:
 otherwise one search box in an app's header would hide every loose login field
 on the page.
+
+The built-in whitelist names fields such as `email`, which a profile form has
+too. So a form without a password field that has more than two visible, editable
+text fields isn't taken for a first step because of the built-in list: the edit
+user dialog of Synology DSM (name, description, e-mail) is not a login. This
+doesn't apply to the stand-in form, whose fields can be from anywhere on the
+page. A field named `name` isn't on the built-in list at all, as it is more often
+a person's or a group's name than a username.
 
 [[form-fit]]
 == Choosing the form and the entry, and filling on page load
@@ -194,6 +204,10 @@ if (more than 1 other visible, editable\ntext field the entry has nothing for?) 
   :wait for a click\n"Form asks for more"\n(names the fields);
   stop
 endif
+if (no password field, username field called\nemail, e-mail, mail or id, and neither the entry\nnor the site says it's a login?) then (yes)
+  :wait for a click\n"Maybe not a login";
+  stop
+endif
 if (one matching entry, or several\nand the settings allow that?) then (no)
   :wait for a click;
   stop
@@ -225,6 +239,10 @@ Examples:
   new-password field: "Looks like sign-up".
 * A profile form with first name, street and a password field: "Form asks for
   more (first name, street)".
+* A "change e-mail" dialog with one field named `email` and no password field:
+  "Maybe not a login". The same field does fill if an entry stores its id or
+  name, if the site marks it `autocomplete="username"`, or if the form is on the
+  site's own Include List.
 
 An entry that isn't filled on load is still offered in the popup and on the
 field icon; a click fills it without any of these checks. The popup shows the
@@ -417,7 +435,8 @@ fills here"). The report runs the entry through the same pipeline on the
 current page and lists
 
 * whether the entry's URLs match the page,
-* each form, whether it counts as a login form, and why not,
+* each form, whether it counts as a login form, what made it one (a password
+  field, an Include List match, `autocomplete="username"`), or why not,
 * per login form, its login field, the stored field names matched, and
   whether the entry is filled on its own there or what blocks it,
 * every field of that form with its type, name, id, label, autocomplete,
@@ -447,7 +466,7 @@ participant "Content script\n(fillDiagnostics.ts)" as Page
 User -> Popup : click (?) on an entry
 Popup -> BG : entry to diagnose
 BG -> Page : Action.DiagnoseFill
-Page -> Page : scan, score, force-fill\nthe best form (never submits)
+Page -> Page : scan, score, force-fill the best\nform if it has a password field\n(never submits)
 Page -> BG : report lines
 BG -> Popup : report
 Popup -> User : report with Copy button

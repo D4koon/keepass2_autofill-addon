@@ -507,6 +507,14 @@
       "message": "This form has other fields the entry has nothing for ($1), so it's probably not just a login and KeeLink doesn't fill it on its own.",
       "description": "Tooltip with the full explanation for autofill_blocked_extra_fields_short. $1 is a comma-separated list of the names or labels of those fields."
   },
+  "autofill_blocked_unsure_first_step_short": {
+      "message": "Maybe not a login",
+      "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the form has no password field and only a generic field name suggests a login. The full explanation is a tooltip on this text."
+  },
+  "autofill_blocked_unsure_first_step": {
+      "message": "This form has no password field, and only a generic field name (such as e-mail) suggests it's a login, so KeeLink waits for you to pick the entry.",
+      "description": "Tooltip with the full explanation for autofill_blocked_unsure_first_step_short."
+  },
   "site_specific_settings_checkbox_explanation": {
       "message": "Settings from \"All Websites\" will apply to each section below unless you enable the setting using the checkbox next to it." ,
       "description": "Explains to the user how the site-specific settings can be enabled and what happens in the default situation"

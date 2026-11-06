@@ -6,6 +6,8 @@ import { KeeLogger, KeeLog } from "../common/Logger";
 import { configManager } from "../common/ConfigManager";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { SubmitButtonDeps, findSubmitButton } from "./submitButtonFinder";
+import { MAX_EXTRA_FIELDS } from "./formFit";
+import { reachOf } from "./fieldRanking";
 import punycode from "punycode/";
 
 // The per-frame form scan, extracted verbatim from FormFilling: enumerate the
@@ -58,6 +60,20 @@ function scanSignature(
 
 function sameSignature(a: unknown[], b: unknown[] | null) {
     return !!b && a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+// The first step of a login asks for the username and at most a little more. A
+// form with no password field and more to fill in is a profile or settings form,
+// even with a field called "email". Fields under a dialog on top still count: the
+// answer shouldn't change as windows of a web app are moved around.
+export function asksForTooMuchForFirstStep(otherFields: MatchedField[], formUtils: FormUtils) {
+    const fillable = otherFields.filter(
+        f =>
+            formUtils.isATextFormFieldType(f.field.type) &&
+            formUtils.isDOMElementVisible(f.DOMelement) &&
+            reachOf(f, { isCoveredBySite: () => false }) === "reachable"
+    );
+    return fillable.length > 1 + MAX_EXTRA_FIELDS;
 }
 
 // onlyIfChanged: for the rescans the page's DOM mutation observer asks for. If
@@ -190,6 +206,23 @@ export function scanFrameForForms(
                 "No password field found in this form and either there are no other" +
                     " fields or no whitelisted text field or form element"
             );
+            continue;
+        }
+
+        // The stand-in form gathers the loose fields of the whole page, which says
+        // nothing about how much a login asks for. The site saying so counts for
+        // more: its own Include List, or a field marked autocomplete="username"
+        if (
+            noPasswordField &&
+            form !== pseudoForm &&
+            asksForTooMuchForFirstStep(otherFields, formUtils) &&
+            !configManager.siteVouchesForForm(
+                form,
+                url.href,
+                otherFields.map(f => f.field)
+            )
+        ) {
+            logger.debug("No password field and too many text fields for a first login step");
             continue;
         }
 

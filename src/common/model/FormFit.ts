@@ -8,7 +8,10 @@ export type FitBlocker =
     // A new-password field, or two password fields: signing up or changing it
     | { code: "sign-up-form" }
     // More text fields the entry has nothing for than a login has (a captcha)
-    | { code: "extra-fields"; fields: string[] };
+    | { code: "extra-fields"; fields: string[] }
+    // No password field, and the only sign of a login is a field called "email"
+    // or the like, which many other forms have too
+    | { code: "unsure-first-step" };
 
 export interface FormFit {
     // What the form offers for logging in, visible and reachable: a password

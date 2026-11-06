@@ -2,6 +2,16 @@ import { SiteConfig, Config, SiteConfigLookup, SiteConfigIndex } from "./config"
 import { defaultSiteConfig } from "./DefaultSiteConfig";
 
 export class ConfigMigrations {
+    public migrateToVersion9(current: Config) {
+        // A field called "name" is as often a person's or a group's name as a
+        // username, so it no longer makes a form without a password a login form.
+        // Stored configs hold their own copy of the built-in list.
+        const fields = current.siteConfig?.pageRegex?.["^.*$"]?.config?.whiteList?.fields;
+        if (fields?.names) fields.names = fields.names.filter(n => n !== "name");
+        if (fields?.ids) fields.ids = fields.ids.filter(id => id !== "name");
+        Object.assign(current, { version: 9 } as Partial<Config>);
+    }
+
     public migrateToVersion8(current: Config) {
         // This isn't reliable due to sync so we've deprecated the setting
         // and created a new one that requires no migration

@@ -835,6 +835,14 @@
         "message": "Dieses Formular hat weitere Felder, für die der Eintrag nichts enthält ($1). Es ist also wohl nicht nur eine Anmeldung, und KeeLink füllt es nicht von selbst aus.",
         "description": "Tooltip with the full explanation for autofill_blocked_extra_fields_short. $1 is a comma-separated list of the names or labels of those fields."
     },
+    "autofill_blocked_unsure_first_step_short": {
+        "message": "Evtl. keine Anmeldung",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the form has no password field and only a generic field name suggests a login. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_unsure_first_step": {
+        "message": "Dieses Formular hat kein Passwortfeld, und nur ein allgemeiner Feldname (z. B. E-Mail) deutet auf eine Anmeldung hin. KeeLink wartet daher, bis Sie den Eintrag auswählen.",
+        "description": "Tooltip with the full explanation for autofill_blocked_unsure_first_step_short."
+    },
     "all_sites_permissions_required": {
         "message": "Ihr Browser verlangt einen zusätzlichen Schritt, bevor KeeLink funktionieren kann. Klicken Sie auf „fortfahren“ und erlauben Sie KeeLink den Zugriff auf alle Webseiten, damit es Ihre Zugangsdaten ausfüllen kann.",
         "description": "Explains why the user must grant the all-sites permission on first install."

@@ -223,6 +223,8 @@ export default {
                     return $STR("autofill_blocked_sign_up_short");
                 case "extra-fields":
                     return $STR("autofill_blocked_extra_fields_short");
+                case "unsure-first-step":
+                    return $STR("autofill_blocked_unsure_first_step_short");
                 default:
                     return null;
             }
@@ -245,6 +247,8 @@ export default {
                     return $STR("autofill_blocked_sign_up");
                 case "extra-fields":
                     return $STRF("autofill_blocked_extra_fields", [(r.fields ?? []).join(", ")]);
+                case "unsure-first-step":
+                    return $STR("autofill_blocked_unsure_first_step");
                 default:
                     return null;
             }

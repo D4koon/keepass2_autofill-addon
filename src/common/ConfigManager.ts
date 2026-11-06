@@ -26,7 +26,7 @@ type SiteConfigNodeAndIndex = {
 */
 
 // increment when changes are introduced that require data migration
-export const LATEST_VERSION = 8;
+export const LATEST_VERSION = 9;
 
 export const defaultConfig = new Config();
 defaultConfig.autoFillDialogs = false;
@@ -222,6 +222,8 @@ export class ConfigManager {
                 migrations.migrateToVersion7(this.current);
             case 7:
                 migrations.migrateToVersion8(this.current);
+            case 8:
+                migrations.migrateToVersion9(this.current);
         }
         /* eslint-enable no-fallthrough */
         void this.save().catch(() => {});
@@ -309,6 +311,15 @@ export class ConfigManager {
 
     public siteConfigFor(url: string): SiteConfig {
         const matchedConfigNodes = this.findAllConfigsFor(url);
+        matchedConfigNodes.sort((node1, node2) => node2.matchWeight - node1.matchWeight);
+        return this.deriveConfigFromMatches(matchedConfigNodes);
+    }
+
+    // Like siteConfigFor, without the built-in defaults: what was set for this site
+    public ownSiteConfigFor(url: string): SiteConfig {
+        const matchedConfigNodes = this.findAllConfigsFor(url).filter(
+            node => node.source !== "Default"
+        );
         matchedConfigNodes.sort((node1, node2) => node2.matchWeight - node1.matchWeight);
         return this.deriveConfigFromMatches(matchedConfigNodes);
     }
@@ -616,18 +627,7 @@ export class ConfigManager {
 
         if (excluded) return false;
 
-        const includeFormIds = caseAwareMatch(conf?.whiteList?.form?.ids);
-        const includeFormNames = caseAwareMatch(conf?.whiteList?.form?.names);
-        const includeFieldIds = caseAwareMatch(conf?.whiteList?.fields?.ids);
-        const includeFieldNames = caseAwareMatch(conf?.whiteList?.fields?.names);
-
-        const included =
-            includeFormIds.indexOf(formId) >= 0 ||
-            includeFormNames.indexOf(formName) >= 0 ||
-            includeFieldIds.some(id => fieldIds.find(i => id === i) !== undefined) ||
-            includeFieldNames.some(name => fieldNames.find(n => name === n) !== undefined);
-
-        if (included) return true;
+        if (this.includeListMatch(form, conf, otherFields)) return true;
 
         // A field the site explicitly marks as a username is the first step of a
         // multi-step login (username page, then password page) even without a
@@ -637,6 +637,41 @@ export class ConfigManager {
         }
 
         return null;
+    }
+
+    // What of the form the Include List names, for the fill diagnosis as well;
+    // null if nothing
+    public includeListMatch(
+        form: HTMLFormElement,
+        conf: SiteConfig,
+        otherFields: Field[]
+    ): string | null {
+        const ic = conf.listMatchingCaseSensitive !== true;
+        const norm = (v: string) => (ic ? v?.toLowerCase() : v);
+        const listed = (values: string[]) => (values || []).map(norm).filter(Boolean);
+
+        const formId = this.normalizeFormProperty(form.id, ic);
+        if (listed(conf.whiteList?.form?.ids).includes(formId)) return `form id "${formId}"`;
+        const formName = this.normalizeFormProperty(form.name, ic);
+        if (listed(conf.whiteList?.form?.names).includes(formName)) {
+            return `form name "${formName}"`;
+        }
+
+        const ids = listed(conf.whiteList?.fields?.ids);
+        const names = listed(conf.whiteList?.fields?.names);
+        for (const field of otherFields) {
+            const id = norm(field.locators[0]?.id);
+            if (id && ids.includes(id)) return `field id "${id}"`;
+            const name = norm(field.locators[0]?.name);
+            if (name && names.includes(name)) return `field name "${name}"`;
+        }
+        return null;
+    }
+
+    // Whether more than the built-in list says this form is a login: this site's
+    // own Include List, or a field the site marks as a username
+    public siteVouchesForForm(form: HTMLFormElement, url: string, otherFields: Field[]) {
+        return this.isFormInteresting(form, this.ownSiteConfigFor(url), otherFields) === true;
     }
 
     public get activeTheme(): string {

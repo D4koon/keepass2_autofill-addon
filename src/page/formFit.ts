@@ -15,6 +15,9 @@ export type { FitBlocker, FormFit };
 // a captcha. A sign-up or profile form has more.
 export const MAX_EXTRA_FIELDS = 1;
 
+// Names of a username field that plenty of forms other than a login have too
+const GENERIC_FIELD_NAMES = ["email", "e-mail", "mail", "id"];
+
 interface FieldFacts {
     visible: boolean;
     reach: Reach;
@@ -30,7 +33,9 @@ export class FormFacts {
         readonly passwordFields: MatchedField[],
         readonly otherFields: MatchedField[],
         readonly usernameIndex: number | undefined,
-        deps: CandidateDeps
+        deps: CandidateDeps,
+        // The site's own Include List names the form, or it marks a username field
+        private readonly siteVouches = false
     ) {
         // Candidates for each entry ask again; answer from the same lookups
         this.deps = {
@@ -71,6 +76,15 @@ export class FormFacts {
         const guess = this.otherFields[this.usernameIndex];
         if (guess && guess.field?.type === "text" && this.couldTakeLogin(guess)) return "username";
         return null;
+    }
+
+    // Nothing but the guessed username field's generic name says this is a login
+    get isUnsureFirstStep(): boolean {
+        if (this.siteVouches || this.passwordFields.length > 0) return false;
+        const locator = this.otherFields[this.usernameIndex]?.field?.locators?.[0];
+        return [locator?.name, locator?.id].some(v =>
+            GENERIC_FIELD_NAMES.includes((v || "").toLowerCase())
+        );
     }
 
     get looksLikeSignUp(): boolean {
@@ -133,6 +147,9 @@ export function assessFit(entry: Entry, form: FormFacts): FormFit {
         );
         if (extra.length > MAX_EXTRA_FIELDS) {
             fit.blocker = { code: "extra-fields", fields: extra.map(describeField) };
+        } else if (form.isUnsureFirstStep && fit.storedMatches === 0) {
+            // An entry storing the field's name has been used on it before
+            fit.blocker = { code: "unsure-first-step" };
         }
     }
     return fit;
@@ -171,5 +188,7 @@ export function describeBlocker(blocker: FitBlocker): string {
             return "the form looks like a sign-up or change-password form (a new-password field, or two password fields)";
         case "extra-fields":
             return `the form has ${blocker.fields.length} other text fields the entry has nothing for (${blocker.fields.join(", ")}); a login has at most ${MAX_EXTRA_FIELDS}`;
+        case "unsure-first-step":
+            return "the form has no password field, and only a generic field name (such as email or id) suggests a login";
     }
 }

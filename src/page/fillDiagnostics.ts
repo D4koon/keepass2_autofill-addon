@@ -11,6 +11,9 @@ import { RULES, findCandidates, pairFields } from "./fieldRanking";
 import { MAX_EXTRA_FIELDS, describeBlocker } from "./formFit";
 import { isOneTimeCodeField, isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 import { Field } from "../common/model/Field";
+import { configManager } from "../common/ConfigManager";
+import { asksForTooMuchForFirstStep } from "./formScanner";
+import punycode from "punycode/";
 
 // The "why won't this entry fill here?" diagnosis, extracted verbatim from
 // FormFilling. It drives the real scan + scoring + force-fill pipeline through a
@@ -175,10 +178,11 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             const f = host.state.current.forms[i] as HTMLFormElement;
             const name = `Form #${i} (${f?.id || f?.name || "unnamed"})`;
             if (scannedIndexes.indexOf(i) !== -1) {
-                add(diag.ok(`${name}: treated as a login form.`));
+                add(diag.ok(`${name}: treated as a login form: ${whyLoginForm(i, f, host)}.`));
                 continue;
             }
             add(diag.warn(`${name}: NOT treated as a login form.`));
+            add(...whyNotFirstStep(f, host));
             add(...describeForm(f, host));
         }
 
@@ -196,7 +200,8 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
                 "Likely reasons:",
                 diag.bullet(
                     "The form has no password field (e.g. a two-step login that asks for " +
-                        "the username first) and none of its field names/ids are white-listed."
+                        "the username first) and none of its field names/ids are white-listed, " +
+                        `or it is a <form> with more than ${1 + MAX_EXTRA_FIELDS} text fields to fill in.`
                 ),
                 diag.bullet("The real form is in another iframe."),
                 diag.bullet("The form loads after this check ran."),
@@ -251,26 +256,41 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
                     "of a first step, before neither; then the most stored field names " +
                     "matched; then the first on the page. It is filled on its own unless it " +
                     "lacks a login field, looks like a sign-up form, or has more than " +
-                    `${MAX_EXTRA_FIELDS} other text field the entry has nothing for (an entry ` +
+                    `${MAX_EXTRA_FIELDS} other text field the entry has nothing for, or has no ` +
+                    "password field and only a generic field name such as email (an entry " +
                     "set to always auto-fill skips these checks). Otherwise the entry is only " +
                     "offered in the list."
             )
         );
 
-        // Force the fill of the best form regardless of the auto-fill threshold - this is
-        // the "try it here anyway" part. We never submit from a diagnosis.
-        add(diag.info("Force-filled the best form (ignoring these checks, never submitting)."));
-        host.state.current.UUID = null;
-        host.state.current.dbFileName = null;
-        host.state.current.formReadyForSubmit = false;
-        host.state.current.mustAutoFillForm = true;
-        host.state.current.mustAutoSubmitForm = false;
-        host.fillAndSubmit(false, best.bestFormIndex, 0, true);
+        // Without a password field this may be no login at all, and a diagnosis
+        // shouldn't type the username into a settings dialog
+        const mayFill = host.state.current.passwordFieldsArray[best.bestFormIndex]?.length > 0;
+        if (mayFill) {
+            // Force the fill of the best form regardless of the auto-fill threshold - this is
+            // the "try it here anyway" part. We never submit from a diagnosis.
+            add(diag.info("Force-filled the best form (ignoring these checks, never submitting)."));
+            host.state.current.UUID = null;
+            host.state.current.dbFileName = null;
+            host.state.current.formReadyForSubmit = false;
+            host.state.current.mustAutoFillForm = true;
+            host.state.current.mustAutoSubmitForm = false;
+            host.fillAndSubmit(false, best.bestFormIndex, 0, true);
+        } else {
+            add(
+                diag.info(
+                    "Not filled: the best form has no password field, so it may not be a login. " +
+                        "If it is, pick the entry in the popup to fill it."
+                )
+            );
+        }
 
-        const filled = [
-            ...(host.state.current.lastFilledOther || []),
-            ...(host.state.current.lastFilledPasswords || [])
-        ];
+        const filled = mayFill
+            ? [
+                  ...(host.state.current.lastFilledOther || []),
+                  ...(host.state.current.lastFilledPasswords || [])
+              ]
+            : [];
         add(...describeFilledForm(entry, best.bestFormIndex, filled, host));
 
         if (filled.length > 0) {
@@ -290,7 +310,7 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
                         "by the site's JavaScript."
                 )
             );
-        } else {
+        } else if (mayFill) {
             add(
                 diag.error("No fields were filled."),
                 "Common causes:",
@@ -311,6 +331,52 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
 
 function round(n: number) {
     return typeof n === "number" && isFinite(n) ? Math.round(n * 100) / 100 : n;
+}
+
+function pageUrl() {
+    const url = new URL(window.document.URL);
+    url.hostname = punycode.toUnicode(url.hostname);
+    return url.href;
+}
+
+// What made the scan take this form for a login form (formScanner.ts)
+function whyLoginForm(i: number, f: HTMLFormElement, host: FillDiagnosisHost): string {
+    const s = host.state.current;
+    if (s.passwordFieldsArray?.[i]?.length > 0) return "it has a password field";
+
+    const fields = (s.otherFieldsArray?.[i] || []).map(mf => mf.field);
+    const url = pageUrl();
+    const own = configManager.includeListMatch(f, configManager.ownSiteConfigFor(url), fields);
+    if (own) return `this site's Include List names its ${own}`;
+    if (fields.some(field => field.locators[0]?.autocompleteValues?.includes("username"))) {
+        return "a field has autocomplete=\"username\"";
+    }
+    const all = configManager.includeListMatch(f, configManager.siteConfigFor(url), fields);
+    return `the Include List for all websites names its ${all}`;
+}
+
+// Says so if the form was only turned down for asking too much of a first step
+function whyNotFirstStep(f: any, host: FillDiagnosisHost): string[] {
+    try {
+        if (!(f instanceof HTMLFormElement)) return [];
+        const { pwFields, otherFields } = host.formUtils.getFormFields(f, false, 50);
+        const fields = otherFields.map(mf => mf.field);
+        const conf = configManager.siteConfigFor(pageUrl());
+        const match = configManager.includeListMatch(f, conf, fields);
+        if (pwFields.length > 0 || !match) return [];
+        // Excluded forms are turned down for that reason instead
+        if (configManager.isFormInteresting(f, conf, fields) !== true) return [];
+        if (!asksForTooMuchForFirstStep(otherFields, host.formUtils)) return [];
+        return [
+            diag.bullet(
+                `The Include List names its ${match}, but it has no password field and more ` +
+                    `than ${1 + MAX_EXTRA_FIELDS} text fields to fill in: too many for the ` +
+                    "first step of a login."
+            )
+        ];
+    } catch (e) {
+        return [];
+    }
 }
 
 // Best-effort structural summary of a single form for the fill diagnosis.

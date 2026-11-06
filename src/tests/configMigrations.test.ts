@@ -64,6 +64,44 @@ describe("ConfigMigrations - per step", () => {
         m.migrateToVersion8(c);
         expect(c).toMatchObject({ version: 8, overWriteFieldsAutomatically: false });
     });
+
+    it("v9 takes name off the built-in Include List only, keeping what the user added", () => {
+        const fields = () => ({ names: ["username", "name", "mine"], ids: ["name", "email"] });
+        const c = cfg({
+            version: 8,
+            siteConfig: {
+                pageRegex: {
+                    "^.*$": {
+                        config: { whiteList: { fields: fields() } },
+                        matchWeight: 0,
+                        source: "Default"
+                    }
+                },
+                hostExact: {
+                    "example.com": {
+                        config: { whiteList: { fields: fields() } },
+                        matchWeight: 100,
+                        source: "User"
+                    }
+                }
+            }
+        } as unknown as Partial<Config>);
+
+        m.migrateToVersion9(c);
+
+        expect(c.version).toBe(9);
+        expect(c.siteConfig.pageRegex["^.*$"].config.whiteList.fields).toEqual({
+            names: ["username", "mine"],
+            ids: ["email"]
+        });
+        expect(c.siteConfig.hostExact["example.com"].config.whiteList.fields).toEqual(fields());
+    });
+
+    it("v9 copes with a config without site settings", () => {
+        const c = cfg({ version: 8 });
+        m.migrateToVersion9(c);
+        expect(c.version).toBe(9);
+    });
 });
 
 describe("ConfigMigrations - full chain via ConfigManager.load()", () => {
