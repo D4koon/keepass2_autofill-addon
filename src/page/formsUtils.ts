@@ -323,7 +323,26 @@ export class FormUtils {
     }
 
     // Fast existence check for the mutation observer's "is this worth a rescan?"
+    // The selectors go in as one list, so a subtree without a match is searched
+    // once rather than once per selector. Its shadow roots come from the page's
+    // cached list while that is fresh, rather than from walking `root` again:
+    // pages that keep toggling classes on a big wrapper would otherwise have
+    // the whole wrapper listed on every change.
     public deepContains(root: ParentNode, selectors: string[]): boolean {
+        if (this.queryAny(root, selectors)) return true;
+        for (const sr of this.openShadowRootsUnder(root)) {
+            if (this.queryAny(sr, selectors)) return true;
+        }
+        return false;
+    }
+
+    private queryAny(root: ParentNode, selectors: string[]): boolean {
+        try {
+            return !!root.querySelector(selectors.join(","));
+        } catch (e) {
+            // One selector the browser doesn't know spoils the whole list; try
+            // them one by one
+        }
         for (const s of selectors) {
             try {
                 if (root.querySelector(s)) return true;
@@ -331,16 +350,28 @@ export class FormUtils {
                 /* ignore */
             }
         }
-        for (const sr of this.getOpenShadowRoots(root)) {
-            for (const s of selectors) {
-                try {
-                    if (sr.querySelector(s)) return true;
-                } catch (e) {
-                    /* ignore */
-                }
-            }
-        }
         return false;
+    }
+
+    // The open shadow roots at or below `root`: from the page's list if that
+    // is still fresh, else by walking `root`
+    private openShadowRootsUnder(root: ParentNode): ShadowRoot[] {
+        const doc = (root as Node).ownerDocument ?? (root as Document);
+        if (root === doc || root === doc.body) return this.getOpenShadowRoots(doc);
+        const cache = this.shadowRootCache;
+        if (!cache || cache.root !== doc || cache.generation !== this.shadowGeneration) {
+            return this.walkOpenShadowRoots(root);
+        }
+        const node = root as Node;
+        return cache.roots.filter(sr => {
+            // Its host, or the host of a shadow root it sits in, is in `root`
+            for (let host: Element = sr.host; host; ) {
+                if (node.contains(host)) return true;
+                const r = host.getRootNode();
+                host = r instanceof ShadowRoot ? r.host : null;
+            }
+            return false;
+        });
     }
 
     // A form's fields, including inputs inside open shadow roots of elements in

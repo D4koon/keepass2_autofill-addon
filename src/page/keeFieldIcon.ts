@@ -24,6 +24,14 @@ const HOST_ATTR = "data-keelink-icon";
 // the site wants it gone
 const MAX_REATTACH = 3;
 
+function pageRectKey(r: DOMRect): string {
+    return `${r.left + window.scrollX},${r.top + window.scrollY},${r.width},${r.height}`;
+}
+
+function isIconHost(node: Node): boolean {
+    return node instanceof Element && node.hasAttribute(HOST_ATTR);
+}
+
 type SavedStyle = { element: HTMLElement; property: string; value: string; priority: string };
 
 // The element that draws the field. Usually the input itself, but a
@@ -126,8 +134,15 @@ export class KeeFieldIcon {
     // Is this mutation just our own style change on a field? The page's mutation
     // observer must not rescan for it: a rescan redraws the icons, which changes
     // the style again, and the icons and field text flicker in a loop
+    // So is anything on the icons themselves: adding or removing one, moving it
+    // (its style) or showing it (its class).
     public isOwnMutation(mutation: MutationRecord): boolean {
         const target = mutation.target as Element;
+        if (isIconHost(target)) return true;
+        if (mutation.type === "childList") {
+            const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+            return nodes.length > 0 && nodes.every(isIconHost);
+        }
         return (
             mutation.type === "attributes" &&
             mutation.attributeName === "style" &&
@@ -346,8 +361,9 @@ export class KeeFieldIcon {
             return;
         }
 
-        const rectKey = `${rect.left},${rect.top},${rect.width},${rect.height},${window.scrollX},${window.scrollY}`;
-        if (rectKey === icon.lastRect) return;
+        // Where the field is on the page: scrolling the page doesn't change that,
+        // and so costs nothing; the icon scrolls along by itself
+        if (pageRectKey(rect) === icon.lastRect) return;
 
         // Only re-check which side is free when the field changes size, not on every scroll
         const sizeKey = `${rect.width},${rect.height}`;
@@ -358,7 +374,7 @@ export class KeeFieldIcon {
 
         // Applying the side may have changed the field's padding, so measure again
         const r = element.getBoundingClientRect();
-        icon.lastRect = `${r.left},${r.top},${r.width},${r.height},${window.scrollX},${window.scrollY}`;
+        icon.lastRect = pageRectKey(r);
         const x = icon.side === "left" ? r.left + ICON_INSET : r.right - ICON_INSET - ICON_SIZE;
         const y = r.top + (r.height - ICON_SIZE) / 2;
         const left = x + window.scrollX;

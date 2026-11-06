@@ -71,6 +71,22 @@ const MUTATION_OBSERVER_OPTIONS: MutationObserverInit = {
     attributeFilter: ["style", "class", "hidden", "type"]
 };
 
+// Only a newly added <form> or a text-like input is worth a full rescan +
+// KeePassRPC round-trip. Ignoring range/checkbox/radio/hidden/submit inputs
+// stops dashboards (e.g. Home Assistant) that constantly re-render such
+// controls - now also visible inside shadow DOM - from thrashing the scanner.
+const interestingNodes = [
+    "form",
+    'input[type="password"]',
+    'input[type="text"]',
+    'input[type="email"]',
+    'input[type="tel"]',
+    'input[type="url"]',
+    'input[type="number"]',
+    "input:not([type])"
+];
+const INTERESTING_NODES_SELECTOR = interestingNodes.join(",");
+
 function resetRescanBackoff() {
     rescanCount = 0;
 }
@@ -79,10 +95,14 @@ function resetRescanBackoff() {
 // We have no interest in this document if it has no body Node
 if (document.body) {
 
-    inputsObserver = new MutationObserver((mutations, observer) => {
+    inputsObserver = new MutationObserver((allMutations, observer) => {
         // The observer can be armed (from pageshow) before onFirstConnect has
         // wired everything up, and stays armed briefly during pagehide teardown.
         if (!formFilling || !formUtils || !store) return;
+
+        // Our own field icons coming, going and following their fields
+        const mutations = allMutations.filter(m => !formFilling.isOwnMutation(m));
+        if (mutations.length === 0) return;
 
         // A structural change may have added or removed a shadow host, so the
         // cached list of open shadow roots can no longer be trusted. Cheap.
@@ -111,24 +131,8 @@ if (document.body) {
         if (!store?.state.connected || store?.state.ActiveKeePassDatabaseIndex < 0) return;
 
         let rescan = false;
-        // Only a newly added <form> or a text-like input is worth a full rescan +
-        // KeePassRPC round-trip. Ignoring range/checkbox/radio/hidden/submit inputs
-        // stops dashboards (e.g. Home Assistant) that constantly re-render such
-        // controls - now also visible inside shadow DOM - from thrashing the scanner.
-        const interestingNodes = [
-            "form",
-            'input[type="password"]',
-            'input[type="text"]',
-            'input[type="email"]',
-            'input[type="tel"]',
-            'input[type="url"]',
-            'input[type="number"]',
-            "input:not([type])"
-        ];
         mutations.forEach(mutation => {
             if (rescan) return;
-            // Our own field icon making room for itself
-            if (formFilling.isOwnMutation(mutation)) return;
             if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                 for (const node of mutation.addedNodes) {
                     if (rescan) break;
@@ -138,7 +142,7 @@ if (document.body) {
                     // subtree carries, so web-component forms trigger a rescan too.
                     if (
                         formUtils.deepContains(element, interestingNodes) ||
-                        (element.matches && element.matches(interestingNodes.join(",")))
+                        (element.matches && element.matches(INTERESTING_NODES_SELECTOR))
                     ) {
                         rescan = true;
                         break;
@@ -161,7 +165,7 @@ if (document.body) {
                 const isDocumentRoot =
                     element === document.documentElement || element === document.body;
                 if (
-                    (element.matches && element.matches(interestingNodes.join(","))) ||
+                    (element.matches && element.matches(INTERESTING_NODES_SELECTOR)) ||
                     (!isDocumentRoot &&
                         typeof element.querySelector === "function" &&
                         formUtils.deepContains(element, interestingNodes))

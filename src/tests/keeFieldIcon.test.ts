@@ -147,6 +147,50 @@ describe("KeeFieldIcon", () => {
         expect(records.filter(r => r.target === user).some(r => icon.isOwnMutation(r))).toBe(false);
     });
 
+    it("counts adding, moving and removing its icons as its own changes", async () => {
+        const { icon } = setup();
+        const user = makeInput("user");
+        const records: MutationRecord[] = [];
+        const observer = new MutationObserver(m => records.push(...m));
+        observer.observe(document.body, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["style", "class"]
+        });
+        const flush = () => new Promise(r => setTimeout(r, 0));
+
+        icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
+        rect = { ...RECT, left: 150, right: 350 };
+        window.dispatchEvent(new Event("scroll"));
+        icon.removeKeeIconFromAllFields();
+        await flush();
+        expect(records.some(r => r.type === "childList")).toBe(true);
+        expect(records.every(r => icon.isOwnMutation(r))).toBe(true);
+
+        // The site's own nodes still count
+        document.body.appendChild(document.createElement("form"));
+        await flush();
+        observer.disconnect();
+        expect(icon.isOwnMutation(records[records.length - 1])).toBe(false);
+    });
+
+    it("leaves the icon alone while the page scrolls", () => {
+        const { icon } = setup();
+        const user = makeInput("user");
+        icon.addKeeIconToFields([], [matched(user)], ONE_ENTRY);
+        const host = overlays()[0];
+        const set = vi.spyOn(host.style, "setProperty");
+
+        // The field moves up in the window by exactly as far as the page scrolled
+        vi.stubGlobal("scrollY", 40);
+        rect = { ...RECT, top: RECT.top - 40, bottom: RECT.bottom - 40 };
+        window.dispatchEvent(new Event("scroll"));
+
+        expect(set).not.toHaveBeenCalled();
+        expect(host.style.getPropertyValue("--keelink-icon-top")).toBe(RECT.top + (30 - 16) / 2 + "px");
+    });
+
     it("does not stack icons when called again", () => {
         const { icon } = setup();
         const user = makeInput("user");

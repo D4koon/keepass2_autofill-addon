@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormUtils } from "../page/formsUtils";
 
 const logger = { debug() {}, info() {}, warn() {}, error() {} };
@@ -95,6 +95,51 @@ describe("FormUtils shadow-DOM traversal", () => {
 
         expect(u.getOpenShadowRoots(document)).toBe(page);
         expect(u.getOpenShadowRoots(document.body)).toBe(page);
+    });
+
+    it("deepContains searches a subtree once for all selectors", () => {
+        document.body.innerHTML = "<div id=\"changed\"><span></span></div>";
+        const changed = document.getElementById("changed")!;
+        const spy = vi.spyOn(changed, "querySelector");
+
+        expect(fu().deepContains(changed, ["form", 'input[type="password"]', "input"])).toBe(false);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it("deepContains still works when one selector is unknown", () => {
+        document.body.innerHTML = "<div id=\"changed\"><input></div>";
+
+        expect(fu().deepContains(document.getElementById("changed")!, ["::nonsense(", "input"])).toBe(true);
+    });
+
+    it("deepContains takes the shadow roots from the page's fresh list instead of walking", () => {
+        document.body.innerHTML =
+            "<div id=\"changed\"><x-outer></x-outer></div><x-other></x-other>";
+        const outer = shadow(document.querySelector("x-outer")!, "<x-inner></x-inner>");
+        shadow(outer.querySelector("x-inner")!, "<input id=\"pass\" type=\"password\">");
+        shadow(document.querySelector("x-other")!, "<input id=\"elsewhere\" type=\"text\">");
+        const u = fu();
+        u.getOpenShadowRoots(document);
+        const changed = document.getElementById("changed")!;
+        const walk = vi.spyOn(changed, "querySelectorAll");
+
+        expect(u.deepContains(changed, ['input[type="password"]'])).toBe(true);
+        // x-other's input is in the page's list but not under #changed
+        expect(u.deepContains(changed, ['input[type="text"]'])).toBe(false);
+        expect(walk).not.toHaveBeenCalled();
+    });
+
+    it("deepContains walks the subtree when the page's list is stale", () => {
+        document.body.innerHTML = "<div id=\"changed\"></div>";
+        const u = fu();
+        u.getOpenShadowRoots(document);
+        const changed = document.getElementById("changed")!;
+        changed.innerHTML = "<x-new></x-new>";
+        shadow(changed.querySelector("x-new")!, "<input type=\"password\">");
+        u.invalidateShadowCache();
+
+        expect(u.deepContains(changed, ['input[type="password"]'])).toBe(true);
     });
 
     it("finds shadow inputs of a form, also in nested shadow roots, via the page's list", () => {
