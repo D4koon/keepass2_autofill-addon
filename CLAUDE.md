@@ -27,7 +27,7 @@ npx playwright install chromium firefox      # one-time, before the first browse
 npx vitest run src/tests/keeUrl.test.ts      # single file
 npx vitest run -t "name of test"             # single test by name
 npm run test:coverage    # unit tests only
-npm run bench            # benchmarks of the content script's hot paths (jsdom); not part of npm test
+npm run bench            # benchmarks of the content script's hot paths, in Chromium + Firefox; not part of npm test
 ```
 
 Before a release or PR, run `tsc`, `lint` and `test`. The VS Code task **Kee: Dev (watch + Firefox)** in `.vscode/tasks.json` combines the watch build and the Firefox launch.
@@ -93,12 +93,12 @@ There are two vitest projects (see `test.projects` in `vite.config.ts`):
 - `unit`: everything in `src/tests/` except `src/tests/browser/`. jsdom tests opt in with `// @vitest-environment jsdom`.
 - `browser`: `src/tests/browser/**`, run in real headless Chromium and Firefox via `@vitest/browser` + Playwright. Use it for code that depends on layout, the CSS cascade or hit-testing (`getBoundingClientRect`, `elementsFromPoint`, shadow DOM styling), which jsdom does not do — e.g. the field icon overlay. Each test builds a small fixture page reproducing a real-site layout. Known unfixed gaps are written as `it.fails`; flip them to `it` when fixed.
 
-**Benchmarks.** `src/tests/bench/page.bench.ts` measures the scan, the shadow-root walk, form fields and the page observer's checks on a large synthetic page (`bench/busyPage.ts`). When a change touches `src/page/` code that runs on every scan or DOM change, measure it rather than guessing:
+**Benchmarks.** `src/tests/browser/bench/page.bench.ts` runs in real Chromium and Firefox (the browser project; the unit project runs no benchmarks). It measures the scan, the shadow-root walk, form fields and the page observer's checks on a large synthetic page (`bench/busyPage.ts`). When a change touches `src/page/` code that runs on every scan or DOM change, measure it rather than guessing:
 1. Run `npm run bench -- --outputJson bench-before.json` on the old code (e.g. after `git stash`).
 2. Run `npm run bench -- --compare bench-before.json` on the new code.
 3. Report the difference. The JSON file lands in `src/` (vitest's root) and is git-ignored.
 
-The numbers are jsdom's: compare runs with each other, not with real browsers. Its selector engine is much slower in places. Layout-dependent code (icon and panel positioning) isn't covered. Performance checks that must hold belong in the unit tests as counts (how often something is searched or scheduled, as in `rescanTrigger.test.ts`), never as timings.
+Runs on unchanged code differ by about ±30%, sometimes up to 2×, so trust only larger differences that hold over a repeat run. Don't benchmark in jsdom: its DOM is far slower than a browser's in places (a scan took about 200× longer, nearly all of it in jsdom's HTML collections), so a jsdom profile points at the wrong code. Layout-dependent code (icon and panel positioning) isn't covered. Performance checks that must hold belong in the unit tests as counts (how often something is searched or scheduled, as in `rescanTrigger.test.ts`), never as timings.
 
 ## Conventions
 

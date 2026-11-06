@@ -1,17 +1,16 @@
-// @vitest-environment jsdom
-//
-// Benchmarks for the content script's hot paths on a large page. Not tests:
-// they never fail, they measure. Run before and after a change to src/page/:
+// Benchmarks for the content script's hot paths on a large page, in real
+// Chromium and Firefox. Not tests: they never fail, they measure. Run before
+// and after a change to src/page/:
 //
 //   npm run bench -- --outputJson bench-before.json    (on the old code)
 //   npm run bench -- --compare bench-before.json       (on the new code)
 //
-// Numbers are jsdom's, whose selector engine is far slower than a browser's
-// in places, so compare runs with each other, not with real-world timings.
+// Firefox rounds its clock to 1 ms (Chromium to 0.1 ms), so single samples of
+// fast cases read 0 or 1; the mean over many samples is still meaningful.
 import { bench, describe } from "vitest";
-import { FormUtils } from "../../page/formsUtils";
-import { isStructural, MUTATION_OBSERVER_OPTIONS, wantsRescan } from "../../page/rescanTrigger";
-import { createHarness, makeEntry, type Harness } from "../helpers/formFillingHarness";
+import { FormUtils } from "../../../page/formsUtils";
+import { isStructural, MUTATION_OBSERVER_OPTIONS, wantsRescan } from "../../../page/rescanTrigger";
+import { createHarness, makeEntry, type Harness } from "../../helpers/formFillingHarness";
 import { attachShadowRoots, buildBusyPage, busyPageHtml } from "./busyPage";
 
 const logger = { debug() {}, info() {}, warn() {}, error() {} };
@@ -32,21 +31,18 @@ function recordsOf(change: () => void): MutationRecord[] {
 }
 
 describe("form scan and matching", () => {
-    // A scan of the whole page takes long in jsdom, so take fewer samples
-    const few = { iterations: 5, warmupIterations: 1, time: 0, warmupTime: 0 };
     let h: Harness;
     const setup = () => {
         h = createHarness(busyPageHtml());
         attachShadowRoots();
     };
 
-    bench("full scan and match of the page", () => h.run([ENTRY]), { ...few, setup });
+    bench("full scan and match of the page", () => h.run([ENTRY]), { setup });
 
     bench(
         "rescan of an unchanged page",
         () => h.formFilling.findMatchesInThisFrame({}, true),
         {
-            ...few,
             setup: () => {
                 setup();
                 h.run([ENTRY]);

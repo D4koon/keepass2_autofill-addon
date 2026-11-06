@@ -144,6 +144,8 @@ export default defineConfig(({ command }) => ({
                 test: {
                     name: "unit",
                     include: ["tests/**/*.test.ts"],
+                    // Benchmarks run in real browsers only; see the browser project
+                    benchmark: { include: [] },
                     exclude: ["tests/browser/**"]
                 }
             },
@@ -154,6 +156,9 @@ export default defineConfig(({ command }) => ({
                 test: {
                     name: "browser",
                     include: ["tests/browser/**/*.test.ts"],
+                    // npm run bench. jsdom's DOM is far slower than a browser's in
+                    // places (a scan took ~200x longer), so its numbers mislead.
+                    benchmark: { include: ["tests/browser/bench/**/*.bench.ts"] },
                     browser: {
                         enabled: true,
                         provider: "playwright",
