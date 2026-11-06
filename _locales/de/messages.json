@@ -772,8 +772,8 @@
         "description": ""
     },
     "diagnose_fill_here": {
-        "message": "Warum wird hier nichts ausgefüllt?",
-        "description": "Button shown on a search-box entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports why it does or does not fill the credentials."
+        "message": "Prüfen, wie hier ausgefüllt wird",
+        "description": "Button in the expanded details of an entry in the popup. Runs the chosen entry through the form-matching pipeline on the current page and reports which fields it finds and fills, and why."
     },
     "autofill_status_fills_here": {
         "message": "Wird hier automatisch ausgefüllt",

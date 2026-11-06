@@ -305,6 +305,68 @@ describe("fill diagnosis", () => {
         expect(h.fieldValue("u")).toBe("alice");
         expect(h.fieldValue("p")).toBe("s3cret");
     });
+
+    // Like the Proxmox VE login (ExtJS): no <form>, generated ids, read-only
+    // dropdown inputs, and the app's own search box elsewhere on the page
+    const LOOSE_LOGIN = `
+        <div class="header"><input type="text" id="textfield-1010-inputEl" name="filter" placeholder="Search"></div>
+        <div class="login-window">
+            <label for="textfield-1031-inputEl">User name:</label>
+            <input type="text" id="textfield-1031-inputEl" name="username" aria-label="User name">
+            <label for="textfield-1032-inputEl">Password:</label>
+            <input type="password" id="textfield-1032-inputEl" name="password">
+            <input type="text" id="combo-1033-inputEl" name="realm" readonly value="pam">
+            <input type="checkbox" id="checkbox-1035-inputEl">
+        </div>`;
+    // As KeePass stores most entries: no field name or id to match against
+    const UNNAMED_ENTRY = () =>
+        makeEntry([
+            { type: "text", value: "user-value-7f3a", name: "" },
+            { type: "password", value: "pass-value-9c1e", name: "" }
+        ]);
+
+    it("lists every field of the filled form with its scores and what was filled", () => {
+        const h = createHarness(LOOSE_LOGIN);
+        h.formFilling.diagnoseFillForEntry(UNNAMED_ENTRY());
+        const lines = report(h);
+
+        const start = lines.findIndex(l => l.startsWith("## Fields of form #"));
+        expect(start).toBeGreaterThan(-1);
+        const fields = lines.slice(start + 1).filter(l => l.startsWith("- #"));
+        const field = (name: string) => fields.find(l => l.includes(`name="${name}"`));
+
+        // (jsdom has no innerText, so <label> texts are missing here; aria-label works)
+        expect(field("username")).toContain('label="user name"');
+        expect(field("username")).toContain("detected as the username field");
+        expect(field("realm")).toContain("read-only");
+        expect(field("filter")).toMatch(/scores: "text" \d+/);
+        expect(field("password")).toContain("FILLED");
+        // Exactly one text field got the username, and the report says which
+        const filledText = fields.filter(l => l.startsWith("- #") && l.includes("FILLED") && !l.includes("password"));
+        expect(filledText).toHaveLength(1);
+        expect(lines.join("\n")).not.toContain("user-value-7f3a");
+        expect(lines.join("\n")).not.toContain("pass-value-9c1e");
+    });
+
+    it("never puts field values into the report", () => {
+        // A form that isn't a login form gets an HTML excerpt in the report
+        const h = createHarness(`
+            <form id="profile"><input type="text" name="city" value="Springfield"><input type='text' value='42 Main St'></form>
+            <form id="loginForm"><input name="username" type="text"><input name="password" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(
+            makeEntry([
+                { type: "text", value: "alice", name: "username" },
+                { type: "password", value: "s3cret", name: "password" }
+            ])
+        );
+        const text = report(h).join("\n");
+
+        expect(text).toContain('name="city"');
+        expect(text).not.toContain("Springfield");
+        expect(text).not.toContain("42 Main St");
+        expect(text).not.toContain("alice");
+        expect(text).not.toContain("s3cret");
+    });
 });
 
 describe("field filling", () => {

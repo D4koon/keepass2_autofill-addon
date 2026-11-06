@@ -5,6 +5,8 @@ import { FormUtils } from "./formsUtils";
 import { KeeLogger } from "../common/Logger";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { diag } from "../common/diagnosisReport";
+import { MatchedField } from "./MatchedField";
+import { Field } from "../common/model/Field";
 
 // The "why won't this entry fill here?" diagnosis, extracted verbatim from
 // FormFilling. It drives the real scan + scoring + force-fill pipeline through a
@@ -34,6 +36,8 @@ export interface FillDiagnosisHost {
         entryIndex?: number,
         noSubmit?: boolean
     ): void;
+    // How well `dataField` of `entry` suits `formField`, as the fill scores it
+    fieldMatchScore(formField: MatchedField, dataField: Field, entry: Entry): number;
 }
 
 export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
@@ -73,9 +77,9 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             (entry as { matchAccuracy: number }).matchAccuracy = 0;
             add(
                 diag.info(
-                    "Reached via search, not URL matching. It only appears in the automatic " +
-                        "matches list if one of its URLs covers this page (per its match " +
-                        "accuracy setting)."
+                    "Looked up directly, so URL matching played no part in this check. The " +
+                        "entry only appears in the automatic matches list if one of its URLs " +
+                        "covers this page (per its match accuracy setting)."
                 )
             );
         }
@@ -244,6 +248,8 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             ...(host.state.current.lastFilledOther || []),
             ...(host.state.current.lastFilledPasswords || [])
         ];
+        add(...describeFilledForm(entry, best.bestFormIndex, filled, host));
+
         if (filled.length > 0) {
             const names = filled
                 .map(
@@ -306,6 +312,8 @@ function describeForm(f: any, host: FillDiagnosisHost): string[] {
                 .map(k => `${k}×${tags[k]}`)
                 .join(", ") || "none";
         const html = (f && f.outerHTML ? String(f.outerHTML) : "")
+            // Never pass on what is in the fields
+            .replace(/\svalue\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
             .replace(/\s+/g, " ")
             .slice(0, 300);
         const lines = [
@@ -321,6 +329,98 @@ function describeForm(f: any, host: FillDiagnosisHost): string[] {
             )
         ];
     }
+}
+
+const MAX_FIELDS_LISTED = 30;
+
+// Every field of the form that was filled: what it is, how well each of the
+// entry's fields suits it, which one was taken as the username and what was
+// filled. This is what tells why the wrong field got the username. Names,
+// ids and labels only - never values.
+function describeFilledForm(
+    entry: Entry,
+    formIndex: number,
+    filled: { DOMelement: HTMLInputElement | HTMLSelectElement }[],
+    host: FillDiagnosisHost
+): string[] {
+    try {
+        const s = host.state.current;
+        const filledEls = new Set(filled.map(f => f.DOMelement));
+        const usernameIndex = s.usernameIndexArray?.[formIndex];
+        const groups: [MatchedField[], Field[], boolean][] = [
+            [
+                s.otherFieldsArray?.[formIndex] || [],
+                entry.fields.filter(f => f.type !== "password"),
+                true
+            ],
+            [
+                s.passwordFieldsArray?.[formIndex] || [],
+                entry.fields.filter(f => f.type === "password"),
+                false
+            ]
+        ];
+        const lines = [diag.heading(`Fields of form #${formIndex}`)];
+        let n = 0;
+        for (const [formFields, dataFields, isOther] of groups) {
+            formFields.forEach((mf, i) => {
+                if (!mf || n >= MAX_FIELDS_LISTED) return;
+                const parts = [describeField(mf, host)];
+                const scores = dataFields.map(
+                    d => `${entryFieldName(d)} ${round(host.fieldMatchScore(mf, d, entry))}`
+                );
+                if (scores.length) parts.push("scores: " + scores.join(", "));
+                if (isOther && i === usernameIndex) parts.push("detected as the username field");
+                parts.push(filledEls.has(mf.DOMelement) ? "FILLED" : "not filled");
+                lines.push(diag.bullet(`#${n} ` + parts.join("; ")));
+                n++;
+            });
+        }
+        const total = groups.reduce((sum, [f]) => sum + f.length, 0);
+        if (total > n) lines.push(diag.info(`${total - n} more field(s) not listed.`));
+        if (total === 0) lines.push(diag.info("The form has no fields Kee could fill."));
+        lines.push(
+            diag.info(
+                "Scores: 1 to start, +50 if the id matches the entry field's, +40 if the name " +
+                    "does, +35 if the field is visible; 0 if the types don't fit. Each entry " +
+                    "field goes to its best-scoring page field; a tie goes to the one that " +
+                    "comes first on the page."
+            )
+        );
+        return lines;
+    } catch (e) {
+        return [
+            diag.warn(
+                "Could not list the form's fields (" + (e && e.message ? e.message : e) + ")."
+            )
+        ];
+    }
+}
+
+function describeField(mf: MatchedField, host: FillDiagnosisHost): string {
+    const el = mf.DOMelement as HTMLInputElement;
+    const locator = mf.field?.locators?.[0];
+    const quote = (v: string) => `"${v.length > 40 ? v.slice(0, 40) + "…" : v}"`;
+    const parts = [(el.type || locator?.type || el.localName || "?").toLowerCase()];
+    if (el.name) parts.push("name=" + quote(el.name));
+    if (el.id) parts.push("id=" + quote(el.id));
+    const label = locator?.labels?.[0];
+    if (label) parts.push("label=" + quote(label));
+    if (el.autocomplete) parts.push("autocomplete=" + quote(el.autocomplete));
+    let visible: boolean | undefined;
+    try {
+        visible = host.formUtils.isDOMElementVisible(el);
+    } catch {
+        visible = undefined;
+    }
+    parts.push(visible === undefined ? "visibility unknown" : visible ? "visible" : "hidden");
+    if (el.readOnly) parts.push("read-only");
+    if (el.disabled) parts.push("disabled");
+    if (el.getRootNode() instanceof ShadowRoot) parts.push("in shadow DOM");
+    return parts.join(" ");
+}
+
+function entryFieldName(f: Field): string {
+    return `"${f.name || f.locators?.[0]?.name || f.locators?.[0]?.id || f.type}"`;
 }
 
 // Frame-wide field picture: catches the common cases where the form Kee found is

@@ -77,7 +77,15 @@ function notifyDiagnoseFill(lines: string[]) {
             "kee-diagnose-fill",
             [],
             utils.newGUID(),
-            [diag.title("Fill diagnosis"), ...lines],
+            [
+                diag.title("Fill diagnosis"),
+                // So people know what they share when they copy it
+                diag.info(
+                    "Contains the page address, the entry's title, UUID and URLs, and the " +
+                        "names, ids and labels of form fields. Never field values or passwords."
+                ),
+                ...lines
+            ],
             "Medium"
         )
     );

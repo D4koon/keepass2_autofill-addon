@@ -86,8 +86,9 @@ location="top" :disabled="!entryPathIsLong"
                                 </v-sheet>
 
                                 <v-sheet class="ma-2 shrink" style="display: flex; column-gap: 4px;">
+                                    <!-- Only in the expanded details, so the list stays quiet -->
                                     <v-btn
-v-if="isSearchResult" size="small" location="bottom left"
+size="small" location="bottom left"
                                         icon="mdi-help-circle-outline" :title="$i18n('diagnose_fill_here')"
                                         @click="diagnoseFillHere">
                                     </v-btn>
@@ -190,11 +191,6 @@ export default {
         isMatchedEntry: function () {
             const e = this.entrySummary as EntrySummary;
             return typeof e.isPreferredMatch === "boolean";
-        },
-        isSearchResult: function () {
-            // No entryIndex means this came from the search box rather than the
-            // automatically matched list, so a click navigates instead of filling.
-            return this.entryIndex === undefined || this.entryIndex === null;
         },
         autoFillReasonBlocked: function () {
             const e = this.entrySummary as EntrySummary;
