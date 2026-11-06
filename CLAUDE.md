@@ -124,7 +124,8 @@ Each run:
 Consequences:
 - Because of the version commit, local `master` falls behind after every push: `git pull` before working on or pushing anything else.
 - Don't push the same commits to `master` and a `release/*` branch together: both runs compute the same version and one of them fails.
-- After a `release/*` run, its version commit is only on that branch; merge it into `master`.
+- After a `release/*` run, its version commit is only on that branch; merge it into `master` (`git merge origin/release/x.y.z`). If that is forgotten, the next `master` run computes a version whose tag already exists and fails at "Create git tag" (this happened with 1.0.12).
+- Before pushing to `master`, run `git fetch --tags` and check that `git describe --tags --abbrev=0` (the last tag reachable from `master`) is the newest tag in `git tag --sort=-v:refname | head -1`. If a newer tag exists, merge the `release/*` branch it came from first.
 - Don't hand-edit `version` for a release.
 
 `TODO.md` lists the outstanding work for Firefox auto-updates (`update_url`).
