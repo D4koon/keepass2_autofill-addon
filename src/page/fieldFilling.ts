@@ -18,17 +18,32 @@ interface ScoreMatrix {
 export interface FieldFillingDeps {
     logger: KeeLogger;
     scoringDeps: ScoringDeps;
+    // Whether something else on the page lies over the field (see fieldCover.ts)
+    isCoveredBySite(element: HTMLElement): boolean;
 }
 
 // Highest score first. Ties - common when the entry has no field names or ids,
 // so every visible text field scores the same - go to editable fields, then to
-// the field the scanner took as the username, then to the one that comes first
-// on the page (the sort is stable). Otherwise a site's search box above the
-// login form gets the username, as on Proxmox.
-function byScore(formFields: MatchedField[], preferredFormFieldIndex: number | undefined) {
+// ones nothing else on the page lies over, then to the field the scanner took
+// as the username, then to the one that comes first on the page (the sort is
+// stable). Otherwise a site's search box gets the username, as on Proxmox,
+// where it sits behind the mask of the login window.
+function byScore(
+    formFields: MatchedField[],
+    preferredFormFieldIndex: number | undefined,
+    deps: FieldFillingDeps
+) {
+    // 0 usable, 1 covered, 2 read-only or disabled. Hit-testing forces a layout,
+    // so each field is looked at once.
+    const reach = new Map<number, number>();
     const locked = (i: number) => {
-        const el = formFields[i]?.DOMelement as HTMLInputElement | undefined;
-        return el && (el.readOnly || el.disabled) ? 1 : 0;
+        let r = reach.get(i);
+        if (r === undefined) {
+            const el = formFields[i]?.DOMelement as HTMLInputElement | undefined;
+            r = !el ? 0 : el.readOnly || el.disabled ? 2 : deps.isCoveredBySite(el) ? 1 : 0;
+            reach.set(i, r);
+        }
+        return r;
     };
     return (a: ScoreMatrix, b: ScoreMatrix) =>
         b.score - a.score ||
@@ -61,7 +76,7 @@ function fillMatchedFields(
     // The above algorithm could maybe be tweaked slightly in order to auto-fill
     // a "change password" form if we ever manage to make that automated
 
-    const order = byScore(formFields, preferredFormFieldIndex);
+    const order = byScore(formFields, preferredFormFieldIndex, deps);
     fieldScoreMatrix.sort(order);
 
     // Remember what we've filled in so we can make more accurate decisions when

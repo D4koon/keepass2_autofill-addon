@@ -6,6 +6,7 @@ import { KeeLogger } from "../common/Logger";
 import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { diag } from "../common/diagnosisReport";
 import { MatchedField } from "./MatchedField";
+import { isFieldCoveredBySite } from "./fieldCover";
 import { Field } from "../common/model/Field";
 
 // The "why won't this entry fill here?" diagnosis, extracted verbatim from
@@ -67,6 +68,14 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             )
             .join(", ");
         add(diag.kv("Fields", entryFieldDesc || "(none)"));
+        if (entry.fields.some(f => !f.locators?.[0]?.name && !f.locators?.[0]?.id)) {
+            add(
+                diag.info(
+                    "No name/id: the entry doesn't say which page field that value goes in, " +
+                        "as usual for entries made in KeePass, so Kee picks the field."
+                )
+            );
+        }
         if (entry.URLs && entry.URLs.length) {
             add(diag.kv("URLs", entry.URLs.join(", ")));
         }
@@ -383,8 +392,8 @@ function describeFilledForm(
                 "Scores: 1 to start, +50 if the id matches the entry field's, +40 if the name " +
                     "does, +35 if the field is visible; 0 if the types don't fit. Each entry " +
                     "field goes to its best-scoring page field; a tie goes to editable " +
-                    "fields, then to the detected username field, then to the one that " +
-                    "comes first on the page."
+                    "fields, then to uncovered ones, then to the detected username field, " +
+                    "then to the one that comes first on the page."
             )
         );
         return lines;
@@ -416,6 +425,7 @@ function describeField(mf: MatchedField, host: FillDiagnosisHost): string {
     parts.push(visible === undefined ? "visibility unknown" : visible ? "visible" : "hidden");
     if (el.readOnly) parts.push("read-only");
     if (el.disabled) parts.push("disabled");
+    if (isFieldCoveredBySite(el)) parts.push("covered by something else on the page");
     if (el.getRootNode() instanceof ShadowRoot) parts.push("in shadow DOM");
     return parts.join(" ");
 }

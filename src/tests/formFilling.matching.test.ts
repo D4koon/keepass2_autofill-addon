@@ -423,6 +423,29 @@ describe("field filling", () => {
         expect(h.fieldValue("tenant")).toBe("");
     });
 
+    it("passes over a field something else on the page lies over", () => {
+        // Nothing is named like a username; the first field is behind a modal mask
+        const h = createHarness(`
+            <form>
+                <input type="text" id="behind" name="lookup">
+                <input type="text" id="account" name="account">
+                <input type="password" id="pass" name="password">
+            </form>`);
+        // (jsdom can't hit-test; the browser tests cover the check itself)
+        (h.formFilling as unknown as { fieldFillingDeps: { isCoveredBySite(el: Element): boolean } })
+            .fieldFillingDeps.isCoveredBySite = el => el.id === "behind";
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+
+        expect(h.fieldValue("account")).toBe("alice");
+        expect(h.fieldValue("behind")).toBe("");
+    });
+
     it("still fills the field whose name matches, even before the detected username field", () => {
         const h = createHarness(`
             <form>

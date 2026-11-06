@@ -13,6 +13,7 @@ import {
 import { FormScannerDeps, scanFrameForForms } from "./formScanner";
 import { SubmitButtonDeps, submitForm } from "./submitButtonFinder";
 import { FieldFillingDeps, fillManyFormFields } from "./fieldFilling";
+import { isFieldCoveredBySite } from "./fieldCover";
 import { decideFill, resolveFillTarget, shouldAnnounceEntries } from "./fillDecision";
 import { FrameMatchState } from "./frameMatchState";
 import { runFillDiagnosis } from "./fillDiagnostics";
@@ -70,7 +71,11 @@ export class FormFilling {
             logger: this.Logger
         };
         this.submitButtonDeps = { formUtils: this.formUtils, logger: this.Logger };
-        this.fieldFillingDeps = { logger: this.Logger, scoringDeps: this.scoringDeps };
+        this.fieldFillingDeps = {
+            logger: this.Logger,
+            scoringDeps: this.scoringDeps,
+            isCoveredBySite: isFieldCoveredBySite
+        };
         this.entryRankingDeps = {
             logger: this.Logger,
             formUtils: this.formUtils,

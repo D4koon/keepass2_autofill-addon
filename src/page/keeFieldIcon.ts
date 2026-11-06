@@ -5,6 +5,7 @@ import { MatchedField } from "./MatchedField";
 import { Entry } from "../common/model/Entry";
 import { leaveTopLayer, showInTopLayer, topLayerAncestor } from "./topLayer";
 import { PositionTracker } from "./positionTracker";
+import { ICON_HOST_ATTR, fieldBox, fieldSurroundings, isIconHost, siteElementAt } from "./fieldCover";
 
 export type IconSide = "left" | "right";
 
@@ -15,9 +16,6 @@ const ICON_INSET = 0;
 const TEXT_START = ICON_INSET + ICON_SIZE + 4;
 const LEFT_VAR = "--keelink-icon-left";
 const TOP_VAR = "--keelink-icon-top";
-// Marks our icon hosts, so a fresh copy of the content script (after the add-on
-// is reloaded or updated) can clear away the icons an earlier copy left behind
-const HOST_ATTR = "data-keelink-icon";
 // How often an icon is put back after the site removed it, before we accept
 // the site wants it gone
 const MAX_REATTACH = 3;
@@ -26,26 +24,7 @@ function pageRectKey(r: DOMRect): string {
     return `${r.left + window.scrollX},${r.top + window.scrollY},${r.width},${r.height}`;
 }
 
-function isIconHost(node: Node): boolean {
-    return node instanceof Element && node.hasAttribute(HOST_ATTR);
-}
-
 type SavedStyle = { element: HTMLElement; property: string; value: string; priority: string };
-
-// The element that draws the field. Usually the input itself, but a
-// form-associated web component (e.g. <lux-password> on auth.gmx.net) is the
-// form control as far as the page is concerned and draws the visible box, with
-// the real input inset somewhere inside its shadow root.
-function fieldBox(input: HTMLElement): HTMLElement {
-    let root = input.getRootNode();
-    while (root instanceof ShadowRoot) {
-        const host = root.host as HTMLElement;
-        const form = host.closest("form");
-        if (form && Array.prototype.includes.call(form.elements, host)) return host;
-        root = host.getRootNode();
-    }
-    return input;
-}
 
 // Labels the site lays over the field itself, e.g. a floating label that sits
 // where the text goes until the field is focused or filled (auth.gmx.net)
@@ -78,18 +57,6 @@ function overlaidLabels(box: HTMLElement, input: HTMLElement): HTMLElement[] {
             r.bottom > field.top
         );
     });
-}
-
-// The field and what is laid out around it: up to two wrappers up, short of
-// <body>. Things in there that cover the field are the field's own.
-function fieldSurroundings(box: HTMLElement): Element {
-    let near: Element = box;
-    for (let i = 0; i < 2; i++) {
-        const parent = near.parentElement;
-        if (!parent || parent === document.body || parent === document.documentElement) break;
-        near = parent;
-    }
-    return near;
 }
 
 // One overlay icon attached to one input
@@ -170,7 +137,7 @@ export class KeeFieldIcon {
         entries: Entry[]
     ) {
         this.removeKeeIconFromAllFields();
-        for (const leftover of Array.from(document.querySelectorAll(`[${HOST_ATTR}]`))) {
+        for (const leftover of Array.from(document.querySelectorAll(`[${ICON_HOST_ATTR}]`))) {
             leftover.remove();
         }
         this.passwordFields = passwordFields;
@@ -206,7 +173,7 @@ export class KeeFieldIcon {
         const icon = new FieldIcon(field.DOMelement as HTMLInputElement);
 
         const host = document.createElement("div");
-        host.setAttribute(HOST_ATTR, "");
+        host.setAttribute(ICON_HOST_ATTR, "");
         const shadow = host.attachShadow({ mode: "closed" });
         const style = document.createElement("style");
         // `all: initial !important` here beats the host's inline styles (important
@@ -406,11 +373,7 @@ export class KeeFieldIcon {
     // The topmost element at x/y that isn't one of our icons; null if it can't
     // be told (off-screen, or no hit-testing as in jsdom)
     private siteElementAt(icon: FieldIcon, x: number, y: number): Element | null {
-        if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return null;
-        const root = icon.box.getRootNode() as Document | ShadowRoot;
-        if (typeof root.elementsFromPoint !== "function") return null;
-        const ours = new Set<Element>(this.icons.map(i => i.host));
-        return root.elementsFromPoint(x, y).find(e => !ours.has(e)) ?? null;
+        return siteElementAt(icon.box.getRootNode(), x, y);
     }
 
     // Is something from elsewhere on the page over the icon's spot? What the
