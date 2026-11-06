@@ -807,22 +807,6 @@
         "message": "Цей запис налаштовано у вашій базі паролів так, щоб він ніколи не заповнювався автоматично.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Слабкий збіг",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Цей запис недостатньо збігається з формою входу на цій сторінці.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Мало збіжних полів",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Надто мало полів цієї форми відповідає полям цього запису.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "Ваш браузер вимагає додаткового кроку, перш ніж KeeLink зможе працювати. Натисніть «продовжити» і дозвольте KeeLink доступ до всіх вебсайтів, щоб він міг заповнювати ваші облікові дані.",
         "description": "Explains why the user must grant the all-sites permission on first install."

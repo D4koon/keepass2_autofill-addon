@@ -1,4 +1,5 @@
 import { Entry } from "../common/model/Entry";
+import { describeBlocker } from "./formFit";
 import { Config } from "../common/config";
 
 // The auto vs. manual / relevance-threshold / multi-match / per-entry-override
@@ -212,21 +213,17 @@ export function decideFill(input: DecideFillInput): FillDecision {
                 logs.push({
                     level: "debug",
                     message:
-                        "Entry is flagged alwaysAutoFill, so the relevance / field match ratio threshold is skipped."
+                        "Entry is flagged alwaysAutoFill, so it is filled whatever the form looks like."
                 });
-            } else if (!(matchingLogin.relevanceScore >= 1)) {
-                // >= 1 rather than < 1 so a missing / NaN score also fails.
+            } else if (!matchingLogin.formFit || matchingLogin.formFit.blocker) {
                 logs.push({
                     level: "info",
                     message:
-                        "Our selected entry is not relevant enough to exceed our threshold so will not be auto-filled."
-                });
-                matchingLogin = null;
-            } else if (matchingLogin.lowFieldMatchRatio) {
-                logs.push({
-                    level: "info",
-                    message:
-                        "Our selected entry has a low field match ratio so will not be auto-filled."
+                        "Our selected entry will not be auto-filled: " +
+                        (matchingLogin.formFit
+                            ? describeBlocker(matchingLogin.formFit.blocker)
+                            : "it wasn't checked against this form") +
+                        "."
                 });
                 matchingLogin = null;
             }

@@ -807,22 +807,6 @@
         "message": "此条目在您的密码数据库中被设置为从不自动填写。",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "匹配度低",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "此条目与此页面的登录表单匹配度不够高。",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "匹配的字段太少",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "此表单中与此条目字段对应的字段太少。",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "在 KeeLink 正常工作之前，您的浏览器需要额外的一步。请点击“继续”，并允许 KeeLink 访问所有网站，以便它填写您的登录信息。",
         "description": "Explains why the user must grant the all-sites permission on first install."

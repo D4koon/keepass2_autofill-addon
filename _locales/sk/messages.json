@@ -807,22 +807,6 @@
         "message": "Tento záznam je vo vašej databáze hesiel nastavený tak, aby sa nikdy nevypĺňal automaticky.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Slabá zhoda",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Tento záznam dostatočne nezodpovedá prihlasovaciemu formuláru na tejto stránke.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Zhoduje sa málo polí",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Príliš málo polí tohto formulára zodpovedá poliam tohto záznamu.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "Váš prehliadač vyžaduje pred spustením KeeLink ešte jeden krok. Kliknite na „pokračovať“ a povoľte KeeLink prístup ku všetkým webom, aby mohol vypĺňať vaše prihlasovacie údaje.",
         "description": "Explains why the user must grant the all-sites permission on first install."

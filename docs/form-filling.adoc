@@ -42,7 +42,7 @@ if (any login form?) then (no)
   stop
 endif
 :Ask KeePass for entries\nmatching the page URL\n(background → KeePassRPC);
-:Score every entry against every form\n(entryRanking.ts, relevanceScoring.ts);
+:Check how each entry fits each form\n(entryRanking.ts, formFit.ts);
 :Pick entry and form, decide\nwhether to fill and submit\n(fillDecision.ts);
 if (fill now?) then (yes)
   :Assign entry fields to page fields\nand fill them\n(fieldFilling.ts);
@@ -68,7 +68,7 @@ The main files:
 |`page/fieldSignals.ts` |Cheap DOM hints: search box, one-time code, switched off, nearness
 |`page/fieldCover.ts` |Hit-test: is something else on the page lying over a field?
 |`page/fieldRanking.ts` |Which page field gets which entry field: the rules (`RULES`, `pairFields`)
-|`page/relevanceScoring.ts` |Weighs entries against forms, field match ratio
+|`page/formFit.ts` |How an entry fits a form: which form, which entry, fill on page load
 |`page/entryRanking.ts` |Ranks entries per form, marks the site's preferred entry
 |`page/fillDecision.ts` |Fill or not, submit or not
 |`page/fieldFilling.ts` |The fill itself, with the pairs from `fieldRanking.ts`
@@ -130,46 +130,105 @@ as logins. For the stand-in form only the blacklisted *field* is left out:
 otherwise one search box in an app's header would hide every loose login field
 on the page.
 
-== Choosing the entry and deciding to fill
+[[form-fit]]
+== Choosing the form and the entry, and filling on page load
 
-When KeePass returns several entries, or the page has several login forms,
-KeeLink weighs each entry against each form (`calculateRelevanceScore` in
-`relevanceScoring.ts`). This is the one place that still uses points, because
-it compares amounts: how well the URL matches, whether the form is visible,
-and how many of the form's fields the entry's fields suit. The highest total
-picks the form, and orders the entries in the popup.
+`formFit.ts` describes how an entry fits a form in three facts (`FormFit`):
 
-=== Enough of the form covered?
+Login field:: What the form offers for logging in, visible and not in the way:
+a password field; or, on the first step of a two-step login, the guessed
+username field (see <<username-guess>>); or neither. A field that is read-only
+or disabled still counts, as some sites unlock their login fields on a click.
+Stored field names matched:: How many of the entry's fields have a stored id
+or name that a page field matches.
+Blocker:: Why the entry isn't filled without a click, if anything (below).
 
-The *field match ratio* is the share of the form's named text and password
-fields that the entry can fill. Below one half, the entry gets
-`lowFieldMatchRatio` and isn't filled on page load, so a two-field entry
-doesn't fill, say, a long registration form by itself.
+There are no points. Wherever two things are compared, the first rule that
+tells them apart decides.
 
-Fields that can never take a login value don't count (`cannotTakeLoginValue`
-in `fieldSignals.ts`): read-only or disabled fields, fields the site switched
-off (`inert`, `aria-hidden`), search boxes and one-time code fields. On the
-Proxmox VE login the entry's 2 fields cover the user name and password field,
-2 of 2; without this rule the search box and the read-only realm and language
-fields made it 2 of 6, and the login only filled on click.
+=== Which form
 
-If that would leave no field to count, all of them count. Some sites make their
-login fields read-only until clicked, to keep browsers from filling them; such
-a login would otherwise never fill on page load.
+When a page has several login forms (`compareForms`, `bestFormIndex`):
 
-=== Fill or only offer
+. a password field, before a username field of a first step, before neither
+. more stored field names matched (with the entry that fits the form best)
+. the one that comes first on the page
 
-`decideFill` in `fillDecision.ts`. For an automatic fill on page load:
+=== Which entry
 
-* one matching entry is taken; with several, the site's preferred entry, else
-  the most relevant one,
-* it must reach the relevance threshold *and* not have `lowFieldMatchRatio`,
-  unless the entry is set to always auto-fill in KeePass,
-* then the add-on settings and the entry's *always/never auto-fill* and
-  *always/never auto-submit* flags decide.
+When KeePass returns several entries for the page, they are offered in this
+order (`compareEntries`), and the first one is taken:
 
-An entry that fails the threshold is still offered in the popup and on the
-field icon. A click on it fills without any threshold.
+. the entry marked as preferred for this site
+. how exactly an entry URL matches the page, as KeePass reports it: the exact
+  page before the same host, before the same domain
+. more stored field names matched
+. KeePass's order
+
+=== Filling on page load
+
+An entry is filled without a click only if the form passes all these checks;
+the first that fails is the blocker:
+
+[plantuml, fill-on-load, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title Fill this entry on page load?
+
+start
+if (entry set to always auto-fill?) then (yes)
+  :fill;
+  stop
+endif
+if (login field?) then (none)
+  :wait for a click\n"No login field";
+  stop
+endif
+if (a visible new-password field,\nor two visible password fields?) then (yes)
+  :wait for a click\n"Looks like sign-up";
+  stop
+endif
+if (more than 1 other visible, editable\ntext field the entry has nothing for?) then (yes)
+  :wait for a click\n"Form asks for more"\n(names the fields);
+  stop
+endif
+if (one matching entry, or several\nand the settings allow that?) then (no)
+  :wait for a click;
+  stop
+endif
+if (add-on settings allow auto-fill,\nentry not set to never auto-fill?) then (yes)
+  :fill;
+else (no)
+  :wait for a click;
+endif
+stop
+@enduml
+----
+
+The "other fields" are counted after pairing the entry's fields with the page
+(<<field-rules>>): visible, editable text fields that got nothing. Hidden
+fields, read-only or disabled ones, search boxes, one-time code fields and
+fields the site switched off don't count. One such field is allowed
+(`MAX_EXTRA_FIELDS`), for a captcha or a "device name" field.
+
+Examples:
+
+* Proxmox VE: user name and password; the search box is in the way and the
+  realm and language fields are read-only. Fills.
+* Sparkasse: the user name field is visible, the password field hidden until
+  the next step, plus a hidden, disabled field for catching bots. The login
+  field is the username field. Fills the user name; the password follows on
+  the next step.
+* A sign-up form with first name, last name, street, user name and a
+  new-password field: "Looks like sign-up".
+* A profile form with first name, street and a password field: "Form asks for
+  more (first name, street)".
+
+An entry that isn't filled on load is still offered in the popup and on the
+field icon; a click fills it without any of these checks. The popup shows the
+blocker under the entry.
 
 [[username-guess]]
 == Guessing the username field
@@ -321,8 +380,11 @@ combination of these facts. They pick the same field except in two rare cases:
 * A radio button's stored value now counts below an id or name match.
 
 The old −5 for a stored id or name that doesn't match (for databases with the
-`KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY` feature) only applies to choosing the
-entry now; for the field choice, rule 1 covers it.
+`KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY` feature) is gone; rule 1 covers it.
+
+Choosing the form and the entry, and deciding to fill on page load, used
+points too, plus a "field match ratio" (the share of the form's fields the
+entry covers, which had to be over one half). <<form-fit>> replaces them.
 
 == Steering the result
 
@@ -335,8 +397,7 @@ a submitted form already have them. Beware of generated names such as
 
 Always auto-fill::
 An entry set to always auto-fill (in its KeePassRPC tab in KeePass) skips the
-relevance and field match ratio threshold, for pages that still only fill on
-click.
+checks of <<form-fit>>, for pages that still only fill on click.
 
 Include and exclude lists::
 In KeeLink's settings, choose *A specific website*, then *Finding forms*. A
@@ -357,7 +418,8 @@ current page and lists
 
 * whether the entry's URLs match the page,
 * each form, whether it counts as a login form, and why not,
-* the relevance score and `lowFieldMatchRatio` of the best form,
+* per login form, its login field, the stored field names matched, and
+  whether the entry is filled on its own there or what blocks it,
 * every field of that form with its type, name, id, label, autocomplete,
   visibility, read-only/disabled, and the signals of section
   <<username-guess>>, which field was guessed as the username, and which were
@@ -395,7 +457,8 @@ Popup -> User : report with Copy button
 == Tests
 
 * `src/tests/formFilling.matching.test.ts`: form detection, choosing the
-  entry, the field match ratio, the username guess (one fixture page per rule,
+  form and entry, filling on page load (sign-up, extra fields, two-step
+  logins), the username guess (one fixture page per rule,
   each one the old guess got wrong), the field rules on real pages, the
   stand-in form blacklist, the diagnosis report.
 * `src/tests/fieldSignals.test.ts`: the DOM signals, including shadow DOM.

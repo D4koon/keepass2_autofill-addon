@@ -49,16 +49,23 @@ describe("form detection", () => {
     });
 });
 
-describe("relevance scoring", () => {
-    it("scores the form whose field names match the entry higher", () => {
+describe("how an entry fits a form", () => {
+    const UNNAMED = () =>
+        makeEntry([
+            { type: "text", value: "alice", name: "" },
+            { type: "password", value: "s3cret", name: "" }
+        ]);
+    const fit = (h: ReturnType<typeof createHarness>, form = 0) => h.matchResult().entries[form][0].formFit;
+
+    it("fills the form whose field names the entry stores, not the first one", () => {
         const h = createHarness(`
             <form id="wrong">
-                <input type="text" name="firstname">
-                <input type="password" name="pin">
+                <input type="text" id="first" name="firstname">
+                <input type="password" id="pin" name="pin">
             </form>
             <form id="right">
-                <input type="text" name="username">
-                <input type="password" name="password">
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
             </form>`);
 
         h.run([
@@ -68,35 +75,40 @@ describe("relevance scoring", () => {
             ])
         ]);
 
-        const scores = h.matchResult().formRelevanceScores as number[];
-        // index 1 is #right
-        expect(scores[1]).toBeGreaterThan(scores[0]);
+        expect(h.matchResult().formFits.map(f => f.storedMatches)).toEqual([0, 2]);
+        expect(h.fieldValue("user")).toBe("alice");
+        expect(h.fieldValue("first")).toBe("");
     });
 
-    it("marks a hidden form with unrecognisable fields as a low field-match ratio", () => {
-        // display:none + no id + a name the entry does not share => each field
-        // scores below the per-field match threshold, so the ratio is low and
-        // the entry would not be auto-filled.
+    it("prefers a form with a password field to a username-only first step", () => {
+        const h = createHarness(`
+            <form id="step"><input type="text" id="u1" name="username" autocomplete="username"></form>
+            <form id="login">
+                <input type="text" id="u2" name="login">
+                <input type="password" id="pass" name="password">
+            </form>`);
+
+        h.run([UNNAMED()]);
+
+        expect(h.matchResult().formFits.map(f => f.loginField)).toEqual(["username", "password"]);
+        expect(h.fieldValue("u2")).toBe("alice");
+        expect(h.fieldValue("u1")).toBe("");
+    });
+
+    it("doesn't fill a hidden form by itself: it has no login field", () => {
         const h = createHarness(`
             <form id="loginForm">
                 <input name="aaa" type="text" style="display:none">
                 <input name="bbb" type="password" style="display:none">
             </form>`);
 
-        h.run([
-            makeEntry([
-                { type: "text", value: "alice", name: "username" },
-                { type: "password", value: "s3cret", name: "password" }
-            ])
-        ]);
+        h.run([UNNAMED()]);
 
-        const scored = h.matchResult().entries[0][0];
-        expect(scored.lowFieldMatchRatio).toBe(true);
+        expect(fit(h).blocker).toEqual({ code: "no-login-field" });
+        expect(h.fieldValue("bbb")).toBe("");
     });
 
-    it("still fills even mismatched field names when no field-name punishment applies", () => {
-        // Default KPRPC session has no KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY feature,
-        // so a visible field of the right type is a match regardless of its name.
+    it("fills fields whose names differ from the entry's stored ones", () => {
         const h = createHarness(`
             <form id="loginForm">
                 <input id="u" name="totally-different" type="text">
@@ -110,9 +122,84 @@ describe("relevance scoring", () => {
             ])
         ]);
 
+        expect(fit(h).blocker).toBeNull();
         expect(h.fieldValue("u")).toBe("alice");
         expect(h.fieldValue("p")).toBe("s3cret");
-        expect(h.matchResult().entries[0][0].lowFieldMatchRatio).toBe(false);
+    });
+
+    it.each([
+        ["a new-password field", '<input type="password" id="pass" name="pw" autocomplete="new-password">'],
+        ["two password fields", '<input type="password" id="pass" name="pw"><input type="password" id="pass2" name="pw2">']
+    ])("doesn't fill a sign-up form with %s by itself", (_, passwords) => {
+        const h = createHarness(`<form><input type="text" id="user" name="username">${passwords}</form>`);
+
+        h.run([UNNAMED()]);
+
+        expect(fit(h).blocker).toEqual({ code: "sign-up-form" });
+        expect(h.fieldValue("user")).toBe("");
+    });
+
+    it("names the fields the entry has nothing for when there are too many", () => {
+        const h = createHarness(`
+            <form>
+                <input type="text" id="first" name="first" aria-label="First name">
+                <input type="text" id="user" name="username">
+                <input type="text" id="street" name="street">
+                <input type="password" id="pass" name="password">
+            </form>`);
+
+        h.run([UNNAMED()]);
+
+        expect(fit(h).blocker).toEqual({ code: "extra-fields", fields: ["first name", "street"] });
+    });
+
+    it("fills a login with one more field, such as a captcha", () => {
+        const h = createHarness(`
+            <form>
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
+                <input type="text" id="captcha" name="captcha">
+            </form>`);
+
+        h.run([UNNAMED()]);
+
+        expect(fit(h).blocker).toBeNull();
+        expect(h.fieldValue("user")).toBe("alice");
+        expect(h.fieldValue("captcha")).toBe("");
+    });
+
+    // Sparkasse: the password field stays hidden until the username is in,
+    // next to a hidden, disabled field that is there to catch bots
+    it("fills the first step of a login whose password field is still hidden", () => {
+        const h = createHarness(`
+            <form id="a53530be45192ad3">
+                <input type="text" id="trap" name="lyUq" style="display:none" disabled>
+                <input type="text" id="user" name="kATT" aria-label="Anmeldename" autocomplete="username">
+                <input type="password" id="pass" name="rjjU" autocomplete="off" style="display:none">
+            </form>`);
+
+        h.run([UNNAMED()]);
+
+        expect(fit(h)).toEqual({ loginField: "username", storedMatches: 0, blocker: null });
+        expect(h.fieldValue("user")).toBe("alice");
+        expect(h.fieldValue("trap")).toBe("");
+    });
+
+    it("offers entries by how exactly their URL matches, then by stored field names", () => {
+        const h = createHarness(`
+            <form><input type="text" id="user" name="username"><input type="password" id="pass" name="password"></form>`);
+        const named = (uuid: string, matchAccuracy: number, name: string) =>
+            Object.assign(
+                makeEntry([
+                    { type: "text", value: uuid, name },
+                    { type: "password", value: "x", name: "" }
+                ]),
+                { uuid, matchAccuracy }
+            );
+
+        h.run([named("domain", 10, "username"), named("host", 30, ""), named("host-named", 30, "username")]);
+
+        expect(h.postedEntries()[0].map(e => e.uuid)).toEqual(["host-named", "host", "domain"]);
     });
 });
 
@@ -396,7 +483,7 @@ describe("field filling", () => {
             ])
         ]);
 
-        expect(h.matchResult().entries[h.matchResult().mostRelevantFormIndex][0].lowFieldMatchRatio).toBe(false);
+        expect(h.matchResult().entries[h.matchResult().mostRelevantFormIndex][0].formFit.blocker).toBeNull();
         expect(h.fieldValue("user")).toBe("root");
         expect(h.fieldValue("pass")).toBe("s3cret");
         expect(h.fieldValue("search")).toBe("");

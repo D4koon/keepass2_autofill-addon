@@ -24,7 +24,7 @@ function makeInput(id: string, type = "text") {
 }
 
 function matched(input: HTMLInputElement): MatchedField {
-    return { field: { type: input.type }, DOMelement: input, highestScore: 1 } as MatchedField;
+    return { field: { type: input.type }, DOMelement: input } as MatchedField;
 }
 
 // Current geometry of every test input

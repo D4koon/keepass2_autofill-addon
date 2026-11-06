@@ -6,6 +6,7 @@ import { EntryDto, FormFieldTypeDTO } from "./KPRPCDTOs";
 import { DatabaseSummary } from "./DatabaseSummary";
 import { GroupSummary } from "./GroupSummary";
 import type { AutoFillExplanation } from "./AutoFillExplanation";
+import type { FormFit } from "./FormFit";
 
 // Although we use uuids for Fields and possibly Locators, we don't allow them to exist outside of their parent entry.
 
@@ -45,11 +46,9 @@ export class Entry {
 
     readonly database: DatabaseSummary;
 
-    // How relevant this entry is to the current form in
-    // the browser - transient (not stored in KeePass)
-    //TODO:5 put all match data into a new object?
-    relevanceScore: number;
-    lowFieldMatchRatio: any;
+    // How the entry fits the current form in the browser - transient (not
+    // stored in KeePass)
+    formFit?: FormFit;
     formIndex: number;
     entryIndex: number;
     isPreferredMatch?: boolean;
@@ -70,8 +69,7 @@ export class Entry {
         this.matchAccuracy = e.matchAccuracy || 0;
         this.icon = e.icon || { version: 1, iconImageData: "" };
         this.database = e.database || new Database({});
-        this.relevanceScore = e.relevanceScore;
-        this.lowFieldMatchRatio = e.lowFieldMatchRatio;
+        this.formFit = e.formFit;
         this.formIndex = e.formIndex;
         this.entryIndex = e.entryIndex;
         this.isPreferredMatch = e.isPreferredMatch;

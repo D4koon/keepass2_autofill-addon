@@ -217,10 +217,12 @@ export default {
                     ]);
                 case "entry-never":
                     return $STR("autofill_blocked_entry_never_short");
-                case "low-relevance":
-                    return $STR("autofill_blocked_low_relevance_short");
-                case "low-field-match":
-                    return $STR("autofill_blocked_low_field_match_short");
+                case "no-login-field":
+                    return $STR("autofill_blocked_no_login_field_short");
+                case "sign-up-form":
+                    return $STR("autofill_blocked_sign_up_short");
+                case "extra-fields":
+                    return $STR("autofill_blocked_extra_fields_short");
                 default:
                     return null;
             }
@@ -237,10 +239,12 @@ export default {
                     return $STRF("autofill_blocked_multiple", [String(r.matchCount ?? "")]);
                 case "entry-never":
                     return $STR("autofill_blocked_entry_never");
-                case "low-relevance":
-                    return $STR("autofill_blocked_low_relevance");
-                case "low-field-match":
-                    return $STR("autofill_blocked_low_field_match");
+                case "no-login-field":
+                    return $STR("autofill_blocked_no_login_field");
+                case "sign-up-form":
+                    return $STR("autofill_blocked_sign_up");
+                case "extra-fields":
+                    return $STRF("autofill_blocked_extra_fields", [(r.fields ?? []).join(", ")]);
                 default:
                     return null;
             }

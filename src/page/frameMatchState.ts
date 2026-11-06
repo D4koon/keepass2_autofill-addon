@@ -54,7 +54,7 @@ export class FrameMatchState {
         this.current.autofillOnSuccess = behaviour.autofillOnSuccess;
         this.current.autosubmitOnSuccess = behaviour.autosubmitOnSuccess;
         this.current.allMatchingLogins = [];
-        this.current.formRelevanceScores = [];
+        this.current.formFits = [];
         this.current.submitTargets = [];
         this.current.usernameIndexArray = [];
         this.current.passwordFieldsArray = [];

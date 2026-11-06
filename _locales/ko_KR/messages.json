@@ -807,22 +807,6 @@
         "message": "이 항목은 비밀번호 데이터베이스에서 자동으로 채우지 않도록 설정되어 있습니다.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "낮은 일치도",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "이 항목은 이 페이지의 로그인 양식과 충분히 일치하지 않습니다.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "일치하는 필드가 적음",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "이 양식의 필드 중 이 항목의 필드와 맞는 것이 너무 적습니다.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "KeeLink가 작동하려면 브라우저에서 추가 단계가 필요합니다. ‘계속’ 버튼을 클릭하고 KeeLink가 로그인 정보를 채울 수 있도록 모든 웹사이트에 대한 접근을 허용하세요.",
         "description": "Explains why the user must grant the all-sites permission on first install."

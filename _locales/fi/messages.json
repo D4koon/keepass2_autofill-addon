@@ -807,22 +807,6 @@
         "message": "Tämä merkintä on asetettu salasanatietokannassasi niin, ettei sitä koskaan täytetä automaattisesti.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Heikko osuma",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Tämä merkintä ei vastaa riittävän hyvin tämän sivun kirjautumislomaketta.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Vähän täsmääviä kenttiä",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Liian harvat tämän lomakkeen kentät vastaavat tämän merkinnän kenttiä.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "Selaimesi vaatii lisävaiheen ennen kuin KeeLink voi toimia. Napsauta ”jatka” ja salli KeeLinkin käyttää kaikkia verkkosivustoja, jotta se voi täyttää kirjautumistietosi.",
         "description": "Explains why the user must grant the all-sites permission on first install."

@@ -28,7 +28,7 @@ function setup() {
 }
 
 function matched(input: HTMLInputElement): MatchedField {
-    return { field: { type: input.type }, DOMelement: input, highestScore: 1 } as MatchedField;
+    return { field: { type: input.type }, DOMelement: input } as MatchedField;
 }
 
 // Builds the page; returns the input with id "field"

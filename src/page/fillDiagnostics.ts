@@ -8,6 +8,7 @@ import { diag } from "../common/diagnosisReport";
 import { MatchedField } from "./MatchedField";
 import { isFieldCoveredBySite } from "./fieldCover";
 import { RULES, findCandidates, pairFields } from "./fieldRanking";
+import { MAX_EXTRA_FIELDS, describeBlocker } from "./formFit";
 import { isOneTimeCodeField, isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 import { Field } from "../common/model/Field";
 
@@ -30,7 +31,6 @@ export interface FillDiagnosisHost {
     ): unknown;
     getMostRelevantForm(formIndex?: number): {
         bestFormIndex: number;
-        bestRelevanceScore: number;
         bestFindMatchesResult: unknown;
     };
     fillAndSubmit(
@@ -219,33 +219,47 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             host.state.current
         );
 
-        host.state.current.formRelevanceScores.forEach((score, i) => {
+        host.state.current.formFits.forEach((_, i) => {
             if (scannedIndexes.indexOf(i) === -1) return;
             const f = host.state.current.forms[i] as HTMLFormElement;
-            const scored = host.state.current.entries[i] && host.state.current.entries[i][0];
+            const fit = host.state.current.entries[i]?.[0]?.formFit;
+            if (!fit) return;
+            const loginField =
+                fit.loginField === "password"
+                    ? "a password field"
+                    : fit.loginField === "username"
+                      ? "a username field (first step of a two-step login)"
+                      : "none";
             add(
                 diag.kv(
                     `Form #${i} (${f?.id || f?.name || "unnamed"})`,
-                    `relevance ${round(score)}` +
-                        (scored ? `, lowFieldMatchRatio=${!!scored.lowFieldMatchRatio}` : "")
+                    `login field: ${loginField}; stored field names matched: ${fit.storedMatches}`
                 )
+            );
+            add(
+                fit.blocker
+                    ? diag.warn(`Not filled on its own: ${describeBlocker(fit.blocker)}.`)
+                    : diag.ok("Can be filled on its own.")
             );
         });
 
         const best = host.getMostRelevantForm();
+        add(diag.kv("Best form", `#${best.bestFormIndex}`));
         add(
-            diag.kv("Best form", `#${best.bestFormIndex} (score ${round(best.bestRelevanceScore)})`)
-        );
-        add(
-            (best.bestRelevanceScore >= 1 ? diag.ok : diag.warn)(
-                "Automatic fill needs score >= 1 and lowFieldMatchRatio=false; below that the " +
-                    "entry is still offered in the list but not auto-filled."
+            diag.info(
+                "The best form has a visible password field, before one with a username field " +
+                    "of a first step, before neither; then the most stored field names " +
+                    "matched; then the first on the page. It is filled on its own unless it " +
+                    "lacks a login field, looks like a sign-up form, or has more than " +
+                    `${MAX_EXTRA_FIELDS} other text field the entry has nothing for (an entry ` +
+                    "set to always auto-fill skips these checks). Otherwise the entry is only " +
+                    "offered in the list."
             )
         );
 
         // Force the fill of the best form regardless of the auto-fill threshold - this is
         // the "try it here anyway" part. We never submit from a diagnosis.
-        add(diag.info("Force-filled the best form (ignoring the threshold, never submitting)."));
+        add(diag.info("Force-filled the best form (ignoring these checks, never submitting)."));
         host.state.current.UUID = null;
         host.state.current.dbFileName = null;
         host.state.current.formReadyForSubmit = false;

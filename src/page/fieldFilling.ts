@@ -3,7 +3,7 @@ import { MatchedField } from "./MatchedField";
 import { Field } from "../common/model/Field";
 import { configManager } from "../common/ConfigManager";
 import { KeeLogger } from "../common/Logger";
-import { ScoringDeps } from "./relevanceScoring";
+import { ScoringDeps } from "./pageDeps";
 import { findCandidates, pairFields } from "./fieldRanking";
 
 // Form-field population, extracted from FormFilling. Which page field gets

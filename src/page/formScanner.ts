@@ -223,7 +223,7 @@ export function scanFrameForForms(
 
         // the overall relevance of this form is the maximum of it's
         // matching entries (so we fill the most relevant form)
-        state.current.formRelevanceScores[i] = 0;
+        state.current.formFits[i] = null;
     }
 
     let searchSentToKeePass = false;

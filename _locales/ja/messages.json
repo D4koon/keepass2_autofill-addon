@@ -739,22 +739,6 @@
         "message": "このエントリは、パスワードデータベースで自動入力しないよう設定されています。",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "一致度が低い",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "このエントリは、このページのログインフォームとの一致度が十分ではありません。",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "一致するフィールドが少ない",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "このフォームのフィールドのうち、このエントリのフィールドと対応するものが少なすぎます。",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "KeeLink を使用するには、ブラウザーで追加の手順が必要です。「続行」をクリックして、KeeLink がログイン情報を入力できるようにすべてのウェブサイトへのアクセスを許可してください。",
         "description": "Explains why the user must grant the all-sites permission on first install."

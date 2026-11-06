@@ -811,21 +811,29 @@
         "message": "Dieser Eintrag ist in Ihrer Passwortdatenbank so eingestellt, dass er nie automatisch ausgefüllt wird.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Schwacher Treffer",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
+    "autofill_blocked_no_login_field_short": {
+        "message": "Kein Anmeldefeld",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the form has no visible password field, nor a username field of a first login step. The full explanation is a tooltip on this text."
     },
-    "autofill_blocked_low_relevance": {
-        "message": "Dieser Eintrag passt nicht gut genug zum Anmeldeformular dieser Seite.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
+    "autofill_blocked_no_login_field": {
+        "message": "Dieses Formular hat kein sichtbares Passwortfeld und kein Benutzernamenfeld eines ersten Anmeldeschritts, das KeeLink ausfüllen könnte. Daher wartet es, bis Sie den Eintrag auswählen.",
+        "description": "Tooltip with the full explanation for autofill_blocked_no_login_field_short."
     },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Wenige Felder passen",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
+    "autofill_blocked_sign_up_short": {
+        "message": "Sieht nach Registrierung aus",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the form looks like a sign-up or change-password form. The full explanation is a tooltip on this text."
     },
-    "autofill_blocked_low_field_match": {
-        "message": "Zu wenige Felder dieses Formulars entsprechen den Feldern dieses Eintrags.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
+    "autofill_blocked_sign_up": {
+        "message": "Dieses Formular sieht nach einer Registrierung oder Passwortänderung aus (ein Feld für ein neues Passwort oder zwei Passwortfelder). Daher füllt KeeLink es nicht von selbst aus.",
+        "description": "Tooltip with the full explanation for autofill_blocked_sign_up_short."
+    },
+    "autofill_blocked_extra_fields_short": {
+        "message": "Formular fragt mehr ab",
+        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the form has more text fields than the entry has values for. The full explanation is a tooltip on this text."
+    },
+    "autofill_blocked_extra_fields": {
+        "message": "Dieses Formular hat weitere Felder, für die der Eintrag nichts enthält ($1). Es ist also wohl nicht nur eine Anmeldung, und KeeLink füllt es nicht von selbst aus.",
+        "description": "Tooltip with the full explanation for autofill_blocked_extra_fields_short. $1 is a comma-separated list of the names or labels of those fields."
     },
     "all_sites_permissions_required": {
         "message": "Ihr Browser verlangt einen zusätzlichen Schritt, bevor KeeLink funktionieren kann. Klicken Sie auf „fortfahren“ und erlauben Sie KeeLink den Zugriff auf alle Webseiten, damit es Ihre Zugangsdaten ausfüllen kann.",

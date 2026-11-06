@@ -739,22 +739,6 @@
         "message": "Bu kayıt, parola veritabanınızda asla otomatik doldurulmayacak şekilde ayarlanmış.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Zayıf eşleşme",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Bu kayıt, bu sayfanın giriş formuyla yeterince eşleşmiyor.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Az alan eşleşiyor",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Bu formun alanlarından çok azı bu kaydın alanlarıyla eşleşiyor.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "KeeLink'in çalışabilmesi için tarayıcınız ek bir adım gerektiriyor. “devam” düğmesine tıklayın ve KeeLink'in oturum açma bilgilerinizi doldurabilmesi için tüm web sitelerine erişmesine izin verin.",
         "description": "Explains why the user must grant the all-sites permission on first install."

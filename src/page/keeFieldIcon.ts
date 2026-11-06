@@ -234,7 +234,7 @@ export class KeeFieldIcon {
     }
 
     // The two fields of a kind most likely to be the login's, in the order the
-    // fill picks them (fieldRanking.ts): how well an entry suits them, then
+    // fill picks them (fieldRanking.ts): an entry stores their id or name, then
     // reachable before in the way before locked, then the guessed username
     // field, then page order. Fields aren't left out for being locked: some
     // sites make their login fields read-only until clicked.
@@ -253,7 +253,7 @@ export class KeeFieldIcon {
             .filter(f => !this.skipField(f))
             .sort(
                 (a, b) =>
-                    (b.highestScore ?? 0) - (a.highestScore ?? 0) ||
+                    Number(!!b.matchesEntry) - Number(!!a.matchesEntry) ||
                     reachRank(b) - reachRank(a) ||
                     Number(b === this.usernameField) - Number(a === this.usernameField)
             );

@@ -11,12 +11,22 @@ import {
     DecideFillInput
 } from "../page/fillDecision";
 import { Entry } from "../common/model/Entry";
+import type { FormFit } from "../common/model/FormFit";
+
+// How an entry fits a plain login form, and ones it isn't filled on by itself
+const FITS: FormFit = { loginField: "password", storedMatches: 0, blocker: null };
+const NO_LOGIN: FormFit = { loginField: null, storedMatches: 0, blocker: { code: "no-login-field" } };
+const EXTRA: FormFit = {
+    loginField: "password",
+    storedMatches: 0,
+    blocker: { code: "extra-fields", fields: ["First name", "Street"] }
+};
 
 type EntryOver = Partial<Entry>;
 function entry(over: EntryOver = {}): Entry {
     return new Entry({
         uuid: over.uuid ?? "uuid-" + Math.random().toString(36).slice(2),
-        relevanceScore: over.relevanceScore ?? 40,
+        formFit: "formFit" in over ? over.formFit : FITS,
         database: { fileName: "db.kdbx" } as Entry["database"],
         ...over
     });
@@ -116,7 +126,7 @@ describe("shouldAnnounceEntries", () => {
 
 describe("decideFill - automated, single match", () => {
     it("fills a relevant single match using the global autoFillForms preference", () => {
-        const e = entry({ relevanceScore: 40 });
+        const e = entry({ formFit: FITS });
         const d = decideFill(baseInput({ entriesForForm: [e], config: cfg({ autoFillForms: true }) }));
         expect(d.matchingLogin).toBe(e);
         expect(d.action).toEqual({ fill: true, submit: false });
@@ -124,25 +134,25 @@ describe("decideFill - automated, single match", () => {
         expect(d.clearUuid).toBe(false);
     });
 
-    it("drops a single match whose relevance is below the threshold", () => {
-        const d = decideFill(baseInput({ entriesForForm: [entry({ relevanceScore: 0.5 })] }));
+    it("drops a single match on a form without a login field", () => {
+        const d = decideFill(baseInput({ entriesForForm: [entry({ formFit: NO_LOGIN })] }));
         expect(d.matchingLogin).toBeNull();
-        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(true);
+        expect(d.logs.some(l => l.message.includes("will not be auto-filled"))).toBe(true);
     });
 
-    it("drops a single match with a low field match ratio", () => {
+    it("drops a single match on a form with fields the entry has nothing for", () => {
         const d = decideFill(
-            baseInput({ entriesForForm: [entry({ relevanceScore: 40, lowFieldMatchRatio: true })] })
+            baseInput({ entriesForForm: [entry({ formFit: EXTRA })] })
         );
         expect(d.matchingLogin).toBeNull();
-        expect(d.logs.some(l => l.message.includes("low field match ratio"))).toBe(true);
+        expect(d.logs.some(l => l.message.includes("other text fields the entry has nothing for"))).toBe(true);
     });
 
-    it("[T4] an undefined / NaN relevanceScore fails the threshold", () => {
-        const e = entry({ relevanceScore: undefined });
+    it("[T4] an entry not checked against the form is not filled", () => {
+        const e = entry({ formFit: undefined });
         const d = decideFill(baseInput({ entriesForForm: [e] }));
         expect(d.matchingLogin).toBeNull();
-        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(true);
+        expect(d.logs.some(l => l.message.includes("will not be auto-filled"))).toBe(true);
     });
 
     it("respects autoSubmitForms for the automated path", () => {
@@ -173,8 +183,8 @@ describe("decideFill - behaviour gates", () => {
 
 describe("decideFill - automated, multiple matches", () => {
     const many = () => [
-        entry({ uuid: "a", relevanceScore: 10 }),
-        entry({ uuid: "b", relevanceScore: 40 })
+        entry({ uuid: "a", formFit: FITS }),
+        entry({ uuid: "b", formFit: FITS })
     ];
 
     it("picks the first ordered entry and fills when multi-match fill is allowed", () => {
@@ -207,8 +217,8 @@ describe("decideFill - automated, multiple matches", () => {
 
     it("prefers the entry flagged isPreferredMatch", () => {
         const ordered = [
-            entry({ uuid: "a", relevanceScore: 40 }),
-            entry({ uuid: "b", relevanceScore: 10, isPreferredMatch: true })
+            entry({ uuid: "a", formFit: FITS }),
+            entry({ uuid: "b", formFit: FITS, isPreferredMatch: true })
         ];
         const d = decideFill(
             baseInput({ entriesForForm: many(), orderedEntriesWithPreference: ordered })
@@ -246,8 +256,8 @@ describe("decideFill - entryIndex directed (matched-login request)", () => {
         expect(d.action.fill).toBe(true); // isMatchedLoginRequest overrides autoFillForms
     });
 
-    it("does not apply the relevance threshold on the entryIndex path", () => {
-        const live = [entry({ uuid: "a", relevanceScore: 0 })];
+    it("does not apply the form checks on the entryIndex path", () => {
+        const live = [entry({ uuid: "a", formFit: NO_LOGIN })];
         const d = decideFill(
             baseInput({
                 automated: false,
@@ -361,7 +371,7 @@ describe("decideFill - UUID directed", () => {
     });
 
     it("[T3] a UUID hint on a single-entry form selects by UUID and skips the threshold", () => {
-        const live = [entry({ uuid: "only", relevanceScore: 0.2 })];
+        const live = [entry({ uuid: "only", formFit: NO_LOGIN })];
         const d = decideFill(
             baseInput({
                 entriesForForm: live,
@@ -369,13 +379,13 @@ describe("decideFill - UUID directed", () => {
                 uuidHint: "only"
             })
         );
-        // UUID branch runs before the single-entry branch => low score is not applied
+        // UUID branch runs before the single-entry branch => the form checks are not applied
         expect(d.matchingLogin).toBe(live[0]);
-        expect(d.logs.some(l => l.message.includes("not relevant enough"))).toBe(false);
+        expect(d.logs.some(l => l.message.includes("will not be auto-filled"))).toBe(false);
     });
 
     it("[T3] a UUID hint that misses on a single-entry form fills nothing", () => {
-        const live = [entry({ uuid: "only", relevanceScore: 40 })];
+        const live = [entry({ uuid: "only", formFit: FITS })];
         const d = decideFill(
             baseInput({
                 entriesForForm: live,
@@ -399,22 +409,22 @@ describe("decideFill - per-entry overrides (automated, non-matched)", () => {
         expect(d.action.fill).toBe(true);
     });
 
-    it("alwaysAutoFill bypasses the relevance threshold on the automated path", () => {
-        const e = entry({ alwaysAutoFill: true, relevanceScore: 0.2 });
+    it("alwaysAutoFill bypasses a missing login field on the automated path", () => {
+        const e = entry({ alwaysAutoFill: true, formFit: NO_LOGIN });
         const d = decideFill(baseInput({ entriesForForm: [e] }));
         expect(d.matchingLogin).toBe(e);
         expect(d.action.fill).toBe(true);
     });
 
-    it("alwaysAutoFill bypasses a low field-match ratio on the automated path", () => {
-        const e = entry({ alwaysAutoFill: true, lowFieldMatchRatio: true });
+    it("alwaysAutoFill bypasses fields the entry has nothing for on the automated path", () => {
+        const e = entry({ alwaysAutoFill: true, formFit: EXTRA });
         const d = decideFill(baseInput({ entriesForForm: [e] }));
         expect(d.matchingLogin).toBe(e);
         expect(d.action.fill).toBe(true);
     });
 
-    it("neverAutoFill still wins when both flags are set and the score is low", () => {
-        const e = entry({ alwaysAutoFill: true, neverAutoFill: true, relevanceScore: 0.2 });
+    it("neverAutoFill still wins when both flags are set and the form fails the checks", () => {
+        const e = entry({ alwaysAutoFill: true, neverAutoFill: true, formFit: NO_LOGIN });
         const d = decideFill(baseInput({ entriesForForm: [e] }));
         // the threshold is bypassed (matchingLogin survives) but neverAutoFill
         // is applied after alwaysAutoFill, so it still does not fill

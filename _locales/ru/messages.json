@@ -807,22 +807,6 @@
         "message": "Эта запись настроена в вашей базе паролей так, чтобы никогда не заполняться автоматически.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Слабое совпадение",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Эта запись недостаточно точно соответствует форме входа на этой странице.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Мало совпадающих полей",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Слишком мало полей этой формы соответствуют полям этой записи.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "Браузеру требуется дополнительный шаг, прежде чем KeeLink сможет работать. Нажмите «продолжить» и разрешите KeeLink доступ ко всем сайтам, чтобы он мог заполнять ваши учётные данные.",
         "description": "Explains why the user must grant the all-sites permission on first install."

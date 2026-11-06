@@ -807,22 +807,6 @@
         "message": "Ten wpis jest ustawiony w Twojej bazie haseł tak, aby nigdy nie był wypełniany automatycznie.",
         "description": "Tooltip with the full explanation for autofill_blocked_entry_never_short."
     },
-    "autofill_blocked_low_relevance_short": {
-        "message": "Słabe dopasowanie",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - the entry's relevance score is below KeeLink's threshold. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_relevance": {
-        "message": "Ten wpis nie pasuje wystarczająco do formularza logowania na tej stronie.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_relevance_short."
-    },
-    "autofill_blocked_low_field_match_short": {
-        "message": "Mało pasujących pól",
-        "description": "Short status line (fits a narrow popup card) under a matched entry explaining why it was not auto-filled - too few form fields line up with the entry. The full explanation is a tooltip on this text."
-    },
-    "autofill_blocked_low_field_match": {
-        "message": "Zbyt mało pól tego formularza odpowiada polom tego wpisu.",
-        "description": "Tooltip with the full explanation for autofill_blocked_low_field_match_short."
-    },
     "all_sites_permissions_required": {
         "message": "Twoja przeglądarka wymaga dodatkowego kroku, zanim KeeLink będzie mógł działać. Kliknij „kontynuuj” i zezwól KeeLink na dostęp do wszystkich witryn, aby mógł wypełniać Twoje dane logowania.",
         "description": "Explains why the user must grant the all-sites permission on first install."

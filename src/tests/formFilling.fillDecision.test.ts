@@ -52,7 +52,7 @@ describe("automated fill - single match", () => {
         expect(h.keeFieldIcon.addKeeIconToFields).toHaveBeenCalledTimes(1);
     });
 
-    it("#3 relevanceScore below threshold: not auto-filled (automated only)", () => {
+    it("#3 a hidden form has no login field: not auto-filled (automated only)", () => {
         const h = createHarness(`
             <form id="loginForm">
                 <input name="aaa" type="text" style="display:none">
@@ -60,10 +60,10 @@ describe("automated fill - single match", () => {
             </form>`);
         h.run([goodEntry({ matchAccuracy: 0 })]);
         expect(h.fieldValue("bbb")).toBe(""); // present but not filled
-        expect(h.matchResult().entries[0][0].relevanceScore).toBeLessThan(1);
+        expect(h.matchResult().entries[0][0].formFit.blocker).toEqual({ code: "no-login-field" });
         expect(
             h.logger.info.mock.calls.some(
-                c => /not relevant enough|low field match ratio/.test(String(c[0]))
+                c => /will not be auto-filled: the form has no visible password field/.test(String(c[0]))
             )
         ).toBe(true);
     });

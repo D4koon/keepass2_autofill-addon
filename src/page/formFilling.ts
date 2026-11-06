@@ -3,10 +3,11 @@ import { MatchedLoginsPanel } from "./matchedLoginsPanel";
 import { FormUtils } from "./formsUtils";
 import { FormSaving } from "./formSaving";
 import { KeeFieldIcon, type IconSide } from "./keeFieldIcon";
-import { ScoringDeps } from "./relevanceScoring";
+import { ScoringDeps } from "./pageDeps";
 import {
     EntryRankingDeps,
     flagUserPreferredEntry,
+    bestFormIndex,
     rankLoginMatchesAgainstAllForms,
     sortMatchedEntries
 } from "./entryRanking";
@@ -79,10 +80,7 @@ export class FormFilling {
         this.entryRankingDeps = {
             logger: this.Logger,
             formUtils: this.formUtils,
-            scoringDeps: this.scoringDeps,
-            sessionFeaturesFor: dbFileName =>
-                this.store.state.KeePassDatabases.find(db => db.fileName === dbFileName)
-                    .sessionFeatures
+            isCoveredBySite: isFieldCoveredBySite
         };
         this.formScannerDeps = {
             logger: this.Logger,
@@ -268,31 +266,12 @@ export class FormFilling {
 
         // There may be no results for this frame (e.g. no forms found, search failed, etc.)
         if (!findMatchesResult) {
-            return {
-                bestFormIndex: 0,
-                bestRelevanceScore: 0,
-                bestFindMatchesResult: undefined
-            };
+            return { bestFormIndex: 0, bestFindMatchesResult: undefined };
         }
 
-        let mostRelevantFormIndex = 0;
-
-        if (formIndex >= 0) mostRelevantFormIndex = formIndex;
-        else {
-            findMatchesResult.formRelevanceScores.forEach((c, index) => {
-                this.Logger.debug("Relevance of form is " + c);
-                if (c > findMatchesResult.formRelevanceScores[mostRelevantFormIndex]) {
-                    mostRelevantFormIndex = index;
-                }
-            });
-        }
-
-        this.Logger.debug("The most relevant form is #" + mostRelevantFormIndex);
-        return {
-            bestFormIndex: mostRelevantFormIndex,
-            bestRelevanceScore: findMatchesResult.formRelevanceScores[mostRelevantFormIndex],
-            bestFindMatchesResult: findMatchesResult
-        };
+        const best = formIndex >= 0 ? formIndex : bestFormIndex(findMatchesResult);
+        this.Logger.debug("The most relevant form is #" + best);
+        return { bestFormIndex: best, bestFindMatchesResult: findMatchesResult };
     }
 
     // automated could be on page load or resulting from other non-user-interaction.
