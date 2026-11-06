@@ -7,7 +7,7 @@ import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { diag } from "../common/diagnosisReport";
 import { MatchedField } from "./MatchedField";
 import { isFieldCoveredBySite } from "./fieldCover";
-import { isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
+import { isOneTimeCodeField, isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 import { Field } from "../common/model/Field";
 
 // The "why won't this entry fill here?" diagnosis, extracted verbatim from
@@ -431,6 +431,7 @@ function describeField(mf: MatchedField, host: FillDiagnosisHost): string {
     if (isFieldCoveredBySite(el)) parts.push("covered by something else on the page");
     if (isSwitchedOff(el)) parts.push("switched off by the site (inert/aria-hidden)");
     if (looksLikeSearchField(el, locator?.labels)) parts.push("looks like a search box");
+    if (isOneTimeCodeField(el)) parts.push("one-time code field");
     if (el.getRootNode() instanceof ShadowRoot) parts.push("in shadow DOM");
     return parts.join(" ");
 }

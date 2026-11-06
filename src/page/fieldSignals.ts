@@ -28,6 +28,16 @@ export function looksLikeSearchField(el: HTMLElement, labels: string[] = []): bo
     ].some(v => !!v && SEARCH_WORDS.test(v));
 }
 
+// A field for a code sent by text message or an authenticator app
+export function isOneTimeCodeField(el: HTMLElement): boolean {
+    return /(^|\s)one-time-code(\s|$)/i.test(el.getAttribute("autocomplete") || "");
+}
+
+// A field that never takes the username: a search box or a one-time code
+export function isNotForUsername(el: HTMLElement, labels: string[] = []): boolean {
+    return looksLikeSearchField(el, labels) || isOneTimeCodeField(el);
+}
+
 // The site has switched the field off for the user: it, or something around
 // it, is inert or hidden from assistive technology - as modal dialogs do to
 // the rest of the page

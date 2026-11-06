@@ -4,7 +4,7 @@ import { Field } from "../common/model/Field";
 import { configManager } from "../common/ConfigManager";
 import { KeeLogger } from "../common/Logger";
 import { FieldMatchScoreConfig, ScoringDeps, calculateFieldMatchScore } from "./relevanceScoring";
-import { isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
+import { isNotForUsername, isSwitchedOff } from "./fieldSignals";
 
 // Form-field population, extracted verbatim from FormFilling. The logger and the
 // scoring deps are passed in; configManager is still imported directly (see the
@@ -35,8 +35,8 @@ function byScore(
     preferredFormFieldIndex: number | undefined,
     deps: FieldFillingDeps
 ) {
-    // 0 usable; 1 covered, switched off by the site or a search box; 2 read-only
-    // or disabled. Hit-testing forces a layout, so each field is looked at once.
+    // 0 usable; 1 covered, switched off by the site, or a search box or one-time
+    // code field; 2 read-only or disabled. Hit-testing forces a layout, so each field is looked at once.
     const reach = new Map<number, number>();
     const locked = (i: number) => {
         let r = reach.get(i);
@@ -47,7 +47,7 @@ function byScore(
                 ? 0
                 : el.readOnly || el.disabled
                   ? 2
-                  : isSwitchedOff(el) || looksLikeSearchField(el, labels) || deps.isCoveredBySite(el)
+                  : isSwitchedOff(el) || isNotForUsername(el, labels) || deps.isCoveredBySite(el)
                     ? 1
                     : 0;
             reach.set(i, r);

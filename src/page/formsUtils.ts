@@ -1,5 +1,5 @@
 import { KeeLogger } from "../common/Logger";
-import { isSwitchedOff, looksLikeSearchField, stepsToMeet } from "./fieldSignals";
+import { isNotForUsername, isSwitchedOff, stepsToMeet } from "./fieldSignals";
 import { MatchedField } from "./MatchedField";
 import { Field } from "../common/model/Field";
 
@@ -116,16 +116,23 @@ export class FormUtils {
     // The text field most likely to take the username, as an index into
     // `fields`; -1 if there is none. Compared in this order, each only
     // deciding when the ones before are equal:
-    //  1. usable: not read-only or disabled, not switched off by the site, not
-    //     a search box
+    //  1. usable: not switched off by the site, not a search box or one-time
+    //     code field, and when filling, not read-only or disabled (on submit
+    //     many sites lock their fields while signing in, so not then)
     //  2. autocomplete="username"
     //  3. a name or label known for usernames, or autocomplete="email"
     //  4. close to a password field: meets it after fewer steps up the DOM
     //  5. before the first password field
     //  6. nearest to the first password field (with none: the first one)
+    // On a page without a <form> (the stand-in form spans the whole page) 4
+    // comes before 3: a footer newsletter "email" field mustn't beat the field
+    // next to the password. In a real form all fields share the form, and a
+    // field right by the password may be a captcha, so names count for more.
     private pickUsernameIndex(
         fields: { element: MatchedField; type: string }[],
-        firstPasswordIndex: number
+        firstPasswordIndex: number,
+        isSubmission: boolean,
+        wholePage: boolean
     ): number {
         const passwords = fields.filter(f => f.type === "password").map(f => f.element.DOMelement);
         let best = -1;
@@ -137,16 +144,21 @@ export class FormUtils {
             const labels = locator?.labels ?? [];
             const autocomplete = locator?.autocompleteValues ?? [];
             const usable =
-                !el.readOnly && !el.disabled && !isSwitchedOff(el) && !looksLikeSearchField(el, labels);
+                (isSubmission || (!el.readOnly && !el.disabled)) &&
+                !isSwitchedOff(el) &&
+                !isNotForUsername(el, labels);
             const known =
                 this.isAKnownUsernameString(el.name) ||
                 labels.some(label => this.isAKnownUsernameString(label)) ||
                 autocomplete.includes("email");
+            const near = passwords.length
+                ? -Math.min(...passwords.map(p => stepsToMeet(el, p)))
+                : 0;
             const key = [
                 usable ? 1 : 0,
                 autocomplete.includes("username") ? 1 : 0,
-                known ? 1 : 0,
-                passwords.length ? -Math.min(...passwords.map(p => stepsToMeet(el, p))) : 0,
+                wholePage ? near : known ? 1 : 0,
+                wholePage ? (known ? 1 : 0) : near,
                 firstPasswordIndex < 0 || i < firstPasswordIndex ? 1 : 0,
                 firstPasswordIndex < 0 ? -i : -Math.abs(firstPasswordIndex - i)
             ];
@@ -243,7 +255,13 @@ export class FormUtils {
         // This is used to display the username to the user, and when filling it decides
         // between fields that suit the entry's username equally well, so an inaccurate
         // choice doesn't change the form detection but can put the username in the wrong place.
-        const usernameIndex = this.pickUsernameIndex(allFields, firstPasswordIndex);
+        const usernameIndex = this.pickUsernameIndex(
+            allFields,
+            firstPasswordIndex,
+            isSubmission,
+            // The stand-in form of loose fields is a plain object, not a <form>
+            !(form instanceof HTMLFormElement)
+        );
         this.Logger.debug("usernameIndex: " + usernameIndex);
 
         let otherCount = 0;

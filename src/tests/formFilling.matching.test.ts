@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHarness, makeEntry, resetHarness } from "./helpers/formFillingHarness";
+import { FormUtils } from "../page/formsUtils";
 
 beforeEach(() => {
     document.body.innerHTML = "";
@@ -742,6 +743,23 @@ describe("username field guess", () => {
             <input type="password" id="pass"></form>`
         ],
         [
+            "not a one-time code field just before the password",
+            `<form><input type="text" id="want" name="f1">
+            <input type="text" id="other" name="f2" autocomplete="one-time-code">
+            <input type="password" id="pass"></form>`
+        ],
+        [
+            "on a page without forms, the field by the password over a newsletter e-mail field",
+            `<div class="login"><div><input type="text" id="want" name="kennung"></div>
+            <div><input type="password" id="pass"></div></div>
+            <footer><input type="text" id="other" name="email"></footer>`
+        ],
+        [
+            "in a real form, a known name over the field right by the password",
+            `<form><div><input type="text" id="want" name="username"></div>
+            <div><input type="text" id="other" name="captcha"><input type="password" id="pass"></div></form>`
+        ],
+        [
             "the field that shares the password's wrapper",
             `<div class="header"><input type="text" id="other" name="f1"></div>
             <div class="login"><div><input type="password" id="pass"></div>
@@ -749,6 +767,21 @@ describe("username field guess", () => {
         ]
     ])("prefers %s", (_, html) => {
         expect(fillUnnamed(html)).toEqual(["want"]);
+    });
+
+    it("on submit, still takes a field the site locked while signing in as the username", () => {
+        // Saving reads the fields on submit, when many sites have just disabled them
+        document.body.innerHTML = `
+            <form id="login">
+                <input type="text" id="user" name="username" disabled>
+                <input type="text" id="device" name="device-label">
+                <input type="password" id="pass" name="password" value="s3cret" disabled>
+            </form>`;
+        const formUtils = new FormUtils({ debug: () => {}, info: () => {}, warn: () => {} } as never);
+        const form = document.getElementById("login");
+
+        const submitted = formUtils.getFormFields(form, true, 50);
+        expect(submitted.otherFields[submitted.actualUsernameIndex].DOMelement.id).toBe("user");
     });
 
     it("leaves a blacklisted search field out of a page without forms instead of skipping the page", () => {
