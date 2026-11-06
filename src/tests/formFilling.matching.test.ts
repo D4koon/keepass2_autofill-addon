@@ -326,7 +326,7 @@ describe("fill diagnosis", () => {
             { type: "password", value: "pass-value-9c1e", name: "" }
         ]);
 
-    it("lists every field of the filled form with its scores and what was filled", () => {
+    it("lists every field of the filled form, what was filled and why", () => {
         const h = createHarness(LOOSE_LOGIN);
         h.formFilling.diagnoseFillForEntry(UNNAMED_ENTRY());
         const lines = report(h);
@@ -338,14 +338,19 @@ describe("fill diagnosis", () => {
 
         // (jsdom has no innerText, so <label> texts are missing here; aria-label works)
         expect(field("username")).toContain('label="user name"');
-        expect(field("username")).toContain("detected as the username field");
+        expect(field("username")).toContain("guessed username field");
         expect(field("realm")).toContain("read-only");
-        expect(field("filter")).toMatch(/scores: "text" \d+/);
+        expect(field("filter")).toContain("looks like a search box");
         expect(field("password")).toContain("FILLED");
         // Exactly one text field got the username, and the report says which
         const filledText = fields.filter(l => l.startsWith("- #") && l.includes("FILLED") && !l.includes("password"));
         expect(filledText).toHaveLength(1);
         expect(filledText[0]).toContain('name="username"');
+
+        // Why: the username went to #1 over the search box #0 by the reach rule
+        const why = lines.slice(lines.findIndex(l => l.startsWith("## How the fields were chosen")) + 1);
+        expect(why[0]).toMatch(/^- "text" → #1: beat #0 at rule 6: can be reached/);
+        expect(why.find(l => l.startsWith('- "password"'))).toContain("the only page field left that fits");
         expect(lines.join("\n")).not.toContain("user-value-7f3a");
         expect(lines.join("\n")).not.toContain("pass-value-9c1e");
     });
@@ -372,6 +377,52 @@ describe("fill diagnosis", () => {
 });
 
 describe("field filling", () => {
+    // Fields that can never take a login value don't count towards how much of
+    // the form the entry covers
+    it("fills an app's login on load although a search box and read-only fields surround it", () => {
+        const h = createHarness(`
+            <div class="header"><input type="text" id="search" name="globalSearch" placeholder="Search"></div>
+            <div class="login-window">
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
+                <input type="text" id="realm" name="realm" readonly>
+                <input type="text" id="lang" name="lang" readonly>
+            </div>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "root", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+
+        expect(h.matchResult().entries[h.matchResult().mostRelevantFormIndex][0].lowFieldMatchRatio).toBe(false);
+        expect(h.fieldValue("user")).toBe("root");
+        expect(h.fieldValue("pass")).toBe("s3cret");
+        expect(h.fieldValue("search")).toBe("");
+    });
+
+    it("still doesn't fill on load a form with many more fields than the entry", () => {
+        const h = createHarness(`
+            <form>
+                <input type="text" id="first" name="first">
+                <input type="text" id="last" name="last">
+                <input type="text" id="user" name="username">
+                <input type="text" id="street" name="street">
+                <input type="password" id="pass" name="password">
+            </form>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "root", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+
+        expect(h.fieldValue("user")).toBe("");
+        expect(h.fieldValue("pass")).toBe("");
+    });
+
     // Proxmox VE: an entry without field names scores all visible text fields the
     // same, and the app's search box comes before the login window
     it("puts the username into the detected username field, not an earlier search box", () => {

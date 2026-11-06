@@ -3,7 +3,7 @@ import { MatchedLoginsPanel } from "./matchedLoginsPanel";
 import { FormUtils } from "./formsUtils";
 import { FormSaving } from "./formSaving";
 import { KeeFieldIcon, type IconSide } from "./keeFieldIcon";
-import { FieldMatchScoreConfig, ScoringDeps, calculateFieldMatchScore } from "./relevanceScoring";
+import { ScoringDeps } from "./relevanceScoring";
 import {
     EntryRankingDeps,
     flagUserPreferredEntry,
@@ -238,16 +238,6 @@ export class FormFilling {
         this.fillAndSubmit(true);
     }
 
-    // How fields of an entry from this database are scored against the page's
-    private scoreConfigFor(dbFileName: string): FieldMatchScoreConfig {
-        const features =
-            this.store.state.KeePassDatabases.find(db => db.fileName === dbFileName)
-                ?.sessionFeatures ?? [];
-        return {
-            punishWrongIDAndName: features.indexOf("KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY") >= 0
-        };
-    }
-
     // Debugging aid for "this entry is findable in the search box but won't fill here".
     // Runs a single, explicitly chosen entry through the real form-scan + relevance
     // scoring pipeline against this frame, force-fills the best form (never submits) and
@@ -269,14 +259,7 @@ export class FormFilling {
                 ),
             getMostRelevantForm: formIndex => this.getMostRelevantForm(formIndex),
             fillAndSubmit: (automated, formIndex, entryIndex, noSubmit) =>
-                this.fillAndSubmit(automated, formIndex, entryIndex, noSubmit),
-            fieldMatchScore: (formField, dataField, entry) =>
-                calculateFieldMatchScore(
-                    formField,
-                    dataField,
-                    this.scoreConfigFor(entry.database?.fileName),
-                    this.scoringDeps
-                )
+                this.fillAndSubmit(automated, formIndex, entryIndex, noSubmit)
         });
     }
 
@@ -487,11 +470,9 @@ export class FormFilling {
         if (matchingLogin != null && (action.fill || matchResult.mustAutoFillForm)) {
             this.Logger.debug("Going to auto-fill a form");
 
-            const scoreConfig = this.scoreConfigFor(matchingLogin.database.fileName);
             const lastFilledOther = fillManyFormFields(
                 otherFields,
                 matchingLogin.fields.filter(f => f.type !== "password"),
-                scoreConfig,
                 automated,
                 this.fieldFillingDeps,
                 matchResult.usernameIndexArray?.[matchResult.mostRelevantFormIndex]
@@ -499,7 +480,6 @@ export class FormFilling {
             const lastFilledPasswords = fillManyFormFields(
                 passwordFields,
                 matchingLogin.fields.filter(f => f.type === "password"),
-                scoreConfig,
                 automated,
                 this.fieldFillingDeps
             );

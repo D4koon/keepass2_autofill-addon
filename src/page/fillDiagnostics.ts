@@ -7,6 +7,7 @@ import type { FindMatchesBehaviour } from "./findMatchesBehaviour";
 import { diag } from "../common/diagnosisReport";
 import { MatchedField } from "./MatchedField";
 import { isFieldCoveredBySite } from "./fieldCover";
+import { RULES, findCandidates, pairFields } from "./fieldRanking";
 import { isOneTimeCodeField, isSwitchedOff, looksLikeSearchField } from "./fieldSignals";
 import { Field } from "../common/model/Field";
 
@@ -38,8 +39,6 @@ export interface FillDiagnosisHost {
         entryIndex?: number,
         noSubmit?: boolean
     ): void;
-    // How well `dataField` of `entry` suits `formField`, as the fill scores it
-    fieldMatchScore(formField: MatchedField, dataField: Field, entry: Entry): number;
 }
 
 export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
@@ -343,10 +342,9 @@ function describeForm(f: any, host: FillDiagnosisHost): string[] {
 
 const MAX_FIELDS_LISTED = 30;
 
-// Every field of the form that was filled: what it is, how well each of the
-// entry's fields suits it, which one was taken as the username and what was
-// filled. This is what tells why the wrong field got the username. Names,
-// ids and labels only - never values.
+// Every field of the form that was filled: what it is and what was filled,
+// then for each entry field which page field it went to and the rule that
+// decided against the next best one. Names, ids and labels only - never values.
 function describeFilledForm(
     entry: Entry,
     formIndex: number,
@@ -357,46 +355,73 @@ function describeFilledForm(
         const s = host.state.current;
         const filledEls = new Set(filled.map(f => f.DOMelement));
         const usernameIndex = s.usernameIndexArray?.[formIndex];
-        const groups: [MatchedField[], Field[], boolean][] = [
-            [
-                s.otherFieldsArray?.[formIndex] || [],
-                entry.fields.filter(f => f.type !== "password"),
-                true
-            ],
-            [
-                s.passwordFieldsArray?.[formIndex] || [],
-                entry.fields.filter(f => f.type === "password"),
-                false
-            ]
+        const deps = {
+            isVisible: (el: HTMLElement) => host.formUtils.isDOMElementVisible(el),
+            isCoveredBySite: isFieldCoveredBySite
+        };
+        const groups = [
+            {
+                formFields: s.otherFieldsArray?.[formIndex] || [],
+                dataFields: entry.fields.filter(f => f.type !== "password"),
+                usernameIndex
+            },
+            {
+                formFields: s.passwordFieldsArray?.[formIndex] || [],
+                dataFields: entry.fields.filter(f => f.type === "password"),
+                usernameIndex: undefined
+            }
         ];
+
         const lines = [diag.heading(`Fields of form #${formIndex}`)];
+        // Report numbers run across both groups: #n
+        const numbers = new Map<MatchedField, number>();
         let n = 0;
-        for (const [formFields, dataFields, isOther] of groups) {
-            formFields.forEach((mf, i) => {
-                if (!mf || n >= MAX_FIELDS_LISTED) return;
-                const parts = [describeField(mf, host)];
-                const scores = dataFields.map(
-                    d => `${entryFieldName(d)} ${round(host.fieldMatchScore(mf, d, entry))}`
-                );
-                if (scores.length) parts.push("scores: " + scores.join(", "));
-                if (isOther && i === usernameIndex) parts.push("detected as the username field");
-                parts.push(filledEls.has(mf.DOMelement) ? "FILLED" : "not filled");
-                lines.push(diag.bullet(`#${n} ` + parts.join("; ")));
+        for (const g of groups) {
+            g.formFields.forEach((mf, i) => {
+                if (!mf) return;
+                numbers.set(mf, n);
+                if (n < MAX_FIELDS_LISTED) {
+                    const parts = [describeField(mf, host)];
+                    if (i === g.usernameIndex) parts.push("guessed username field");
+                    parts.push(filledEls.has(mf.DOMelement) ? "FILLED" : "not filled");
+                    lines.push(diag.bullet(`#${n} ` + parts.join("; ")));
+                }
                 n++;
             });
         }
-        const total = groups.reduce((sum, [f]) => sum + f.length, 0);
-        if (total > n) lines.push(diag.info(`${total - n} more field(s) not listed.`));
-        if (total === 0) lines.push(diag.info("The form has no fields Kee could fill."));
+        if (n > MAX_FIELDS_LISTED) {
+            lines.push(diag.info(`${n - MAX_FIELDS_LISTED} more field(s) not listed.`));
+        }
+        if (n === 0) lines.push(diag.info("The form has no fields Kee could fill."));
+
+        lines.push(diag.heading("How the fields were chosen"));
+        for (const g of groups) {
+            const picks = pairFields(findCandidates(g.formFields, g.dataFields, g.usernameIndex, deps));
+            const placed = new Set<number>();
+            for (const { winner, runnerUp, rule } of picks) {
+                placed.add(winner.dataFieldIndex);
+                const to = `#${numbers.get(g.formFields[winner.formFieldIndex])}`;
+                const why = runnerUp
+                    ? `beat #${numbers.get(g.formFields[runnerUp.formFieldIndex])} at rule ${rule + 1}: ${RULES[rule].says}`
+                    : "the only page field left that fits";
+                lines.push(
+                    diag.bullet(`${entryFieldName(g.dataFields[winner.dataFieldIndex])} → ${to}: ${why}`)
+                );
+            }
+            g.dataFields.forEach((d, j) => {
+                if (!placed.has(j)) {
+                    lines.push(
+                        diag.bullet(`${entryFieldName(d)} → nothing: no page field left of type ${d.type}`)
+                    );
+                }
+            });
+        }
         lines.push(
             diag.info(
-                "Scores: 1 to start, +50 if the id matches the entry field's, +40 if the name " +
-                    "does, +35 if the field is visible; 0 if the types don't fit. Each entry " +
-                    "field goes to its best-scoring page field; a tie goes to editable " +
-                    "fields, then to uncovered ones that aren't search boxes, then to the " +
-                    "detected username field (by autocomplete, name or label, then nearness " +
-                    "to the password field), " +
-                    "then to the one that comes first on the page."
+                "Each entry field goes to a page field of the same type. Two candidates are " +
+                    "compared rule by rule, and the first rule that tells them apart decides: " +
+                    RULES.map((r, i) => `${i + 1}. ${r.says}`).join("; ") +
+                    "."
             )
         );
         return lines;

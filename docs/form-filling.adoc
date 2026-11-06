@@ -67,10 +67,11 @@ The main files:
 |`page/formsUtils.ts` |Reads a form's fields and guesses the username field (`getFormFields`, `pickUsernameIndex`)
 |`page/fieldSignals.ts` |Cheap DOM hints: search box, one-time code, switched off, nearness
 |`page/fieldCover.ts` |Hit-test: is something else on the page lying over a field?
-|`page/relevanceScoring.ts` |Field and entry scores, field match ratio
+|`page/fieldRanking.ts` |Which page field gets which entry field: the rules (`RULES`, `pairFields`)
+|`page/relevanceScoring.ts` |Weighs entries against forms, field match ratio
 |`page/entryRanking.ts` |Ranks entries per form, marks the site's preferred entry
 |`page/fillDecision.ts` |Fill or not, submit or not
-|`page/fieldFilling.ts` |Which page field gets which entry field (`byScore`), and the fill itself
+|`page/fieldFilling.ts` |The fill itself, with the pairs from `fieldRanking.ts`
 |`page/fillDiagnostics.ts` |The "Check how this fills here" report
 |===
 
@@ -129,44 +130,28 @@ as logins. For the stand-in form only the blacklisted *field* is left out:
 otherwise one search box in an app's header would hide every loose login field
 on the page.
 
-== Scoring
+== Choosing the entry and deciding to fill
 
-=== How well an entry field suits a page field
+When KeePass returns several entries, or the page has several login forms,
+KeeLink weighs each entry against each form (`calculateRelevanceScore` in
+`relevanceScoring.ts`). This is the one place that still uses points, because
+it compares amounts: how well the URL matches, whether the form is visible,
+and how many of the form's fields the entry's fields suit. The highest total
+picks the form, and orders the entries in the popup.
 
-`calculateFieldMatchScore` in `relevanceScoring.ts`:
+=== Enough of the form covered?
 
-[cols="3,1"]
-|===
-|Condition |Points
+The *field match ratio* is the share of the form's named text and password
+fields that the entry can fill. Below one half, the entry gets
+`lowFieldMatchRatio` and isn't filled on page load, so a two-field entry
+doesn't fill, say, a long registration form by itself.
 
-|Start |1
-|Types differ (e.g. text vs. checkbox) |score is 0, nothing else counts
-|The page field's id equals the entry field's stored id |+50
-|The page field's name equals the entry field's stored name |+40
-|The page field is visible |+35
-|Radio button whose value equals the entry field's value |+30
-|Database feature `KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY`, and the entry field
-has an id (or name) that does *not* match |−5 each
-|===
-
-IMPORTANT: Entries made by hand in KeePass usually store *no* field id or name.
-Then every visible text field scores the same, 36, and the score can't tell
-the username field from a search box. Section <<ties>> describes what decides
-then.
-
-=== How well an entry suits a form
-
-`calculateRelevanceScore` adds up, per form and entry:
-
-* the entry's URL match accuracy (from KeePass),
-* −20 if the form is not visible,
-* the best field score of each page field, averaged and reduced when the form
-  and the entry have very different numbers of fields.
-
-It also computes the *field match ratio*: the share of the form's named text
-and password fields that the entry can fill. Below 0.501 the entry gets
-`lowFieldMatchRatio`. On the Proxmox login, for example, the entry has 2
-fields and the page 6 named ones, so the ratio is 2/6.
+Fields that can never take a login value don't count (`cannotTakeLoginValue`
+in `fieldSignals.ts`): read-only or disabled fields, fields the site switched
+off (`inert`, `aria-hidden`), search boxes and one-time code fields. On the
+Proxmox VE login the entry's 2 fields cover the user name and password field,
+2 of 2; without this rule the search box and the read-only realm and language
+fields made it 2 of 6, and the login only filled on click.
 
 === Fill or only offer
 
@@ -174,8 +159,8 @@ fields and the page 6 named ones, so the ratio is 2/6.
 
 * one matching entry is taken; with several, the site's preferred entry, else
   the most relevant one,
-* it must have a relevance score of at least 1 *and* no `lowFieldMatchRatio`,
-  unless the entry has *Always auto-fill* set in KeePass,
+* it must reach the relevance threshold *and* not have `lowFieldMatchRatio`,
+  unless the entry is set to always auto-fill in KeePass,
 * then the add-on settings and the entry's *always/never auto-fill* and
   *always/never auto-submit* flags decide.
 
@@ -189,7 +174,7 @@ field icon. A click on it fills without any threshold.
 username. The guess is used
 
 * to show the username in the popup,
-* to settle ties when filling (see <<ties>>),
+* as rule 7 when filling (see <<field-rules>>),
 * when a form is submitted, to decide which value is saved as the username.
 
 Each rule only decides when all rules before it are equal:
@@ -252,73 +237,97 @@ the unnamed field next to the password. In a real `<form>` all fields share
 the form anyway, and a field right by the password may be a captcha, so known
 names count for more there.
 
-[[ties]]
-== Assigning entry fields to page fields
+[[field-rules]]
+== Which page field gets which entry field
 
-`fillManyFormFields` in `fieldFilling.ts` runs once for text-like fields and
-once for password fields. It scores every pair of page field and entry field,
-then repeatedly takes the best pair, fills it and removes both from the list,
-until no pair with a positive score is left.
+`fieldRanking.ts`. Every pair of page field and entry field whose *types fit*
+(text to text, password to password, checkbox to checkbox) is a candidate.
+Two candidates are compared rule by rule; the first rule that tells them apart
+decides. There are no points.
 
-Pairs are ordered by `byScore`:
-
-[plantuml, tie-break, svg]
+[plantuml, field-rules, svg]
 ----
 @startuml
 skinparam shadowing false
 skinparam defaultFontName sans-serif
-title Order of (page field, entry field) pairs
+title Comparing two candidates: the first rule that differs decides
 
 start
-:1. Higher score first
-   (a stored id or name match always wins here);
-:2. Reachable before covered before locked
-   - locked: read-only or disabled
-   - covered: something else lies over it (hit-test),
-     switched off, a search box or a one-time code field;
-:3. The guessed username field first;
-:4. Page order (stable sort);
+:1. Matches the id or name stored in the entry;
+:2. Is visible;
+:3. Matches both the stored id and name;
+:4. Matches the stored id;
+:5. Is the radio button with the stored value;
+:6. Can be reached
+   - best: nothing in the way
+   - then: covered by something else on the page (hit-test),
+     switched off (inert / aria-hidden),
+     a search box or a one-time code field
+   - last: read-only or disabled;
+:7. Is the guessed username field
+   (see <<username-guess>>);
+:8. Comes first on the page;
 stop
 @enduml
 ----
 
-Rules 2 to 4 only ever matter between pairs with the *same* score, so they
-can't override an entry with stored field names. Each field's reachability is
-looked up once per fill, because the hit-test forces a layout.
+The best candidate is filled, both of its fields drop out, and the best of the
+rest is next, until no candidate is left (`pairFields`). So each entry field
+goes to one page field, and each page field gets at most one value.
+
+Rules 1 to 5 only decide for entries that store field ids or names, typically
+entries KeeLink saved from a submitted form. Entries made by hand in KeePass
+store none, and then rules 6 to 8 decide.
+
+Each page field's visibility and reach are looked up once per fill, because
+the hit-test forces a layout.
 
 === Example: Proxmox VE
 
 The login window sits on a mask over the whole app, including its global
-search box. The entry has no stored field names.
+search box. The entry stores no field names, so rules 1 to 5 are equal for
+every text field.
 
-[cols="3,1,4"]
+[cols="3,4"]
 |===
-|Page field |Score |Outcome
+|Page field |Outcome
 
-|`pveGlobalSearchField-1020-inputEl` (header) |36 |search box, covered: loses
-|`view-inputEl` |36 |read-only: loses
-|`username`, label "User name:" |36 |guessed username: *filled*
-|`realm`, `lang` |36 |read-only: lose
-|`saveusername` (checkbox) |0 |wrong type
-|`password` |36 |only password field: *filled*
+|`pveGlobalSearchField-1020-inputEl` (header) |search box, covered: loses at rule 6
+|`view-inputEl` |read-only: loses at rule 6
+|`username`, label "User name:" |guessed username: *filled* (rule 7)
+|`realm`, `lang` |read-only: lose at rule 6
+|`saveusername` (checkbox) |type doesn't fit: no candidate
+|`password` |the only password field: *filled*
 |===
 
-Before these rules the search box won the tie because it comes first on the
-page.
+=== Compared with the old points
+
+Until version 1.0.12 this choice used points: +50 for a matching id, +40 for
+a name, +35 for a visible field, +30 for a radio value, 1 to start. A test
+(`fieldRanking.test.ts`) compares the rules with the points over every
+combination of these facts. They pick the same field except in two rare cases:
+
+* A visible field matching the stored id or name now beats a hidden field
+  that matches more of them. Before, the hidden one won.
+* A radio button's stored value now counts below an id or name match.
+
+The old −5 for a stored id or name that doesn't match (for databases with the
+`KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY` feature) only applies to choosing the
+entry now; for the field choice, rule 1 covers it.
 
 == Steering the result
 
 Store the page field's name or id in the entry::
 In KeePass, open the entry, tab *KeePassRPC*, *Form fields*, and set the name
-or id of the page field for the username and password. A matching id adds 50
-points, a name 40, which beats every tie rule. Entries that KeeLink saved from
+or id of the page field for the username and password. A match decides at
+rule 1 of <<field-rules>>, ahead of every guess. Entries that KeeLink saved from
 a submitted form already have them. Beware of generated names such as
 `textfield-1067-inputEl`: they can change when the site is updated.
 
 Always auto-fill::
 An entry set to always auto-fill (in its KeePassRPC tab in KeePass) skips the
-relevance and field match ratio threshold, so pages like Proxmox fill on load
-instead of on click.
+relevance and field match ratio threshold, for pages that still only fill on
+click.
 
 Include and exclude lists::
 In KeeLink's settings, choose *A specific website*, then *Finding forms*. A
@@ -342,8 +351,11 @@ current page and lists
 * the relevance score and `lowFieldMatchRatio` of the best form,
 * every field of that form with its type, name, id, label, autocomplete,
   visibility, read-only/disabled, and the signals of section
-  <<username-guess>>, its score against each entry field, which field was
-  guessed as the username, and which were filled.
+  <<username-guess>>, which field was guessed as the username, and which were
+  filled,
+* for each entry field, the page field it went to and the rule that put it
+  ahead of the next best one, e.g. `"KeePass username" → #2: beat #0 at rule
+  6: can be reached`.
 
 It contains the page address, the entry's title, UUID and URLs, and field
 names, ids and labels; never field values or passwords. *Copy* puts it on the
@@ -373,10 +385,13 @@ Popup -> User : report with Copy button
 
 == Tests
 
-* `src/tests/formFilling.matching.test.ts`: form detection, scoring, the
-  username guess (one fixture page per rule, each one the old guess got
-  wrong), tie rules, the stand-in form blacklist, the diagnosis report.
+* `src/tests/formFilling.matching.test.ts`: form detection, choosing the
+  entry, the field match ratio, the username guess (one fixture page per rule,
+  each one the old guess got wrong), the field rules on real pages, the
+  stand-in form blacklist, the diagnosis report.
 * `src/tests/fieldSignals.test.ts`: the DOM signals, including shadow DOM.
+* `src/tests/fieldRanking.test.ts`: the field rules, and their comparison with
+  the old points.
 * `src/tests/browser/fieldCover.test.ts`: the hit-test in real Chromium and
   Firefox (a modal mask over a search box, a floating label over its own
   field).

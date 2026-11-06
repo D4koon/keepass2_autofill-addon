@@ -2,6 +2,7 @@ import { MatchedField } from "./MatchedField";
 import { Field } from "../common/model/Field";
 import { Entry } from "../common/model/Entry";
 import { KeeLogger } from "../common/Logger";
+import { cannotTakeLoginValue } from "./fieldSignals";
 
 // Field- and entry-level relevance scoring, extracted verbatim from FormFilling.
 // Pure apart from one deliberate side effect: determineRelevanceScores writes
@@ -155,12 +156,19 @@ export function calculateRelevanceScore(
     const loginFieldCount = entry.fields.filter(
         f => f.locators[0].id || f.locators[0].name || f.value
     ).length;
+    // Fields that can never take a login value (read-only, disabled, switched
+    // off, search boxes, one-time code fields) don't count: on an app's login
+    // page they would otherwise outnumber the login fields, as on Proxmox VE with
+    // its search box and read-only realm and language fields.
+    const counts = (f: MatchedField) =>
+        !f?.DOMelement || !cannotTakeLoginValue(f.DOMelement, f.field.locators[0]?.labels);
     const formFieldCountForAutofill = passwordFields
         .concat(otherFields)
         .filter(
             f =>
                 (f.field.type === "password" || f.field.type === "text") &&
-                (f.field.locators[0].id || f.field.locators[0].name)
+                (f.field.locators[0].id || f.field.locators[0].name) &&
+                counts(f)
         ).length;
     const loginFieldCountForAutofill = entry.fields.filter(
         f =>
@@ -169,8 +177,9 @@ export function calculateRelevanceScore(
     ).length;
 
     const formMatchedFieldCountForAutofill =
-        otherFieldMatchSuccesses.filter(s => s === true).length +
-        passwordFieldMatchSuccesses.filter(s => s === true).length;
+        otherFieldMatchSuccesses.filter((s, i) => s === true && counts(otherFields[i])).length +
+        passwordFieldMatchSuccesses.filter((s, i) => s === true && counts(passwordFields[i]))
+            .length;
 
     const numberOfNewPasswordFields = passwordFields.filter(f =>
         f.field.locators[0].autocompleteValues?.some(v => v === "new-password")

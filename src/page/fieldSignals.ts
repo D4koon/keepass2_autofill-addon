@@ -38,6 +38,14 @@ export function isNotForUsername(el: HTMLElement, labels: string[] = []): boolea
     return looksLikeSearchField(el, labels) || isOneTimeCodeField(el);
 }
 
+// A field that never takes a login value: read-only or disabled, switched off
+// by the site, or a search box or one-time code field. Such fields don't count
+// when working out how much of a form an entry covers.
+export function cannotTakeLoginValue(el: HTMLElement, labels: string[] = []): boolean {
+    const input = el as HTMLInputElement;
+    return !!(input.readOnly || input.disabled || isSwitchedOff(el) || isNotForUsername(el, labels));
+}
+
 // The site has switched the field off for the user: it, or something around
 // it, is inert or hidden from assistive technology - as modal dialogs do to
 // the rest of the page

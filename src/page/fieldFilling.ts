@@ -3,18 +3,12 @@ import { MatchedField } from "./MatchedField";
 import { Field } from "../common/model/Field";
 import { configManager } from "../common/ConfigManager";
 import { KeeLogger } from "../common/Logger";
-import { FieldMatchScoreConfig, ScoringDeps, calculateFieldMatchScore } from "./relevanceScoring";
-import { isNotForUsername, isSwitchedOff } from "./fieldSignals";
+import { ScoringDeps } from "./relevanceScoring";
+import { findCandidates, pairFields } from "./fieldRanking";
 
-// Form-field population, extracted verbatim from FormFilling. The logger and the
-// scoring deps are passed in; configManager is still imported directly (see the
-// autoFillFieldsWithExistingValue note below).
-
-interface ScoreMatrix {
-    score: number;
-    formFieldIndex: number;
-    dataFieldIndex: number;
-}
+// Form-field population, extracted from FormFilling. Which page field gets
+// which entry field is decided in fieldRanking.ts. configManager is still
+// imported directly (see the autoFillFieldsWithExistingValue note below).
 
 export interface FieldFillingDeps {
     logger: KeeLogger;
@@ -23,70 +17,21 @@ export interface FieldFillingDeps {
     isCoveredBySite(element: HTMLElement): boolean;
 }
 
-// Highest score first. Ties - common when the entry has no field names or ids,
-// so every visible text field scores the same - go to editable fields, then to
-// ones nothing lies over that aren't switched off or search boxes, then to the
-// field the scanner took
-// as the username, then to the one that comes first on the page (the sort is
-// stable). Otherwise a site's search box gets the username, as on Proxmox,
-// where it sits behind the mask of the login window.
-function byScore(
-    formFields: MatchedField[],
-    preferredFormFieldIndex: number | undefined,
-    deps: FieldFillingDeps
-) {
-    // 0 usable; 1 covered, switched off by the site, or a search box or one-time
-    // code field; 2 read-only or disabled. Hit-testing forces a layout, so each field is looked at once.
-    const reach = new Map<number, number>();
-    const locked = (i: number) => {
-        let r = reach.get(i);
-        if (r === undefined) {
-            const el = formFields[i]?.DOMelement as HTMLInputElement | undefined;
-            const labels = formFields[i]?.field?.locators?.[0]?.labels;
-            r = !el
-                ? 0
-                : el.readOnly || el.disabled
-                  ? 2
-                  : isSwitchedOff(el) || isNotForUsername(el, labels) || deps.isCoveredBySite(el)
-                    ? 1
-                    : 0;
-            reach.set(i, r);
-        }
-        return r;
-    };
-    return (a: ScoreMatrix, b: ScoreMatrix) =>
-        b.score - a.score ||
-        locked(a.formFieldIndex) - locked(b.formFieldIndex) ||
-        Number(b.formFieldIndex === preferredFormFieldIndex) -
-            Number(a.formFieldIndex === preferredFormFieldIndex);
-}
-
 function fillMatchedFields(
-    fieldScoreMatrix: ScoreMatrix[],
     dataFields: Field[],
     formFields: MatchedField[],
     automated: boolean,
     deps: FieldFillingDeps,
-    preferredFormFieldIndex?: number
+    usernameIndex?: number
 ) {
-    // We want to make sure each data field is matched to only one form field but we
-    // don't know which field will be the best match and we don't want to ignore
-    // less accurate matches just because they happen to appear later.
-
-    // We have a matrix of objects representing each possible combination of data field
-    // and form field and the score for that match.
-    // We choose what to fill by sorting that list by score.
-    // After filling a field we remove all objects from the list which are for the
-    // data field we just filled in and the form field we filled in.
-
-    // This means we always fill each form field only once, with the best match
-    // selected from all data fields that haven't already been selected for another form field
-
-    // The above algorithm could maybe be tweaked slightly in order to auto-fill
-    // a "change password" form if we ever manage to make that automated
-
-    const order = byScore(formFields, preferredFormFieldIndex, deps);
-    fieldScoreMatrix.sort(order);
+    // Each entry field goes to one page field and each page field gets at most
+    // one entry field: the best pair first, then the best of what is left.
+    const picks = pairFields(
+        findCandidates(formFields, dataFields, usernameIndex, {
+            isVisible: el => deps.scoringDeps.isDOMElementVisible(el),
+            isCoveredBySite: el => deps.isCoveredBySite(el)
+        })
+    );
 
     // Remember what we've filled in so we can make more accurate decisions when
     // the form is submitted later. We resist the urge the index by element ID or
@@ -95,10 +40,9 @@ function fillMatchedFields(
     // direction but occasionally automatically too)
     const filledFields: FilledField[] = [];
 
-    // Keep filling in fields until we find no more with a positive score
-    while (fieldScoreMatrix.length > 0 && fieldScoreMatrix[0].score > 0) {
-        const ffi = fieldScoreMatrix[0].formFieldIndex;
-        const dfi = fieldScoreMatrix[0].dataFieldIndex;
+    for (const { winner } of picks) {
+        const ffi = winner.formFieldIndex;
+        const dfi = winner.dataFieldIndex;
         const formField = formFields[ffi];
         const dataField = dataFields[dfi];
         const domElement = formField.DOMelement;
@@ -139,12 +83,6 @@ function fillMatchedFields(
             name: formField.field.locators[0].name,
             value: dataField.value
         });
-
-        fieldScoreMatrix = fieldScoreMatrix.filter(function (element) {
-            return element.dataFieldIndex != dfi && element.formFieldIndex != ffi;
-        });
-
-        fieldScoreMatrix.sort(order);
     }
     return filledFields;
 }
@@ -192,66 +130,12 @@ function fillASingleField(
 export function fillManyFormFields(
     formFields: MatchedField[],
     dataFields: Field[],
-    scoreConfig: FieldMatchScoreConfig,
     automated: boolean,
     deps: FieldFillingDeps,
-    // The form field to prefer when several score the same, e.g. the username
-    preferredFormFieldIndex?: number
+    // The page field guessed to take the username (FormUtils.pickUsernameIndex)
+    usernameIndex?: number
 ) {
-    deps.logger.debug("_fillManyFormFields started");
-
-    if (
-        formFields == null ||
-        formFields == undefined ||
-        dataFields == null ||
-        dataFields == undefined
-    ) {
-        return;
-    }
-
-    deps.logger.debug("We've received the data we need");
-
+    if (formFields == null || dataFields == null) return;
     deps.logger.info("Filling form fields");
-
-    // we try to fill every form field. We try to match by id first and then name before just guessing.
-    // Generally we'll only fill if the matched field is of the same type as the form field but
-    // we are flexible RE text and username fields because that's an artificial difference
-    // for the sake of the Kee password management software. However, usernames will be chosen above
-    // text fields if all else is equal
-    const fieldScoreMatrix = [];
-
-    for (let i = 0; i < formFields.length; i++) {
-        for (let j = 0; j < dataFields.length; j++) {
-            const score = calculateFieldMatchScore(
-                formFields[i],
-                dataFields[j],
-                scoreConfig,
-                deps.scoringDeps
-            );
-            deps.logger.debug(
-                "Suitability of putting data field " +
-                    j +
-                    " into form field " +
-                    i +
-                    " (id: " +
-                    formFields[i].field.locators[0].id +
-                    ") is " +
-                    score
-            );
-            fieldScoreMatrix.push({
-                score: score,
-                dataFieldIndex: j,
-                formFieldIndex: i
-            });
-        }
-    }
-
-    return fillMatchedFields(
-        fieldScoreMatrix,
-        dataFields,
-        formFields,
-        automated,
-        deps,
-        preferredFormFieldIndex
-    );
+    return fillMatchedFields(dataFields, formFields, automated, deps, usernameIndex);
 }
