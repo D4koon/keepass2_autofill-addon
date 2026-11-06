@@ -297,6 +297,12 @@ export class FormUtils {
                 }
             }
         };
+        // `root` may be a shadow host itself, e.g. a web component just added
+        const own = (root as Element).shadowRoot;
+        if (own) {
+            roots.push(own);
+            visit(own, 1);
+        }
         visit(root, 0);
         return roots;
     }

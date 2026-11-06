@@ -11,6 +11,12 @@ import { Action } from "../common/Action";
 import { Port } from "../common/port";
 import NonReactiveStore from "../store/NonReactiveStore";
 import { Mutation } from "../store/Mutation";
+import {
+    isStructural,
+    MUTATION_OBSERVER_OPTIONS,
+    RescanBackoff,
+    wantsRescan
+} from "./rescanTrigger";
 
 /* This orchestrates the main functions of the add-on
 on all website pages except those containing a KPRPC server */
@@ -51,45 +57,8 @@ let missingPageShowTimer: number;
 let store: NonReactiveStore;
 let inputsObserver: MutationObserver;
 
-// Adaptive rescan backoff: a page that keeps mutating (SPA dashboards) should
-// not trigger a form scan + KeePassRPC round-trip every half second forever.
-const RESCAN_DEBOUNCE_MIN = 500;
-const RESCAN_DEBOUNCE_MAX = 5000;
-const RESCAN_HARD_LIMIT = 250; // give up observing on pathologically chatty pages
-let rescanCount = 0;
-
-// A login form is often revealed by toggling an attribute on an existing
-// (already-present) element - display:none removed, a "hidden" class dropped,
-// the hidden attribute cleared, or a honeypot input's type flipped from
-// "hidden" to "text"/"password" - rather than by adding new DOM nodes. Watch
-// just these few attributes (not the unfiltered firehose) so such reveals
-// trigger a rescan the same way a newly-added form does.
-const MUTATION_OBSERVER_OPTIONS: MutationObserverInit = {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["style", "class", "hidden", "type"]
-};
-
-// Only a newly added <form> or a text-like input is worth a full rescan +
-// KeePassRPC round-trip. Ignoring range/checkbox/radio/hidden/submit inputs
-// stops dashboards (e.g. Home Assistant) that constantly re-render such
-// controls - now also visible inside shadow DOM - from thrashing the scanner.
-const interestingNodes = [
-    "form",
-    'input[type="password"]',
-    'input[type="text"]',
-    'input[type="email"]',
-    'input[type="tel"]',
-    'input[type="url"]',
-    'input[type="number"]',
-    "input:not([type])"
-];
-const INTERESTING_NODES_SELECTOR = interestingNodes.join(",");
-
-function resetRescanBackoff() {
-    rescanCount = 0;
-}
+// How long to wait before rescanning a page that keeps changing; see rescanTrigger.ts
+const rescanBackoff = new RescanBackoff();
 
 // Content scripts are injected into non-HTML documents such as SVGs.
 // We have no interest in this document if it has no body Node
@@ -106,13 +75,7 @@ if (document.body) {
 
         // A structural change may have added or removed a shadow host, so the
         // cached list of open shadow roots can no longer be trusted. Cheap.
-        if (
-            mutations.some(
-                m => m.type === "childList" && (m.addedNodes.length || m.removedNodes.length)
-            )
-        ) {
-            formUtils.invalidateShadowCache();
-        }
+        if (isStructural(mutations)) formUtils.invalidateShadowCache();
 
         // If we have already scheduled a rescan recently, no further action required
         if (formFilling.isRescanPending()) return;
@@ -130,78 +93,29 @@ if (document.body) {
         // Only proceed if we have a DB to search
         if (!store?.state.connected || store?.state.ActiveKeePassDatabaseIndex < 0) return;
 
-        let rescan = false;
-        mutations.forEach(mutation => {
-            if (rescan) return;
-            if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                for (const node of mutation.addedNodes) {
-                    if (rescan) break;
-                    const element = node as Element;
-                    if (typeof (element as Element).querySelector !== "function") continue;
-                    // deepContains also looks inside any open shadow roots the added
-                    // subtree carries, so web-component forms trigger a rescan too.
-                    if (
-                        formUtils.deepContains(element, interestingNodes) ||
-                        (element.matches && element.matches(INTERESTING_NODES_SELECTOR))
-                    ) {
-                        rescan = true;
-                        break;
-                    }
-                }
-            } else if (mutation.type === "attributes") {
-                // A style/class/hidden/type change on an existing element - either
-                // the form/field itself, or a wrapper that was hiding it - can reveal
-                // a login form without adding any DOM nodes. Treat that the same as
-                // a newly-added node.
-                const element = mutation.target as Element;
-                // <html>/<body> themselves are an extremely common target for
-                // unrelated attribute churn (theme toggles, scroll-lock classes,
-                // app-root re-render markers) and, being the mutated element, would
-                // make deepContains search the entire page on every such toggle.
-                // A form is essentially never revealed by an attribute directly on
-                // <html>/<body> - it's some more specific wrapper further down that
-                // gets its own mutation record - so skip the expensive whole-page
-                // search for exactly these two elements.
-                const isDocumentRoot =
-                    element === document.documentElement || element === document.body;
-                if (
-                    (element.matches && element.matches(INTERESTING_NODES_SELECTOR)) ||
-                    (!isDocumentRoot &&
-                        typeof element.querySelector === "function" &&
-                        formUtils.deepContains(element, interestingNodes))
-                ) {
-                    rescan = true;
-                }
-            }
-        });
+        if (!wantsRescan(mutations, formUtils)) return;
 
         // Schedule a rescan. Not immediately, in case a batch of mutations is
         // still coming, and with a delay that grows as a page keeps churning.
-        if (rescan) {
-            rescanCount++;
-            if (rescanCount > RESCAN_HARD_LIMIT) {
-                KeeLog.warn(
-                    "KeeLink: this page mutates too much; stopping the form observer. " +
-                        "Reload the page if a login form appears later."
-                );
-                observer.disconnect();
-                return;
-            }
-
-            // Only now (we already have a reason to rescan) do the full-tree walk to
-            // pick up any new open shadow roots - keeps mutation-heavy pages cheap.
-            try {
-                formUtils.observeOpenShadowRoots(observer, document.body, MUTATION_OBSERVER_OPTIONS);
-            } catch (e) {
-                /* non-fatal */
-            }
-
-            const delay = Math.min(
-                RESCAN_DEBOUNCE_MIN * 2 ** Math.floor(rescanCount / 8),
-                RESCAN_DEBOUNCE_MAX
+        const delay = rescanBackoff.next();
+        if (delay === null) {
+            KeeLog.warn(
+                "KeeLink: this page mutates too much; stopping the form observer. " +
+                    "Reload the page if a login form appears later."
             );
-            formFilling.scheduleRescan(delay);
+            observer.disconnect();
+            return;
         }
+
+        // Only now (we already have a reason to rescan) do the full-tree walk to
+        // pick up any new open shadow roots - keeps mutation-heavy pages cheap.
+        try {
+            formUtils.observeOpenShadowRoots(observer, document.body, MUTATION_OBSERVER_OPTIONS);
+        } catch (e) {
+            /* non-fatal */
+        }
+
+        formFilling.scheduleRescan(delay);
     });
 
     function matchFinder(uri: string) {
@@ -373,7 +287,7 @@ if (document.body) {
         clearTimeout(missingPageShowTimer);
         // New page (incl. bfcache restore): forget any rescan backoff accumulated
         // by the previous page. onFirstConnect re-arms the observer via startup().
-        resetRescanBackoff();
+        rescanBackoff.reset();
         if (configReady) {
             startup();
         }
