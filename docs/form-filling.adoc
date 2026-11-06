@@ -1,0 +1,385 @@
+= How KeeLink finds and fills login fields
+:toc: left
+:toclevels: 3
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+
+This document explains how the content script finds login forms on a page,
+picks a KeePass entry, decides which page field gets which value, and how you
+can see and steer each step. It is written for contributors and for users who
+want to understand why a page fills the way it does.
+
+NOTE: The diagrams are PlantUML. They render with
+https://docs.asciidoctor.org/diagram-extension/latest/[Asciidoctor Diagram]
+(`asciidoctor -r asciidoctor-diagram docs/form-filling.adoc`) or in an editor
+with an AsciiDoc + PlantUML preview. GitHub's own AsciiDoc view shows them as
+source.
+
+== Overview
+
+Everything below happens in the content script (`src/page/`), separately in
+every frame of the page. The background script only relays messages and talks
+to KeePass.
+
+[plantuml, overview, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title From page load to filled fields
+
+start
+:Page loaded or changed\n(page.ts, rescanTrigger.ts);
+:Scan forms and loose fields\n(formScanner.ts, formsUtils.ts);
+note right
+  <form>s, forms in open shadow roots,
+  and a stand-in form for inputs
+  outside any form
+end note
+:Keep forms that look like logins\n(formScanner.ts);
+if (any login form?) then (no)
+  stop
+endif
+:Ask KeePass for entries\nmatching the page URL\n(background → KeePassRPC);
+:Score every entry against every form\n(entryRanking.ts, relevanceScoring.ts);
+:Pick entry and form, decide\nwhether to fill and submit\n(fillDecision.ts);
+if (fill now?) then (yes)
+  :Assign entry fields to page fields\nand fill them\n(fieldFilling.ts);
+  if (submit?) then (yes)
+    :Submit the form;
+  endif
+else (no)
+  :Offer the entries in the popup\nand on the field icon;
+endif
+stop
+@enduml
+----
+
+The main files:
+
+[cols="1,3"]
+|===
+|File |Role
+
+|`page/page.ts`, `page/rescanTrigger.ts` |Start the scan, watch the page for changes worth a rescan
+|`page/formScanner.ts` |Finds the forms and decides which are login forms
+|`page/formsUtils.ts` |Reads a form's fields and guesses the username field (`getFormFields`, `pickUsernameIndex`)
+|`page/fieldSignals.ts` |Cheap DOM hints: search box, one-time code, switched off, nearness
+|`page/fieldCover.ts` |Hit-test: is something else on the page lying over a field?
+|`page/relevanceScoring.ts` |Field and entry scores, field match ratio
+|`page/entryRanking.ts` |Ranks entries per form, marks the site's preferred entry
+|`page/fillDecision.ts` |Fill or not, submit or not
+|`page/fieldFilling.ts` |Which page field gets which entry field (`byScore`), and the fill itself
+|`page/fillDiagnostics.ts` |The "Check how this fills here" report
+|===
+
+== Finding login forms
+
+=== Which forms are scanned
+
+* every `<form>` in the page,
+* every `<form>` inside an open shadow root (web components),
+* a *stand-in form* (`Kee-pseudo-form`) holding every input that is in no form
+  at all, including inputs inside shadow roots. Many single-page apps (Proxmox
+  VE, for example) have no `<form>`; without the stand-in form they couldn't
+  be filled.
+
+A form with more than 50 fields is skipped, so dashboards and big settings
+pages don't slow every page down.
+
+=== Which forms count as login forms
+
+[plantuml, login-form, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title Is this a login form?
+
+start
+if (stand-in form?) then (yes)
+  :Leave out fields the site config\nblacklists (e.g. name="q");
+endif
+if (form or a field blacklisted\nby the site config?) then (yes)
+  :Not a login form;
+  stop
+endif
+if (has a password field?) then (yes)
+  :Login form;
+  stop
+endif
+if (whitelisted by the site config,\nor a field has autocomplete="username"?) then (yes)
+  if (has a text field?) then (yes)
+    :Login form\n(first step of a two-step login);
+    stop
+  endif
+endif
+:Not a login form;
+stop
+@enduml
+----
+
+Blacklist and whitelist are the code's names (`SiteConfig.blackList`,
+`whiteList`) for the *Exclude List* and *Include List* in the settings. The
+built-in site config (`common/DefaultSiteConfig.ts`) blacklists forms with the
+id or name `search` and fields named `search`, `q` or `query` (or with the id
+`search` or `q`), so real search forms are never treated
+as logins. For the stand-in form only the blacklisted *field* is left out:
+otherwise one search box in an app's header would hide every loose login field
+on the page.
+
+== Scoring
+
+=== How well an entry field suits a page field
+
+`calculateFieldMatchScore` in `relevanceScoring.ts`:
+
+[cols="3,1"]
+|===
+|Condition |Points
+
+|Start |1
+|Types differ (e.g. text vs. checkbox) |score is 0, nothing else counts
+|The page field's id equals the entry field's stored id |+50
+|The page field's name equals the entry field's stored name |+40
+|The page field is visible |+35
+|Radio button whose value equals the entry field's value |+30
+|Database feature `KPRPC_FIELD_DEFAULT_NAME_AND_ID_EMPTY`, and the entry field
+has an id (or name) that does *not* match |−5 each
+|===
+
+IMPORTANT: Entries made by hand in KeePass usually store *no* field id or name.
+Then every visible text field scores the same, 36, and the score can't tell
+the username field from a search box. Section <<ties>> describes what decides
+then.
+
+=== How well an entry suits a form
+
+`calculateRelevanceScore` adds up, per form and entry:
+
+* the entry's URL match accuracy (from KeePass),
+* −20 if the form is not visible,
+* the best field score of each page field, averaged and reduced when the form
+  and the entry have very different numbers of fields.
+
+It also computes the *field match ratio*: the share of the form's named text
+and password fields that the entry can fill. Below 0.501 the entry gets
+`lowFieldMatchRatio`. On the Proxmox login, for example, the entry has 2
+fields and the page 6 named ones, so the ratio is 2/6.
+
+=== Fill or only offer
+
+`decideFill` in `fillDecision.ts`. For an automatic fill on page load:
+
+* one matching entry is taken; with several, the site's preferred entry, else
+  the most relevant one,
+* it must have a relevance score of at least 1 *and* no `lowFieldMatchRatio`,
+  unless the entry has *Always auto-fill* set in KeePass,
+* then the add-on settings and the entry's *always/never auto-fill* and
+  *always/never auto-submit* flags decide.
+
+An entry that fails the threshold is still offered in the popup and on the
+field icon. A click on it fills without any threshold.
+
+[[username-guess]]
+== Guessing the username field
+
+`FormUtils.pickUsernameIndex` picks the text field most likely to take the
+username. The guess is used
+
+* to show the username in the popup,
+* to settle ties when filling (see <<ties>>),
+* when a form is submitted, to decide which value is saved as the username.
+
+Each rule only decides when all rules before it are equal:
+
+[plantuml, username-guess, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title Username guess: compare the text fields rule by rule
+
+start
+:1. Usable?
+ - not inert / aria-hidden (also on an ancestor)
+ - not a search box, not a one-time code field
+ - when filling: not read-only or disabled
+   (on submit sites often lock fields, so not then);
+:2. autocomplete="username"?;
+if (stand-in form\n(page without <form>)?) then (yes)
+  :3. Nearest to a password field;
+  :4. Known name or label,\nor autocomplete="email";
+else (real <form>)
+  :3. Known name or label,\nor autocomplete="email";
+  :4. Nearest to a password field;
+endif
+:5. Before the first password field?;
+:6. Closest to the first password field
+   (no password field: the first one);
+stop
+@enduml
+----
+
+Details of the signals (`fieldSignals.ts`):
+
+Search box (`looksLikeSearchField`)::
+`type="search"`, `role="searchbox"`, inside `role="search"`, the name `q`,
+`query` or `s`, or one of the words _search, suche, recherche, buscar, cerca,
+zoek, szukaj_ anywhere in the name, id, placeholder, `aria-label` or label.
+
+One-time code (`isOneTimeCodeField`)::
+`autocomplete="one-time-code"`.
+
+Switched off (`isSwitchedOff`)::
+The field or an ancestor has `inert` or `aria-hidden="true"`, stepping out of
+shadow roots. Modal dialogs often set this on the rest of the page.
+
+Known name or label (`isAKnownUsernameString`)::
+A fixed list such as _username, user, login, email, e-mail, user name, userid,
+benutzername, benutzer, anmeldename_; a trailing colon or asterisk is ignored
+("User name:" counts).
+
+Nearness (`stepsToMeet`)::
+Walk up from the password field until reaching an ancestor of the candidate.
+The fewer steps, the closer the two belong together. The username field meets
+the password in the login box; an app's search box only near `<body>`.
+
+Why the order differs on pages without a `<form>`:: The stand-in form spans
+the whole page, so a newsletter field named `email` in the footer must not beat
+the unnamed field next to the password. In a real `<form>` all fields share
+the form anyway, and a field right by the password may be a captcha, so known
+names count for more there.
+
+[[ties]]
+== Assigning entry fields to page fields
+
+`fillManyFormFields` in `fieldFilling.ts` runs once for text-like fields and
+once for password fields. It scores every pair of page field and entry field,
+then repeatedly takes the best pair, fills it and removes both from the list,
+until no pair with a positive score is left.
+
+Pairs are ordered by `byScore`:
+
+[plantuml, tie-break, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title Order of (page field, entry field) pairs
+
+start
+:1. Higher score first
+   (a stored id or name match always wins here);
+:2. Reachable before covered before locked
+   - locked: read-only or disabled
+   - covered: something else lies over it (hit-test),
+     switched off, a search box or a one-time code field;
+:3. The guessed username field first;
+:4. Page order (stable sort);
+stop
+@enduml
+----
+
+Rules 2 to 4 only ever matter between pairs with the *same* score, so they
+can't override an entry with stored field names. Each field's reachability is
+looked up once per fill, because the hit-test forces a layout.
+
+=== Example: Proxmox VE
+
+The login window sits on a mask over the whole app, including its global
+search box. The entry has no stored field names.
+
+[cols="3,1,4"]
+|===
+|Page field |Score |Outcome
+
+|`pveGlobalSearchField-1020-inputEl` (header) |36 |search box, covered: loses
+|`view-inputEl` |36 |read-only: loses
+|`username`, label "User name:" |36 |guessed username: *filled*
+|`realm`, `lang` |36 |read-only: lose
+|`saveusername` (checkbox) |0 |wrong type
+|`password` |36 |only password field: *filled*
+|===
+
+Before these rules the search box won the tie because it comes first on the
+page.
+
+== Steering the result
+
+Store the page field's name or id in the entry::
+In KeePass, open the entry, tab *KeePassRPC*, *Form fields*, and set the name
+or id of the page field for the username and password. A matching id adds 50
+points, a name 40, which beats every tie rule. Entries that KeeLink saved from
+a submitted form already have them. Beware of generated names such as
+`textfield-1067-inputEl`: they can change when the site is updated.
+
+Always auto-fill::
+An entry set to always auto-fill (in its KeePassRPC tab in KeePass) skips the
+relevance and field match ratio threshold, so pages like Proxmox fill on load
+instead of on click.
+
+Include and exclude lists::
+In KeeLink's settings, choose *A specific website*, then *Finding forms*. A
+form whose id or name, or one of whose text fields' id or name, is on the
+*Include List* is always treated as a login form; one on the *Exclude List*
+never is (exclude wins). These lists decide about whole forms; they don't pick
+a field within a form.
+
+Preferred entry::
+With several matching entries, the one marked as preferred for the site is
+taken.
+
+== Checking what happened
+
+In the popup, expand an entry and click the *(?)* button ("Check how this
+fills here"). The report runs the entry through the same pipeline on the
+current page and lists
+
+* whether the entry's URLs match the page,
+* each form, whether it counts as a login form, and why not,
+* the relevance score and `lowFieldMatchRatio` of the best form,
+* every field of that form with its type, name, id, label, autocomplete,
+  visibility, read-only/disabled, and the signals of section
+  <<username-guess>>, its score against each entry field, which field was
+  guessed as the username, and which were filled.
+
+It contains the page address, the entry's title, UUID and URLs, and field
+names, ids and labels; never field values or passwords. *Copy* puts it on the
+clipboard, ready to paste into a bug report.
+
+[plantuml, diagnosis, svg]
+----
+@startuml
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+title "Check how this fills here"
+
+actor User
+participant "Popup\n(Entry.vue)" as Popup
+participant "Background\n(messageHandlers.ts)" as BG
+participant "Content script\n(fillDiagnostics.ts)" as Page
+
+User -> Popup : click (?) on an entry
+Popup -> BG : entry to diagnose
+BG -> Page : Action.DiagnoseFill
+Page -> Page : scan, score, force-fill\nthe best form (never submits)
+Page -> BG : report lines
+BG -> Popup : report
+Popup -> User : report with Copy button
+@enduml
+----
+
+== Tests
+
+* `src/tests/formFilling.matching.test.ts`: form detection, scoring, the
+  username guess (one fixture page per rule, each one the old guess got
+  wrong), tie rules, the stand-in form blacklist, the diagnosis report.
+* `src/tests/fieldSignals.test.ts`: the DOM signals, including shadow DOM.
+* `src/tests/browser/fieldCover.test.ts`: the hit-test in real Chromium and
+  Firefox (a modal mask over a search box, a floating label over its own
+  field).
+
+When changing a rule, add a fixture page that shows the case, and check that
+the test fails without the change.

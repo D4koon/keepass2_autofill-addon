@@ -76,6 +76,8 @@ To add new shared state, you need a mutation type, a handler in `NonReactiveStor
 
 Most unit tests cover this area, using `src/tests/helpers/formFillingHarness.ts` with jsdom.
 
+`docs/form-filling.adoc` (AsciiDoc with PlantUML) describes the rules: login-form detection, the scores, the username guess (`FormUtils.pickUsernameIndex`) and the tie order when filling (`byScore` in `fieldFilling.ts`). Update it when you change one of them.
+
 **Config.** `common/config.ts` defines `Config` and the per-site `SiteConfig`. `common/ConfigManager.ts` persists them to `chrome.storage`. When the schema changes:
 1. Bump the version.
 2. Add a `migrateToVersionN` method in `common/ConfigMigrations.ts`, and wire it up in `ConfigManager`.
