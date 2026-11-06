@@ -4,6 +4,7 @@ import { type AddonMessage } from "../common/AddonMessage";
 import { MatchedField } from "./MatchedField";
 import { Entry } from "../common/model/Entry";
 import { leaveTopLayer, showInTopLayer, topLayerAncestor } from "./topLayer";
+import { PositionTracker } from "./positionTracker";
 
 export type IconSide = "left" | "right";
 
@@ -12,9 +13,6 @@ const ICON_INSET = 0;
 // Where the field's text starts when the icon sits on the left: just past the
 // icon plus a small gap. The site's own padding counts towards it.
 const TEXT_START = ICON_INSET + ICON_SIZE + 4;
-// Fallback re-check for layout shifts no event tells us about (e.g. a banner
-// inserted above the form)
-const FALLBACK_INTERVAL_MS = 500;
 const LEFT_VAR = "--keelink-icon-left";
 const TOP_VAR = "--keelink-icon-top";
 // Marks our icon hosts, so a fresh copy of the content script (after the add-on
@@ -116,16 +114,8 @@ export class KeeFieldIcon {
     private icons: FieldIcon[] = [];
     private passwordFields: MatchedField[];
     private otherFields: MatchedField[];
-    private raf: number = null;
-    private fallbackTimer: number = null;
-    private resizeObserver: ResizeObserver = null;
-    private readonly scheduleUpdate = () => {
-        if (this.raf !== null) return;
-        this.raf = requestAnimationFrame(() => {
-            this.raf = null;
-            this.updatePositions();
-        });
-    };
+    // Follows the inputs as the page scrolls, resizes or re-lays itself out
+    private tracker = new PositionTracker(() => this.updatePositions());
     // Bumped on every add/remove so a slow labelled-icon render can't attach stale icons
     private generation = 0;
     // The style attribute each field had right after we last changed it
@@ -159,7 +149,7 @@ export class KeeFieldIcon {
         this.icons = [];
         this.passwordFields = null;
         this.otherFields = null;
-        this.stopTracking();
+        this.tracker.stop();
     }
 
     public addKeeIconToFields(
@@ -270,36 +260,7 @@ export class KeeFieldIcon {
         for (const field of fieldSet1.concat(fieldSet2)) {
             this.addIcon(field, image);
         }
-        if (this.icons.length > 0) this.startTracking();
-    }
-
-    // Follow the inputs as the page scrolls, resizes or re-lays itself out.
-    // Event driven (plus a slow fallback timer) so an idle page costs nothing.
-    private startTracking() {
-        if (this.fallbackTimer !== null) return;
-        // Capture so scrolling inside any scrollable container is seen too
-        window.addEventListener("scroll", this.scheduleUpdate, { capture: true, passive: true });
-        window.addEventListener("resize", this.scheduleUpdate, { passive: true });
-        if (typeof ResizeObserver !== "undefined") {
-            this.resizeObserver = new ResizeObserver(this.scheduleUpdate);
-            if (document.body) this.resizeObserver.observe(document.body);
-            for (const icon of this.icons) this.resizeObserver.observe(icon.box);
-        }
-        this.fallbackTimer = window.setInterval(
-            () => this.updatePositions(),
-            FALLBACK_INTERVAL_MS
-        );
-    }
-
-    private stopTracking() {
-        window.removeEventListener("scroll", this.scheduleUpdate, { capture: true });
-        window.removeEventListener("resize", this.scheduleUpdate);
-        this.resizeObserver?.disconnect();
-        this.resizeObserver = null;
-        if (this.fallbackTimer !== null) clearInterval(this.fallbackTimer);
-        this.fallbackTimer = null;
-        if (this.raf !== null) cancelAnimationFrame(this.raf);
-        this.raf = null;
+        if (this.icons.length > 0) this.tracker.start(this.icons.map(i => i.box));
     }
 
     private updatePositions() {

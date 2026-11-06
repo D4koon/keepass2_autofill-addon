@@ -2,12 +2,10 @@ import { PanelStub, PanelStubOptions } from "./PanelStub";
 import { KeeLog } from "../common/Logger";
 import { type IconSide } from "./keeFieldIcon";
 
-// Owns the in-page "matched logins" panel iframe (its PanelStub and the
-// requestAnimationFrame loop that keeps it positioned). Extracted verbatim from
-// FormFilling - behaviour unchanged.
+// Owns the in-page "matched logins" panel iframe (its PanelStub, which keeps
+// itself next to its field).
 export class MatchedLoginsPanel {
     private stub: PanelStub = null;
-    private raf: number;
 
     constructor(private parentFrameId: number) {}
 
@@ -33,17 +31,10 @@ export class MatchedLoginsPanel {
         );
         KeeLog.debug("Creating panel...");
         this.stub.createPanel();
-        this.raf = requestAnimationFrame(() => this.updatePosition());
     }
 
     public close() {
         if (this.stub) this.stub.closePanel();
         this.stub = null;
-        cancelAnimationFrame(this.raf);
-    }
-
-    private updatePosition() {
-        this.stub.updateBoundingClientRect();
-        this.raf = requestAnimationFrame(() => this.updatePosition());
     }
 }

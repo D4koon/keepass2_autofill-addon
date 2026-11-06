@@ -5,7 +5,6 @@ const panelOptions = PanelStubOptions.GeneratePassword;
 
 export class PasswordGenerator {
     public generatePasswordPanelStub: PanelStub;
-    private generatePasswordPanelStubRaf: number;
 
     constructor(private parentFrameId: number) {}
 
@@ -15,25 +14,15 @@ export class PasswordGenerator {
         this.generatePasswordPanelStub.createPanel();
     }
 
+    // The panel keeps itself next to the field
     public createGeneratePasswordPanelNearNode(target: HTMLElement) {
         this.closeGeneratePasswordPanel();
         this.generatePasswordPanelStub = new PanelStub(panelOptions, target, this.parentFrameId);
         this.generatePasswordPanelStub.createPanel();
-        this.generatePasswordPanelStubRaf = requestAnimationFrame(() =>
-            this.updateGeneratePasswordPanelPosition()
-        );
     }
 
     public closeGeneratePasswordPanel() {
         if (this.generatePasswordPanelStub) this.generatePasswordPanelStub.closePanel();
         this.generatePasswordPanelStub = null;
-        cancelAnimationFrame(this.generatePasswordPanelStubRaf);
-    }
-
-    public updateGeneratePasswordPanelPosition() {
-        this.generatePasswordPanelStub.updateBoundingClientRect();
-        this.generatePasswordPanelStubRaf = requestAnimationFrame(() =>
-            this.updateGeneratePasswordPanelPosition()
-        );
     }
 }

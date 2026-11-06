@@ -1,6 +1,7 @@
 import { configManager } from "../common/ConfigManager";
 import { type IconSide } from "./keeFieldIcon";
 import { showInTopLayer, topLayerAncestor } from "./topLayer";
+import { PositionTracker } from "./positionTracker";
 
 export class PanelStubOptions {
     id: string;
@@ -62,6 +63,7 @@ export class PanelStub {
     private anchorSide: IconSide;
     // Ends our listener on the modal dialog or popover the panel is shown in
     private layerListener: AbortController;
+    private tracker: PositionTracker;
 
     constructor(
         options: PanelStubOptions,
@@ -102,6 +104,9 @@ export class PanelStub {
         if (this.target) {
             this.targetRelativeRect = this.target.getBoundingClientRect();
             this.positionPanel();
+            // Follow the field as the page scrolls or re-lays itself out
+            this.tracker = new PositionTracker(() => this.updateBoundingClientRect());
+            this.tracker.start([this.target]);
         } else {
             this.container.style.setProperty("width", this.options.width + "px", "important");
             this.container.style.setProperty("height", this.options.height + "px", "important");
@@ -243,6 +248,8 @@ export class PanelStub {
     }
 
     public closePanel() {
+        this.tracker?.stop();
+        this.tracker = null;
         this.layerListener?.abort();
         this.layerListener = null;
         // By id also catches one an earlier stub left; ours may be in a shadow
