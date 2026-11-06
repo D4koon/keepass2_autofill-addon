@@ -382,7 +382,8 @@ function describeFilledForm(
             diag.info(
                 "Scores: 1 to start, +50 if the id matches the entry field's, +40 if the name " +
                     "does, +35 if the field is visible; 0 if the types don't fit. Each entry " +
-                    "field goes to its best-scoring page field; a tie goes to the one that " +
+                    "field goes to its best-scoring page field; a tie goes to editable " +
+                    "fields, then to the detected username field, then to the one that " +
                     "comes first on the page."
             )
         );

@@ -344,6 +344,7 @@ describe("fill diagnosis", () => {
         // Exactly one text field got the username, and the report says which
         const filledText = fields.filter(l => l.startsWith("- #") && l.includes("FILLED") && !l.includes("password"));
         expect(filledText).toHaveLength(1);
+        expect(filledText[0]).toContain('name="username"');
         expect(lines.join("\n")).not.toContain("user-value-7f3a");
         expect(lines.join("\n")).not.toContain("pass-value-9c1e");
     });
@@ -370,6 +371,77 @@ describe("fill diagnosis", () => {
 });
 
 describe("field filling", () => {
+    // Proxmox VE: an entry without field names scores all visible text fields the
+    // same, and the app's search box comes before the login window
+    it("puts the username into the detected username field, not an earlier search box", () => {
+        const h = createHarness(`
+            <div class="header"><input type="text" id="search-1020" name="globalSearch"></div>
+            <div class="login-window">
+                <input type="text" id="view-1" name="view" readonly>
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
+                <input type="text" id="realm" name="realm" readonly>
+            </div>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "root", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+        // Too few fields match for an automatic fill here; this is a click on the entry
+        h.manualFill(0);
+
+        expect(h.fieldValue("user")).toBe("root");
+        expect(h.fieldValue("search-1020")).toBe("");
+        expect(h.fieldValue("realm")).toBe("");
+        expect(h.fieldValue("pass")).toBe("s3cret");
+    });
+
+    // Nothing is named like a username. The scanner then takes the field just before
+    // the password, which in the first layout is the read-only one.
+    it.each([
+        ["after", `<input type="text" id="account" name="account">
+                <input type="text" id="tenant" name="tenant" readonly>`],
+        ["before", `<input type="text" id="tenant" name="tenant" readonly>
+                <input type="text" id="account" name="account">`]
+    ])("prefers an editable field to an equally suitable read-only one %s it", (_, fields) => {
+        const h = createHarness(`
+            <form>
+                ${fields}
+                <input type="password" id="pass" name="password">
+            </form>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice", name: "" },
+                { type: "password", value: "s3cret", name: "" }
+            ])
+        ]);
+
+        expect(h.fieldValue("account")).toBe("alice");
+        expect(h.fieldValue("tenant")).toBe("");
+    });
+
+    it("still fills the field whose name matches, even before the detected username field", () => {
+        const h = createHarness(`
+            <form>
+                <input type="text" id="mail" name="email">
+                <input type="text" id="user" name="username">
+                <input type="password" id="pass" name="password">
+            </form>`);
+
+        h.run([
+            makeEntry([
+                { type: "text", value: "alice@example.com", name: "email" },
+                { type: "password", value: "s3cret", name: "password" }
+            ])
+        ]);
+
+        expect(h.fieldValue("mail")).toBe("alice@example.com");
+        expect(h.fieldValue("user")).toBe("");
+    });
+
     it("does not overwrite a field that already has a value during automated fill", () => {
         const h = createHarness(`
             <form>

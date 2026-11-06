@@ -488,7 +488,8 @@ export class FormFilling {
                 matchingLogin.fields.filter(f => f.type !== "password"),
                 scoreConfig,
                 automated,
-                this.fieldFillingDeps
+                this.fieldFillingDeps,
+                matchResult.usernameIndexArray?.[matchResult.mostRelevantFormIndex]
             );
             const lastFilledPasswords = fillManyFormFields(
                 passwordFields,

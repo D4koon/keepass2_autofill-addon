@@ -20,12 +20,30 @@ export interface FieldFillingDeps {
     scoringDeps: ScoringDeps;
 }
 
+// Highest score first. Ties - common when the entry has no field names or ids,
+// so every visible text field scores the same - go to editable fields, then to
+// the field the scanner took as the username, then to the one that comes first
+// on the page (the sort is stable). Otherwise a site's search box above the
+// login form gets the username, as on Proxmox.
+function byScore(formFields: MatchedField[], preferredFormFieldIndex: number | undefined) {
+    const locked = (i: number) => {
+        const el = formFields[i]?.DOMelement as HTMLInputElement | undefined;
+        return el && (el.readOnly || el.disabled) ? 1 : 0;
+    };
+    return (a: ScoreMatrix, b: ScoreMatrix) =>
+        b.score - a.score ||
+        locked(a.formFieldIndex) - locked(b.formFieldIndex) ||
+        Number(b.formFieldIndex === preferredFormFieldIndex) -
+            Number(a.formFieldIndex === preferredFormFieldIndex);
+}
+
 function fillMatchedFields(
     fieldScoreMatrix: ScoreMatrix[],
     dataFields: Field[],
     formFields: MatchedField[],
     automated: boolean,
-    deps: FieldFillingDeps
+    deps: FieldFillingDeps,
+    preferredFormFieldIndex?: number
 ) {
     // We want to make sure each data field is matched to only one form field but we
     // don't know which field will be the best match and we don't want to ignore
@@ -43,12 +61,8 @@ function fillMatchedFields(
     // The above algorithm could maybe be tweaked slightly in order to auto-fill
     // a "change password" form if we ever manage to make that automated
 
-    // (score is reduced by one for each position we find in the form - this gives
-    // a slight priority to fields at the top of a form which can be useful occasionally)
-
-    fieldScoreMatrix.sort(function (a, b) {
-        return b.score - a.score;
-    });
+    const order = byScore(formFields, preferredFormFieldIndex);
+    fieldScoreMatrix.sort(order);
 
     // Remember what we've filled in so we can make more accurate decisions when
     // the form is submitted later. We resist the urge the index by element ID or
@@ -106,9 +120,7 @@ function fillMatchedFields(
             return element.dataFieldIndex != dfi && element.formFieldIndex != ffi;
         });
 
-        fieldScoreMatrix.sort(function (a, b) {
-            return b.score - a.score;
-        });
+        fieldScoreMatrix.sort(order);
     }
     return filledFields;
 }
@@ -158,7 +170,9 @@ export function fillManyFormFields(
     dataFields: Field[],
     scoreConfig: FieldMatchScoreConfig,
     automated: boolean,
-    deps: FieldFillingDeps
+    deps: FieldFillingDeps,
+    // The form field to prefer when several score the same, e.g. the username
+    preferredFormFieldIndex?: number
 ) {
     deps.logger.debug("_fillManyFormFields started");
 
@@ -208,5 +222,12 @@ export function fillManyFormFields(
         }
     }
 
-    return fillMatchedFields(fieldScoreMatrix, dataFields, formFields, automated, deps);
+    return fillMatchedFields(
+        fieldScoreMatrix,
+        dataFields,
+        formFields,
+        automated,
+        deps,
+        preferredFormFieldIndex
+    );
 }
