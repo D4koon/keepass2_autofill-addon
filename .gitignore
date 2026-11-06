@@ -30,3 +30,5 @@ tx
 .testing-web-ext-*
 coverage
 src/tests/browser/__screenshots__
+# Benchmark results (npm run bench -- --outputJson ...)
+bench-*.json
