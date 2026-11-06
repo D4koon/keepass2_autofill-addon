@@ -99,11 +99,21 @@ There are two vitest projects (see `test.projects` in `vite.config.ts`):
 
 ## Release / CI
 
-Pushing to a `release/*` branch triggers `.github/workflows/release.yaml`. It:
-- auto-tags the version: it increments the patch number when `package.json`'s major.minor matches the last tag, and otherwise uses major.minor.0
-- commits the version bump
-- builds Chrome and Firefox in both prod and beta variants
-- runs `tsc` and the tests
-- signs the Firefox beta XPI with AMO (`sign:xpi:beta`, using the `AMO_API_KEY`/`AMO_API_SECRET` secrets)
+**Every push to `master` publishes a release.** Two workflows release, and they run the same steps:
+- `.github/workflows/master.yaml` (Master CI) runs on each push to `master` and publishes a GitHub **pre-release**. This is the normal way releases are made.
+- `.github/workflows/release.yaml` (Release CI) runs on a push to a `release/*` branch and publishes a full release. It is rarely used.
 
-Don't hand-edit `version` for a release. `TODO.md` lists the outstanding work for Firefox auto-updates (`update_url`).
+Each run:
+- auto-tags the version: it increments the patch number when `package.json`'s major.minor matches the last tag reachable from the pushed commit, and otherwise uses major.minor.0
+- commits the version bump ("Release x.y.z") and pushes it, with the tag, back to the branch it ran on
+- builds Chrome and Firefox in both prod and beta variants
+- runs `tsc`, the unit and browser tests, and lint
+- signs the Firefox XPI with AMO (`sign:xpi:beta`, using the `AMO_API_KEY`/`AMO_API_SECRET` secrets). AMO refuses to sign a version twice, and a failed step stops the run before anything is pushed or published.
+
+Consequences:
+- Because of the version commit, local `master` falls behind after every push: `git pull` before working on or pushing anything else.
+- Don't push the same commits to `master` and a `release/*` branch together: both runs compute the same version and one of them fails.
+- After a `release/*` run, its version commit is only on that branch; merge it into `master`.
+- Don't hand-edit `version` for a release.
+
+`TODO.md` lists the outstanding work for Firefox auto-updates (`update_url`).
