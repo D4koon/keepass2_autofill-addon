@@ -106,14 +106,14 @@ if (form or a field blacklisted\nby the site config?) then (yes)
   :Not a login form;
   stop
 endif
-if (has a password field?) then (yes)
+if (has a visible password field?) then (yes)
   :Login form;
   stop
 endif
-if (whitelisted by the site config,\nor a field has autocomplete="username"?) then (yes)
-  if (has a text field?) then (yes)
+if (has a hidden password field,\nor is whitelisted by the site config,\nor a field has autocomplete="username"?) then (yes)
+  if (has a hidden password field,\nor a text field?) then (yes)
     if (stand-in form,\nor at most 2 visible, editable text fields,\nor whitelisted for this site specifically,\nor a field has autocomplete="username"?) then (yes)
-      :Login form\n(first step of a two-step login);
+      :Login form\n(maybe the first step of a two-step login);
       stop
     endif
   endif
@@ -133,12 +133,14 @@ otherwise one search box in an app's header would hide every loose login field
 on the page.
 
 The built-in whitelist names fields such as `email`, which a profile form has
-too. So a form without a password field that has more than two visible, editable
-text fields isn't taken for a first step because of the built-in list: the edit
-user dialog of Synology DSM (name, description, e-mail) is not a login. This
-doesn't apply to the stand-in form, whose fields can be from anywhere on the
-page. A field named `name` isn't on the built-in list at all, as it is more often
-a person's or a group's name than a username.
+too. So a form without a visible password field that has more than two visible,
+editable text fields isn't taken for a first step: the edit user dialog of
+Synology DSM (name, description, e-mail) is not a login, and neither is its create
+user dialog, which also has hidden, disabled password fields. A hidden password
+field doesn't change this, though with one username field it is the usual first
+step of a two-step login. The limit doesn't apply to the stand-in form, whose
+fields can be from anywhere on the page. A field named `name` isn't on the built-in
+list at all, as it is more often a person's or a group's name than a username.
 
 [[form-fit]]
 == Choosing the form and the entry, and filling on page load
@@ -466,7 +468,7 @@ participant "Content script\n(fillDiagnostics.ts)" as Page
 User -> Popup : click (?) on an entry
 Popup -> BG : entry to diagnose
 BG -> Page : Action.DiagnoseFill
-Page -> Page : scan, score, force-fill the best\nform if it has a password field\n(never submits)
+Page -> Page : scan, score, force-fill the best\nform if it has a visible password field\n(never submits)
 Page -> BG : report lines
 BG -> Popup : report
 Popup -> User : report with Copy button

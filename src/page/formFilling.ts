@@ -88,7 +88,11 @@ export class FormFilling {
             state: this.state,
             matchFinder: this.matchFinder,
             submitButtonDeps: this.submitButtonDeps,
-            formSaving: this.formSaving
+            formSaving: this.formSaving,
+            onLoginFormsGone: () => {
+                this.keeFieldIcon.removeKeeIconFromAllFields();
+                this.formSaving.removeAllSubmitHandlers();
+            }
         };
         this.panel = new MatchedLoginsPanel(parentFrameId);
         this.keeFieldIcon = new KeeFieldIcon(

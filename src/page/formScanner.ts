@@ -22,6 +22,8 @@ export interface FormScannerDeps {
     matchFinder: (uri: string) => void;
     submitButtonDeps: SubmitButtonDeps;
     formSaving: Pick<FormSaving, "addSubmitHandler">;
+    // A rescan found that none of the login forms it knew are login forms any more
+    onLoginFormsGone(): void;
 }
 
 type LoginForm = {
@@ -63,10 +65,18 @@ function sameSignature(a: unknown[], b: unknown[] | null) {
 }
 
 // The first step of a login asks for the username and at most a little more. A
-// form with no password field and more to fill in is a profile or settings form,
-// even with a field called "email". Fields under a dialog on top still count: the
-// answer shouldn't change as windows of a web app are moved around.
-export function asksForTooMuchForFirstStep(otherFields: MatchedField[], formUtils: FormUtils) {
+// form with no visible password field and more to fill in is a profile or settings
+// form, even with a field called "email" or a hidden password field for later (the
+// create user dialog of Synology DSM). Fields under a dialog on top still count:
+// the answer shouldn't change as windows of a web app are moved around.
+export function asksForTooMuchForFirstStep(
+    passwordFields: MatchedField[] | null | undefined,
+    otherFields: MatchedField[],
+    formUtils: FormUtils
+) {
+    if (passwordFields?.some(f => f?.DOMelement && formUtils.isDOMElementVisible(f.DOMelement))) {
+        return false;
+    }
     const fillable = otherFields.filter(
         f =>
             formUtils.isATextFormFieldType(f.field.type) &&
@@ -213,16 +223,15 @@ export function scanFrameForForms(
         // nothing about how much a login asks for. The site saying so counts for
         // more: its own Include List, or a field marked autocomplete="username"
         if (
-            noPasswordField &&
             form !== pseudoForm &&
-            asksForTooMuchForFirstStep(otherFields, formUtils) &&
+            asksForTooMuchForFirstStep(passwordFields, otherFields, formUtils) &&
             !configManager.siteVouchesForForm(
                 form,
                 url.href,
                 otherFields.map(f => f.field)
             )
         ) {
-            logger.debug("No password field and too many text fields for a first login step");
+            logger.debug("No visible password field and too many text fields for a first login step");
             continue;
         }
 
@@ -247,7 +256,12 @@ export function scanFrameForForms(
         logger.debug("Rescan found the same login fields as before; nothing to do");
         return;
     }
+    // E.g. a dialog hidden during the last scan shows, and asks for too much
+    if (loginForms.length === 0 && state.lastScanSignature?.length > 0) deps.onLoginFormsGone();
     state.lastScanSignature = signature;
+
+    // A search still on its way finds nothing to fill
+    if (loginForms.length === 0) state.loginOp = { forms, formIndexes: [] };
 
     state.reset(behaviour);
     state.current.forms = forms;

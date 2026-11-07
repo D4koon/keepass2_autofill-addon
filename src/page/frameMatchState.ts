@@ -20,7 +20,8 @@ export class FrameMatchState {
     // Was FormFilling.initMatchResult. Resets `current` in place for a new scan.
     //
     // TODO: this deliberately does NOT clear `loginOp` - initMatchResult never
-    // did. A rescan that finds no forms can therefore leave a stale
+    // did. A scan that finds forms but no login forms empties it (formScanner),
+    // but a rescan that finds no forms at all can leave a stale
     // `loginOp.forms` / `loginOp.formIndexes` around, which
     // getRelevanceOfLoginMatchesAgainstAllForms would then iterate. Preserved
     // as-is; not fixed here.

@@ -201,7 +201,7 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
                 diag.bullet(
                     "The form has no password field (e.g. a two-step login that asks for " +
                         "the username first) and none of its field names/ids are white-listed, " +
-                        `or it is a <form> with more than ${1 + MAX_EXTRA_FIELDS} text fields to fill in.`
+                        `or it is a <form> with no visible password field and more than ${1 + MAX_EXTRA_FIELDS} text fields to fill in.`
                 ),
                 diag.bullet("The real form is in another iframe."),
                 diag.bullet("The form loads after this check ran."),
@@ -263,9 +263,10 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
             )
         );
 
-        // Without a password field this may be no login at all, and a diagnosis
-        // shouldn't type the username into a settings dialog
-        const mayFill = host.state.current.passwordFieldsArray[best.bestFormIndex]?.length > 0;
+        // Without a visible password field this may be no login at all, and a
+        // diagnosis shouldn't type the username, or the password out of sight,
+        // into a settings dialog
+        const mayFill = host.state.current.formFits[best.bestFormIndex]?.loginField === "password";
         if (mayFill) {
             // Force the fill of the best form regardless of the auto-fill threshold - this is
             // the "try it here anyway" part. We never submit from a diagnosis.
@@ -279,7 +280,7 @@ export function runFillDiagnosis(rawEntry: Entry, host: FillDiagnosisHost) {
         } else {
             add(
                 diag.info(
-                    "Not filled: the best form has no password field, so it may not be a login. " +
+                    "Not filled: the best form has no visible password field, so it may not be a login. " +
                         "If it is, pick the entry in the popup to fill it."
                 )
             );
@@ -362,16 +363,21 @@ function whyNotFirstStep(f: any, host: FillDiagnosisHost): string[] {
         const { pwFields, otherFields } = host.formUtils.getFormFields(f, false, 50);
         const fields = otherFields.map(mf => mf.field);
         const conf = configManager.siteConfigFor(pageUrl());
-        const match = configManager.includeListMatch(f, conf, fields);
-        if (pwFields.length > 0 || !match) return [];
+        const interesting = configManager.isFormInteresting(f, conf, fields);
         // Excluded forms are turned down for that reason instead
-        if (configManager.isFormInteresting(f, conf, fields) !== true) return [];
-        if (!asksForTooMuchForFirstStep(otherFields, host.formUtils)) return [];
+        if (interesting === false) return [];
+        const match = configManager.includeListMatch(f, conf, fields);
+        // Without a password field, only the Include List gets a form this far
+        if (pwFields.length === 0 && (!match || interesting !== true)) return [];
+        if (!asksForTooMuchForFirstStep(pwFields, otherFields, host.formUtils)) return [];
+        const opening =
+            pwFields.length > 0
+                ? "Its password field is hidden and it has"
+                : `The Include List names its ${match}, but it has no password field and`;
         return [
             diag.bullet(
-                `The Include List names its ${match}, but it has no password field and more ` +
-                    `than ${1 + MAX_EXTRA_FIELDS} text fields to fill in: too many for the ` +
-                    "first step of a login."
+                `${opening} more than ${1 + MAX_EXTRA_FIELDS} text fields to fill in: too many ` +
+                    "for the first step of a login."
             )
         ];
     } catch (e) {

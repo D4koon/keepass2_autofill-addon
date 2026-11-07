@@ -69,6 +69,71 @@ describe("form detection", () => {
             expect(h.matchFinder).not.toHaveBeenCalled();
         });
 
+        describe("but a hidden one", () => {
+            // Synology DSM's create user dialog: the password fields wait on a later page
+            const CREATE_USER = `
+                <form id="create">
+                    <input id="name" name="name" type="text">
+                    <input id="description" name="description" type="text">
+                    <input id="email" name="email" type="text">
+                    <input id="pw" name="password" type="password" style="display:none" disabled>
+                    <input id="pw2" name="confirmpassword" type="password" style="display:none" disabled>
+                </form>`;
+
+            it("ignores a form asking too much for a first step", () => {
+                const h = createHarness(CREATE_USER);
+                h.scan();
+                expect(h.matchFinder).not.toHaveBeenCalled();
+            });
+
+            it("still takes a username field with a hidden password field for a first step", () => {
+                const h = createHarness(`
+                    <form id="login">
+                        <input id="user" name="user" type="text">
+                        <input id="pw" name="password" type="password" style="display:none">
+                    </form>`);
+                h.scan();
+                expect(h.matchFinder).toHaveBeenCalledTimes(1);
+            });
+
+            it("is a login form again once the password field shows", () => {
+                const h = createHarness(CREATE_USER);
+                h.scan();
+
+                document.getElementById("pw")!.style.display = "";
+                h.formFilling.findMatchesInThisFrame({}, true);
+
+                expect(h.matchFinder).toHaveBeenCalledTimes(1);
+            });
+
+            it("drops a dialog that was hidden during the scan once it shows", () => {
+                // The harness only looks at a field's own style
+                const h = createHarness(CREATE_USER.replaceAll("type=\"text\"", "type=\"text\" style=\"display:none\""));
+                h.run([
+                    makeEntry([
+                        { type: "text", value: "alice", name: "" },
+                        { type: "password", value: "pw", name: "" }
+                    ])
+                ]);
+                expect(h.matchFinder).toHaveBeenCalledTimes(1);
+
+                document.querySelectorAll<HTMLElement>("input[type=text]").forEach(f => (f.style.display = ""));
+                h.formFilling.findMatchesInThisFrame({}, true);
+
+                expect(h.matchResult().passwordFieldsArray[0]).toBeUndefined();
+                expect(h.keeFieldIcon.removeKeeIconFromAllFields).toHaveBeenCalled();
+
+                // The answer to a search sent before the dialog showed
+                h.formFilling.findLoginsResultHandler([
+                    makeEntry([
+                        { type: "text", value: "alice", name: "" },
+                        { type: "password", value: "pw", name: "" }
+                    ])
+                ]);
+                expect(h.fieldValue("email")).toBe("");
+            });
+        });
+
         it("doesn't limit the loose fields of a page without a form", () => {
             const h = createHarness(`
                 <input name="email" type="text">
@@ -589,13 +654,42 @@ describe("fill diagnosis", () => {
         expect(report(h).some(l => l.includes("too many for the first step of a login"))).toBe(true);
     });
 
+    it("explains a form with a hidden password field turned down for asking too much", () => {
+        const h = createHarness(`
+            <form id="create">
+                <input name="name" type="text"><input name="description" type="text"><input name="email" type="text">
+                <input name="password" type="password" style="display:none" disabled>
+            </form>
+            <form id="login"><input name="u" type="text"><input name="p" type="password"></form>`);
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        const lines = report(h);
+        expect(lines).toContain("[warn] Form #0 (create): NOT treated as a login form.");
+        expect(
+            lines.some(
+                l => l.includes("Its password field is hidden") && l.includes("too many for the first step of a login")
+            )
+        ).toBe(true);
+    });
+
     it("doesn't type into a form without a password field", () => {
         const h = createHarness("<form id=\"f\"><input id=\"e\" name=\"email\" type=\"text\"></form>");
         h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
         const lines = report(h);
         expect(h.fieldValue("e")).toBe("");
-        expect(lines.some(l => l.includes("Not filled: the best form has no password field"))).toBe(true);
+        expect(lines.some(l => l.includes("Not filled: the best form has no visible password field"))).toBe(true);
         expect(lines.some(l => l.includes("No fields were filled"))).toBe(false);
+    });
+
+    it("doesn't type into a form whose password field is hidden", () => {
+        const h = createHarness(`
+            <form id="f">
+                <input id="u" name="u" type="text">
+                <input id="p" name="p" type="password" style="display:none">
+            </form>`);
+        h.formFilling.diagnoseFillForEntry(UNNAMED_FOR_REPORT());
+        expect(h.fieldValue("u")).toBe("");
+        expect(h.fieldValue("p")).toBe("");
+        expect(report(h).some(l => l.includes("Not filled: the best form has no visible password field"))).toBe(true);
     });
 
     // Like the Proxmox VE login (ExtJS): no <form>, generated ids, read-only
